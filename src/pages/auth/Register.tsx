@@ -20,7 +20,10 @@ export default function Register() {
       toast.success('Account created! Redirecting...');
       navigate('/onboarding');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create account');
+      const message = err.message === 'Failed to fetch'
+        ? 'Unable to connect to the server. Please check your connection and try again.'
+        : err.message || 'Failed to create account';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
