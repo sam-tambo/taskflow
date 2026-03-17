@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { queryClient } from '@/lib/queryClient';
+import { supabaseMisconfigured } from '@/lib/supabase';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/useUIStore';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
@@ -88,7 +89,30 @@ function KeyboardShortcuts() {
   return null;
 }
 
+function ConfigError() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950 p-8">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-xl shadow-lg p-8 text-center">
+        <div className="text-4xl mb-4">⚙️</div>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          Configuration Required
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Supabase environment variables are not set. Add{' '}
+          <code className="text-sm bg-gray-100 dark:bg-slate-800 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> and{' '}
+          <code className="text-sm bg-gray-100 dark:bg-slate-800 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code>{' '}
+          to your Vercel project environment variables, then redeploy.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  if (supabaseMisconfigured) {
+    return <ConfigError />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
