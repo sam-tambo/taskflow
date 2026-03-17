@@ -24,7 +24,10 @@ export default function Login() {
         navigate('/');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to sign in');
+      const message = err.message === 'Failed to fetch'
+        ? 'Unable to connect to the server. Please check your connection and try again.'
+        : err.message || 'Failed to sign in';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
