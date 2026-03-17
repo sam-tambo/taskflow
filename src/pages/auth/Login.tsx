@@ -7,22 +7,16 @@ import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [useMagicLink, setUseMagicLink] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signInWithMagicLink } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      if (useMagicLink) {
-        await signInWithMagicLink(email);
-        toast.success('Magic link sent! Check your email.');
-      } else {
-        await signIn(email, password);
-        navigate('/');
-      }
+      await signIn(email, password);
+      navigate('/');
     } catch (err: any) {
       const message = err.message === 'Failed to fetch'
         ? 'Unable to connect to the server. Please check your connection and try again.'
@@ -60,36 +54,27 @@ export default function Login() {
               />
             </div>
 
-            {!useMagicLink && (
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
-                  required
-                />
-              </div>
-            )}
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                required
+              />
+            </div>
 
             <button
               type="submit"
               disabled={loading}
               className="w-full py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {loading ? 'Please wait...' : useMagicLink ? 'Send Magic Link' : 'Sign In'}
+              {loading ? 'Please wait...' : 'Sign In'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          <button
-            onClick={() => setUseMagicLink(!useMagicLink)}
-            className="w-full mt-3 text-sm text-gray-500 hover:text-coral"
-          >
-            {useMagicLink ? 'Use password instead' : 'Sign in with magic link'}
-          </button>
 
           <div className="mt-6 text-center text-sm text-gray-500">
             Don't have an account?{' '}
