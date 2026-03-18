@@ -93,6 +93,10 @@ export default function Reports() {
     return Array.from(map.values()).sort((a, b) => (b.open + b.done) - (a.open + a.done)).slice(0, 8);
   }, [allTasks]);
 
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const axisColor = isDark ? '#94A3B8' : '#6B7280';
+  const gridColor = isDark ? '#334155' : '#E5E7EB';
+
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -149,10 +153,10 @@ export default function Reports() {
           {tasksByProject.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={tasksByProject} layout="vertical" margin={{ left: 0, right: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: axisColor }} />
+                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, fill: axisColor }} />
+                <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                   {tasksByProject.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
@@ -170,10 +174,10 @@ export default function Reports() {
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Tasks Completed Over Time</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={completedOverTime} margin={{ left: 0, right: 16 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} interval={Math.max(Math.floor(completedOverTime.length / 6), 1)} />
-              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: axisColor }} interval={Math.max(Math.floor(completedOverTime.length / 6), 1)} />
+              <YAxis tick={{ fontSize: 11, fill: axisColor }} allowDecimals={false} />
+              <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
               <Line type="monotone" dataKey="count" stroke="#F97316" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
@@ -186,10 +190,10 @@ export default function Reports() {
         {workloadByAssignee.length > 0 ? (
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={workloadByAssignee} margin={{ left: 0, right: 16 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: axisColor }} />
+              <YAxis tick={{ fontSize: 11, fill: axisColor }} allowDecimals={false} />
+              <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
               <Bar dataKey="open" name="Open" fill="#F97316" stackId="a" radius={[0, 0, 0, 0]} />
               <Bar dataKey="done" name="Done" fill="#10B981" stackId="a" radius={[4, 4, 0, 0]} />
             </BarChart>

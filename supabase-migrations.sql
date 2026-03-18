@@ -926,3 +926,26 @@ $$ language sql stable;
 alter publication supabase_realtime add table tasks;
 alter publication supabase_realtime add table comments;
 alter publication supabase_realtime add table notifications;
+
+-- Phase 5 migrations
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS theme text DEFAULT 'system',
+  ADD COLUMN IF NOT EXISTS notification_preferences jsonb DEFAULT '{
+    "in_app": {
+      "task_assigned": true,
+      "task_commented": true,
+      "mentioned": true,
+      "task_completed": false,
+      "due_soon": true
+    },
+    "email": {
+      "digest_enabled": true,
+      "digest_frequency": "daily",
+      "task_assigned": false,
+      "mentioned": false,
+      "due_soon": false
+    }
+  }'::jsonb;
+
+ALTER TABLE public.workspaces
+  ADD COLUMN IF NOT EXISTS member_limit integer DEFAULT NULL;

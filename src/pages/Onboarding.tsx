@@ -16,11 +16,13 @@ export default function Onboarding() {
   const [projectName, setProjectName] = useState('');
   const [projectColor, setProjectColor] = useState('#F97316');
   const [loading, setLoading] = useState(false);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const { user } = useAuth();
-  const { setCurrentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, setCurrentWorkspace } = useWorkspaceStore();
   const navigate = useNavigate();
 
-  async function handleComplete() {
+  async function handleCreateWorkspace() {
     if (!user) return;
     setLoading(true);
     try {
@@ -70,14 +72,45 @@ export default function Onboarding() {
               position: i,
             });
           }
+          setCreatedProjectId(project.id);
         }
       }
 
       setCurrentWorkspace(workspace);
       toast.success('Workspace created!');
-      navigate('/');
+      setStep(4);
     } catch (err: any) {
       toast.error(err.message || 'Failed to set up workspace');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFinish() {
+    setLoading(true);
+    try {
+      if (taskTitle.trim() && createdProjectId) {
+        // Get the first section (To Do) of the project
+        const { data: sections } = await supabase
+          .from('sections')
+          .select('id')
+          .eq('project_id', createdProjectId)
+          .order('position')
+          .limit(1);
+
+        const sectionId = sections?.[0]?.id;
+        await supabase.from('tasks').insert({
+          title: taskTitle.trim(),
+          project_id: createdProjectId,
+          section_id: sectionId || null,
+          workspace_id: currentWorkspace?.id,
+          created_by: user?.id,
+          position: 0,
+        });
+      }
+      navigate(createdProjectId ? `/projects/${createdProjectId}` : '/');
+    } catch {
+      navigate('/');
     } finally {
       setLoading(false);
     }
@@ -95,7 +128,7 @@ export default function Onboarding() {
           </div>
           <p className="text-slate-400">Let's set up your workspace</p>
           <div className="flex items-center justify-center gap-2 mt-4">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div key={s} className={`h-2 rounded-full transition-all ${s === step ? 'w-8 bg-coral' : s < step ? 'w-8 bg-coral/50' : 'w-8 bg-slate-700'}`} />
             ))}
           </div>
@@ -194,11 +227,45 @@ export default function Onboarding() {
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button
-                  onClick={handleComplete}
+                  onClick={handleCreateWorkspace}
                   disabled={loading}
                   className="flex-1 py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {loading ? 'Setting up...' : 'Get Started'} <ArrowRight className="w-4 h-4" />
+                  {loading ? 'Setting up...' : 'Continue'} <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-purple/10 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-purple" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add your first task</h2>
+                  <p className="text-sm text-gray-500">What needs to get done?</p>
+                </div>
+              </div>
+              <input
+                type="text"
+                placeholder="e.g., Review project requirements"
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button onClick={() => setStep(3)} className="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium flex items-center justify-center gap-2">
+                  <ArrowLeft className="w-4 h-4" /> Back
+                </button>
+                <button
+                  onClick={handleFinish}
+                  disabled={loading}
+                  className="flex-1 py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? 'Setting up...' : 'Get Started!'} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
