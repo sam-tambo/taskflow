@@ -268,7 +268,8 @@ create policy "profiles_insert_own" on public.profiles
 drop policy if exists "workspaces_select" on public.workspaces;
 create policy "workspaces_select" on public.workspaces
   for select using (
-    exists (
+    owner_id = auth.uid()
+    or exists (
       select 1 from public.workspace_members wm
       where wm.workspace_id = id and wm.user_id = auth.uid()
     )
@@ -292,33 +293,34 @@ create policy "workspaces_delete" on public.workspaces
   for delete using (owner_id = auth.uid());
 
 -- ---- workspace_members ----
+-- IMPORTANT: These policies use user_id = auth.uid() directly instead of
+-- subquerying workspace_members itself, which would cause infinite recursion.
 drop policy if exists "workspace_members_select" on public.workspace_members;
 create policy "workspace_members_select" on public.workspace_members
-  for select using (
-    exists (
-      select 1 from public.workspace_members wm
-      where wm.workspace_id = workspace_members.workspace_id and wm.user_id = auth.uid()
-    )
-  );
+  for select using (user_id = auth.uid());
 
 drop policy if exists "workspace_members_insert" on public.workspace_members;
 create policy "workspace_members_insert" on public.workspace_members
   for insert with check (
-    exists (
-      select 1 from public.workspace_members wm
-      where wm.workspace_id = workspace_members.workspace_id and wm.user_id = auth.uid() and wm.role in ('owner', 'admin')
+    user_id = auth.uid()
+    or exists (
+      select 1 from public.workspaces w
+      where w.id = workspace_members.workspace_id and w.owner_id = auth.uid()
     )
-    or (user_id = auth.uid()) -- allow self-join for workspace creation flow
   );
+
+drop policy if exists "workspace_members_update" on public.workspace_members;
+create policy "workspace_members_update" on public.workspace_members
+  for update using (user_id = auth.uid());
 
 drop policy if exists "workspace_members_delete" on public.workspace_members;
 create policy "workspace_members_delete" on public.workspace_members
   for delete using (
-    exists (
-      select 1 from public.workspace_members wm
-      where wm.workspace_id = workspace_members.workspace_id and wm.user_id = auth.uid() and wm.role in ('owner', 'admin')
+    user_id = auth.uid()
+    or exists (
+      select 1 from public.workspaces w
+      where w.id = workspace_members.workspace_id and w.owner_id = auth.uid()
     )
-    or (user_id = auth.uid()) -- allow self-remove
   );
 
 -- ---- teams ----
