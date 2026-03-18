@@ -3,9 +3,11 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import { useUIStore } from '@/stores/useUIStore';
 import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel';
+import { useWorkspaceLoader } from '@/hooks/useWorkspaceLoader';
 
 export default function AppShell() {
   const { sidebarCollapsed, taskDetailId } = useUIStore();
+  useWorkspaceLoader();
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-950">
