@@ -15,11 +15,13 @@ export interface Workspace {
   created_at: string;
 }
 
+export type WorkspaceRole = 'owner' | 'admin' | 'employee' | 'client';
+
 export interface WorkspaceMember {
   id: string;
   workspace_id: string;
   user_id: string;
-  role: 'owner' | 'admin' | 'member' | 'guest';
+  role: WorkspaceRole;
   joined_at: string;
   profiles?: Profile;
 }
@@ -124,6 +126,7 @@ export interface Comment {
   user_id: string;
   body: string;
   is_edited: boolean;
+  visibility: 'all' | 'internal';
   created_at: string;
   updated_at: string;
   user?: Profile;

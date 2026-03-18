@@ -7,8 +7,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useRBAC } from '@/hooks/useRBAC';
+import { RoleBadge } from '@/components/ui/RoleBadge';
 import { InvitePanel } from '@/components/members/InvitePanel';
-import type { WorkspaceMember } from '@/types';
+import type { WorkspaceMember, WorkspaceRole } from '@/types';
 
 export default function Members() {
   usePageTitle('Members');
@@ -84,21 +86,16 @@ export default function Members() {
     },
   });
 
-  const roleIcon = (role: string) => {
-    if (role === 'owner') return <Crown className="w-3.5 h-3.5 text-yellow-500" />;
-    if (role === 'admin') return <Shield className="w-3.5 h-3.5 text-purple-500" />;
-    if (role === 'guest') return <Eye className="w-3.5 h-3.5 text-gray-400" />;
-    return <User className="w-3.5 h-3.5 text-blue-500" />;
-  };
+  const rbac = useRBAC();
 
   const roleLabel = (role: string) =>
-    ({ owner: 'Owner', admin: 'Admin', member: 'Member', guest: 'Guest' } as Record<string, string>)[role] ?? role;
+    ({ owner: 'Owner', admin: 'Admin', employee: 'Employee', client: 'Client' } as Record<string, string>)[role] ?? role;
 
   const grouped = {
     owner: members.filter(m => m.role === 'owner'),
     admin: members.filter(m => m.role === 'admin'),
-    member: members.filter(m => m.role === 'member'),
-    guest: members.filter(m => m.role === 'guest'),
+    employee: members.filter(m => m.role === 'employee'),
+    client: members.filter(m => m.role === 'client'),
   };
 
   if (isLoading) {
@@ -130,7 +127,7 @@ export default function Members() {
 
       {/* Member groups */}
       <div className="space-y-6">
-        {(['owner', 'admin', 'member', 'guest'] as const).map(role => {
+        {(['owner', 'admin', 'employee', 'client'] as const).map(role => {
           const group = grouped[role];
           if (group.length === 0) return null;
           return (
@@ -167,10 +164,7 @@ export default function Members() {
                         </div>
                         <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{profile?.email}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {roleIcon(member.role)}
-                        <span className="text-xs text-gray-500 dark:text-slate-400">{roleLabel(member.role)}</span>
-                      </div>
+                      <RoleBadge role={member.role} />
                       {!isYou && !isOwner && (
                         <MemberMenu
                           currentRole={member.role}
@@ -265,7 +259,7 @@ function MemberMenu({
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-8 z-20 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[160px]">
-            {['admin', 'member', 'guest'].filter(r => r !== currentRole).map(role => (
+            {(['admin', 'employee', 'client'] as const).filter(r => r !== currentRole).map(role => (
               <button
                 key={role}
                 onClick={() => { onChangeRole(role); setOpen(false); }}

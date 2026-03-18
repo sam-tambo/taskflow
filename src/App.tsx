@@ -8,6 +8,7 @@ import { useUIStore } from '@/stores/useUIStore';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
 import { ShortcutsModal } from '@/components/ShortcutsModal';
 import AppShell from '@/components/layout/AppShell';
+import { RoleGuard } from '@/components/ui/RoleGuard';
 import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
@@ -117,12 +118,12 @@ export default function App() {
                 <Route path="/projects/:projectId/forms/:formId" element={<FormBuilder />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/portfolios" element={<Portfolios />} />
-                <Route path="/members" element={<Members />} />
-                <Route path="/members/:userId" element={<MemberProfile />} />
+                <Route path="/members" element={<RoleGuard minRole="admin"><Members /></RoleGuard>} />
+                <Route path="/members/:userId" element={<RoleGuard minRole="admin"><MemberProfile /></RoleGuard>} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/workload" element={<Workload />} />
-                <Route path="/automations" element={<Automations />} />
+                <Route path="/reports" element={<RoleGuard minRole="employee"><Reports /></RoleGuard>} />
+                <Route path="/workload" element={<RoleGuard minRole="employee"><Workload /></RoleGuard>} />
+                <Route path="/automations" element={<RoleGuard minRole="admin"><Automations /></RoleGuard>} />
                 <Route path="/goals" element={<Goals />} />
                 <Route path="/goals/:id" element={<GoalDetail />} />
               </Route>

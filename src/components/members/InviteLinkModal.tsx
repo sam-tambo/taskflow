@@ -63,7 +63,7 @@ export function InviteLinkModal({
     }
   }
 
-  const roleLabel = { admin: 'Admin', member: 'Member', guest: 'Guest' }[role] ?? role
+  const roleLabel = ({ admin: 'Admin', employee: 'Employee', client: 'Client' } as Record<string, string>)[role] ?? role
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">

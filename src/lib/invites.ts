@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export type InviteRole = 'admin' | 'member' | 'guest'
+export type InviteRole = 'admin' | 'employee' | 'client'
 
 export interface GeneratedInvite {
   id: string

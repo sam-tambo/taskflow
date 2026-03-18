@@ -6,6 +6,8 @@ import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useNotifications';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
+import { useRBAC } from '@/hooks/useRBAC';
+import { RoleBadge } from '@/components/ui/RoleBadge';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import {
   Home, Inbox, Search, BarChart3, Users, Settings, Plus, ChevronDown, ChevronRight,
@@ -28,6 +30,7 @@ export default function Sidebar() {
   const { user, profile, signOut } = useAuth();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const { data: unreadCount = 0 } = useUnreadCount(user?.id);
+  const rbac = useRBAC();
   const [showWorkspaceSwitcher, setShowWorkspaceSwitcher] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -175,24 +178,32 @@ export default function Sidebar() {
 
       {/* Bottom nav */}
       <div className="px-3 py-2 border-t border-gray-200 dark:border-slate-800 space-y-0.5">
-        <Link onClick={handleNavClick} to="/goals" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/goals') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <Target className="w-4 h-4" /> Goals
-        </Link>
-        <Link onClick={handleNavClick} to="/portfolios" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/portfolios') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <BarChart3 className="w-4 h-4" /> Portfolios
-        </Link>
-        <Link onClick={handleNavClick} to="/reports" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/reports') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <LineChart className="w-4 h-4" /> Reports
-        </Link>
-        <Link onClick={handleNavClick} to="/workload" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/workload') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <LayoutGrid className="w-4 h-4" /> Workload
-        </Link>
-        <Link onClick={handleNavClick} to="/automations" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/automations') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <Zap className="w-4 h-4" /> Automations
-        </Link>
-        <Link onClick={handleNavClick} to="/members" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/members') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <Users className="w-4 h-4" /> Members
-        </Link>
+        {rbac.isEmployee && (
+          <>
+            <Link onClick={handleNavClick} to="/goals" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/goals') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <Target className="w-4 h-4" /> Goals
+            </Link>
+            <Link onClick={handleNavClick} to="/portfolios" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/portfolios') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <BarChart3 className="w-4 h-4" /> Portfolios
+            </Link>
+            <Link onClick={handleNavClick} to="/reports" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/reports') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <LineChart className="w-4 h-4" /> Reports
+            </Link>
+            <Link onClick={handleNavClick} to="/workload" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/workload') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <LayoutGrid className="w-4 h-4" /> Workload
+            </Link>
+          </>
+        )}
+        {rbac.isAdmin && (
+          <Link onClick={handleNavClick} to="/automations" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/automations') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+            <Zap className="w-4 h-4" /> Automations
+          </Link>
+        )}
+        {rbac.isAdmin && (
+          <Link onClick={handleNavClick} to="/members" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/members') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+            <Users className="w-4 h-4" /> Members
+          </Link>
+        )}
         <Link onClick={handleNavClick} to="/settings" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/settings') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
           <Settings className="w-4 h-4" /> Settings
         </Link>
@@ -208,7 +219,8 @@ export default function Sidebar() {
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0" style={{ backgroundColor: getAvatarColor(user?.id || '') }}>
               {getInitials(profile?.full_name || null)}
             </div>
-            <span className="text-sm text-gray-700 dark:text-slate-300 truncate">{profile?.full_name || profile?.email || 'User'}</span>
+            <span className="text-sm text-gray-700 dark:text-slate-300 truncate flex-1">{profile?.full_name || profile?.email || 'User'}</span>
+            {rbac.role && <RoleBadge role={rbac.role} />}
           </button>
           {showUserMenu && (
             <div className="absolute bottom-full left-0 w-full mb-1 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 p-1">

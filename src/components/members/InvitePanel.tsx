@@ -16,9 +16,9 @@ interface InvitePanelProps {
 }
 
 const ROLES: { value: InviteRole; label: string; description: string }[] = [
-  { value: 'admin', label: 'Admin', description: 'Can manage members and all projects' },
-  { value: 'member', label: 'Member', description: 'Can create and edit projects and tasks' },
-  { value: 'guest', label: 'Guest', description: 'View and comment on shared projects only' },
+  { value: 'admin', label: 'Admin', description: 'Full access — manage members, projects, and settings' },
+  { value: 'employee', label: 'Employee', description: 'Create and edit projects, tasks, and reports' },
+  { value: 'client', label: 'Client', description: 'View assigned projects and leave comments' },
 ]
 
 type Mode = 'link' | 'email'
@@ -27,7 +27,7 @@ export function InvitePanel({
   open, onClose, workspaceId, userId, workspaceName, inviterName
 }: InvitePanelProps) {
   const [mode, setMode] = useState<Mode>('link')
-  const [role, setRole] = useState<InviteRole>('member')
+  const [role, setRole] = useState<InviteRole>('employee')
   const [email, setEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)

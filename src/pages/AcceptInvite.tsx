@@ -88,7 +88,7 @@ export default function AcceptInvite() {
   };
 
   const roleLabel = (role: string) =>
-    ({ owner: 'Owner', admin: 'Admin', member: 'Member', guest: 'Guest' } as Record<string, string>)[role] ?? role;
+    ({ owner: 'Owner', admin: 'Admin', employee: 'Employee', client: 'Client' } as Record<string, string>)[role] ?? role;
 
   const wrapper = (children: React.ReactNode) => (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center p-4">

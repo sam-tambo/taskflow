@@ -1006,3 +1006,29 @@ create policy "Anyone can read invite by token"
 -- Add is_favorite column to tasks
 ALTER TABLE public.tasks
   ADD COLUMN IF NOT EXISTS is_favorite boolean DEFAULT false;
+
+-- =============================================================================
+-- RBAC: Migrate workspace_members roles from (owner/admin/member/guest)
+-- to 3-tier system (owner/admin/employee/client)
+-- =============================================================================
+
+-- Migrate existing data: member → employee, guest → client
+UPDATE public.workspace_members SET role = 'employee' WHERE role = 'member';
+UPDATE public.workspace_members SET role = 'client' WHERE role = 'guest';
+
+-- Update the check constraint
+ALTER TABLE public.workspace_members DROP CONSTRAINT IF EXISTS workspace_members_role_check;
+ALTER TABLE public.workspace_members
+  ADD CONSTRAINT workspace_members_role_check
+  CHECK (role IN ('owner', 'admin', 'employee', 'client'));
+
+-- Update workspace_invites role constraint similarly
+ALTER TABLE public.workspace_invites DROP CONSTRAINT IF EXISTS workspace_invites_role_check;
+ALTER TABLE public.workspace_invites
+  ADD CONSTRAINT workspace_invites_role_check
+  CHECK (role IN ('admin', 'employee', 'client'));
+
+-- Add comment visibility column: 'all' (visible to everyone) or 'internal' (employees/admins only)
+ALTER TABLE public.comments
+  ADD COLUMN IF NOT EXISTS visibility text DEFAULT 'all'
+  CHECK (visibility IN ('all', 'internal'));
