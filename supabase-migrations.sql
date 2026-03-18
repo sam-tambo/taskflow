@@ -949,3 +949,56 @@ ALTER TABLE public.profiles
 
 ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS member_limit integer DEFAULT NULL;
+
+-- ============================================================
+-- 6. WORKSPACE INVITES
+-- ============================================================
+
+create table if not exists public.workspace_invites (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid references public.workspaces(id) on delete cascade not null,
+  email text,
+  role text not null default 'member' check (role in ('admin', 'member', 'guest')),
+  token uuid not null default gen_random_uuid(),
+  invited_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now(),
+  expires_at timestamptz not null default (now() + interval '7 days'),
+  used_at timestamptz,
+  used_by uuid references public.profiles(id) on delete set null
+);
+
+create unique index if not exists idx_workspace_invites_token on public.workspace_invites(token);
+create index if not exists idx_workspace_invites_workspace on public.workspace_invites(workspace_id);
+
+-- RLS policies for workspace_invites
+alter table public.workspace_invites enable row level security;
+
+create policy "Workspace members can view invites"
+  on public.workspace_invites for select
+  using (
+    workspace_id in (
+      select workspace_id from public.workspace_members where user_id = auth.uid()
+    )
+  );
+
+create policy "Workspace admins and owners can create invites"
+  on public.workspace_invites for insert
+  with check (
+    workspace_id in (
+      select workspace_id from public.workspace_members
+      where user_id = auth.uid() and role in ('owner', 'admin')
+    )
+  );
+
+create policy "Workspace admins and owners can update invites"
+  on public.workspace_invites for update
+  using (
+    workspace_id in (
+      select workspace_id from public.workspace_members
+      where user_id = auth.uid() and role in ('owner', 'admin')
+    )
+  );
+
+create policy "Anyone can read invite by token"
+  on public.workspace_invites for select
+  using (true);

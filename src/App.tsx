@@ -29,6 +29,7 @@ const Goals = lazy(() => import('@/pages/Goals'));
 const GoalDetail = lazy(() => import('@/pages/GoalDetail'));
 const FormBuilder = lazy(() => import('@/pages/FormBuilder'));
 const PublicForm = lazy(() => import('@/pages/PublicForm'));
+const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
@@ -108,6 +109,7 @@ export default function App() {
               <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
               <Route path="/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
               <Route path="/forms/:slug" element={<PublicForm />} />
+              <Route path="/invite/:token" element={<AcceptInvite />} />
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/" element={<Home />} />
                 <Route path="/inbox" element={<Inbox />} />

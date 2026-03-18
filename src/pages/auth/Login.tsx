@@ -16,7 +16,9 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(email, password);
-      navigate('/');
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      navigate(redirect || '/');
     } catch (err: any) {
       const message = err.message === 'Failed to fetch'
         ? 'Unable to connect to the server. Please check your connection and try again.'

@@ -18,7 +18,9 @@ export default function Register() {
     try {
       await signUp(email, password, fullName);
       toast.success('Account created! Redirecting...');
-      navigate('/onboarding');
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      navigate(redirect || '/onboarding');
     } catch (err: any) {
       const message = err.message === 'Failed to fetch'
         ? 'Unable to connect to the server. Please check your connection and try again.'
