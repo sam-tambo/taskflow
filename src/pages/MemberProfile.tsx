@@ -19,7 +19,7 @@ const roleColors: Record<string, string> = {
 
 const priorityColors: Record<string, string> = {
   urgent: 'text-red-500',
-  high: 'text-orange-500',
+  high: 'text-[#4B7C6F]',
   medium: 'text-yellow-500',
   low: 'text-blue-400',
   none: 'text-gray-300',
@@ -98,7 +98,7 @@ export default function MemberProfile() {
     return (
       <div className="p-6 max-w-3xl mx-auto text-center py-20">
         <p className="text-gray-500 dark:text-slate-400">Member not found</p>
-        <Link to="/members" className="text-coral text-sm mt-2 inline-block hover:underline">Back to Members</Link>
+        <Link to="/members" className="text-[#4B7C6F] text-sm mt-2 inline-block hover:underline">Back to Members</Link>
       </div>
     );
   }
@@ -147,7 +147,7 @@ export default function MemberProfile() {
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Assigned Tasks</h2>
           <Link
             to={`/search?assignee=${userId}`}
-            className="text-xs text-coral hover:underline"
+            className="text-xs text-[#4B7C6F] hover:underline"
           >
             View all assigned tasks
           </Link>

@@ -17,12 +17,12 @@ interface UIState {
 
 const getInitialTheme = (): 'light' | 'dark' | 'system' => {
   if (typeof window === 'undefined') return 'system';
-  return (localStorage.getItem('taskflow-theme') as 'light' | 'dark' | 'system') || 'system';
+  return (localStorage.getItem('rp-theme') as 'light' | 'dark' | 'system') || 'system';
 };
 
 const getInitialSidebarState = (): boolean => {
   if (typeof window === 'undefined') return false;
-  return localStorage.getItem('taskflow-sidebar-collapsed') === 'true';
+  return localStorage.getItem('rp-sidebar-collapsed') === 'true';
 };
 
 export const useUIStore = create<UIState>((set) => ({
@@ -33,11 +33,11 @@ export const useUIStore = create<UIState>((set) => ({
   theme: getInitialTheme(),
   toggleSidebar: () => set((state) => {
     const collapsed = !state.sidebarCollapsed;
-    localStorage.setItem('taskflow-sidebar-collapsed', String(collapsed));
+    localStorage.setItem('rp-sidebar-collapsed', String(collapsed));
     return { sidebarCollapsed: collapsed };
   }),
   setSidebarCollapsed: (collapsed) => {
-    localStorage.setItem('taskflow-sidebar-collapsed', String(collapsed));
+    localStorage.setItem('rp-sidebar-collapsed', String(collapsed));
     set({ sidebarCollapsed: collapsed });
   },
   openTaskDetail: (taskId) => set({ taskDetailId: taskId }),
@@ -45,7 +45,7 @@ export const useUIStore = create<UIState>((set) => ({
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
   setShortcutsModalOpen: (open) => set({ shortcutsModalOpen: open }),
   setTheme: (theme) => {
-    localStorage.setItem('taskflow-theme', theme);
+    localStorage.setItem('rp-theme', theme);
     const root = document.documentElement;
     root.classList.remove('dark');
     if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

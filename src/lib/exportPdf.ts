@@ -34,7 +34,7 @@ export function exportProjectAsPdf(project: Project, tasks: Task[]) {
     body,
     startY: 48,
     headStyles: {
-      fillColor: [249, 115, 22],
+      fillColor: [75, 124, 111],
       textColor: 255,
       fontStyle: 'bold',
       fontSize: 9
@@ -57,7 +57,7 @@ export function exportProjectAsPdf(project: Project, tasks: Task[]) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
-    doc.text(`TaskFlow — ${project.name} — Page ${i} of ${pageCount}`, 14, (doc as any).internal.pageSize.height - 8);
+    doc.text(`Revenue Precision — ${project.name} — Page ${i} of ${pageCount}`, 14, (doc as any).internal.pageSize.height - 8);
   }
 
   doc.save(`${project.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);

@@ -114,7 +114,7 @@ export function InvitePanel({
               {ROLES.map(r => (
                 <label
                   key={r.value}
-                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${role === r.value ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' : 'border-gray-100 dark:border-slate-800 hover:border-gray-200 dark:hover:border-slate-700'}`}
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${role === r.value ? 'border-[#4B7C6F] bg-[#f0f7f5] dark:bg-[#4B7C6F]/10' : 'border-gray-100 dark:border-slate-800 hover:border-gray-200 dark:hover:border-slate-700'}`}
                 >
                   <input type="radio" name="role" value={r.value} checked={role === r.value} onChange={() => setRole(r.value)} className="accent-orange-500" />
                   <div>
@@ -135,7 +135,7 @@ export function InvitePanel({
                 </p>
                 <button
                   onClick={handleGenerateLink}
-                  className="w-full py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-[#16A34A] text-white rounded-xl text-sm font-medium hover:bg-[#15803d] transition-colors flex items-center justify-center gap-2"
                 >
                   <Link2 className="w-4 h-4" />
                   Generate invite link
@@ -150,7 +150,7 @@ export function InvitePanel({
                   <div className="text-center py-4 space-y-2">
                     <p className="text-sm font-medium text-green-600 dark:text-green-400">Invitation sent!</p>
                     <p className="text-xs text-gray-500 dark:text-slate-400">An invite email has been sent.</p>
-                    <button onClick={() => { setEmailSuccess(false); setEmail('') }} className="text-xs text-orange-500 hover:text-orange-600 underline">
+                    <button onClick={() => { setEmailSuccess(false); setEmail('') }} className="text-xs text-[#4B7C6F] hover:text-[#4B7C6F] underline">
                       Send another
                     </button>
                   </div>
@@ -165,14 +165,14 @@ export function InvitePanel({
                         onChange={e => { setEmail(e.target.value); setEmailError(null) }}
                         onKeyDown={e => e.key === 'Enter' && handleSendEmail()}
                         placeholder="colleague@company.com"
-                        className={`w-full px-3 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${emailError ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600'}`}
+                        className={`w-full px-3 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#4B7C6F] focus:border-transparent ${emailError ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-slate-600'}`}
                       />
                       {emailError && <p className="mt-1.5 text-xs text-red-500">{emailError}</p>}
                     </div>
                     <button
                       onClick={handleSendEmail}
                       disabled={!email.trim() || sendingEmail}
-                      className="w-full py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-[#16A34A] text-white rounded-xl text-sm font-medium hover:bg-[#15803d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                       {sendingEmail ? (
                         <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending...</>

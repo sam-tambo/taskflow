@@ -83,7 +83,7 @@ export function SubtaskList({ parentTask }: SubtaskListProps) {
           />
         </div>
       ) : (
-        <button onClick={() => setIsAdding(true)} className="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-500 hover:text-coral">
+        <button onClick={() => setIsAdding(true)} className="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-500 hover:text-[#4B7C6F]">
           <Plus className="w-3.5 h-3.5" /> Add subtask
         </button>
       )}

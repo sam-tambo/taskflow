@@ -121,7 +121,7 @@ export default function Members() {
         </div>
         <button
           onClick={() => setShowInvitePanel(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-coral text-white rounded-xl text-sm font-medium hover:bg-coral-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#16A34A] text-white rounded-xl text-sm font-medium hover:bg-[#3d6b5e] transition-colors"
         >
           <UserPlus className="w-4 h-4" />
           Invite members

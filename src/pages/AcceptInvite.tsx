@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { Sparkles } from 'lucide-react';
 
 interface InviteData {
   id: string;
@@ -94,8 +93,8 @@ export default function AcceptInvite() {
   const wrapper = (children: React.ReactNode) => (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
-        <div className="w-12 h-12 bg-coral rounded-xl flex items-center justify-center mx-auto mb-6">
-          <Sparkles className="w-6 h-6 text-white" />
+        <div className="w-12 h-12 bg-[#4B7C6F] rounded-xl flex items-center justify-center mx-auto mb-6">
+          <span className="text-white text-base font-bold">RP</span>
         </div>
         {children}
       </div>
@@ -114,7 +113,7 @@ export default function AcceptInvite() {
     <>
       <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Invalid invite</h1>
       <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">This invite link doesn't exist or has been revoked.</p>
-      <Link to="/" className="text-sm text-coral hover:underline">Go to TaskFlow</Link>
+      <Link to="/" className="text-sm text-[#4B7C6F] hover:underline">Go to Revenue Precision</Link>
     </>
   );
 
@@ -125,7 +124,7 @@ export default function AcceptInvite() {
         This invite to <strong>{invite?.workspaces?.name}</strong> has expired.
       </p>
       <p className="text-gray-400 dark:text-slate-500 text-xs mb-6">Ask a workspace admin for a new invite.</p>
-      <Link to="/" className="text-sm text-coral hover:underline">Go to TaskFlow</Link>
+      <Link to="/" className="text-sm text-[#4B7C6F] hover:underline">Go to Revenue Precision</Link>
     </>
   );
 
@@ -135,7 +134,7 @@ export default function AcceptInvite() {
       <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">
         This invite has already been used. You may already be a member of <strong>{invite?.workspaces?.name}</strong>.
       </p>
-      <Link to="/" className="inline-block px-6 py-2.5 bg-coral text-white rounded-xl text-sm font-medium hover:bg-coral-dark">
+      <Link to="/" className="inline-block px-6 py-2.5 bg-[#16A34A] text-white rounded-xl text-sm font-medium hover:bg-[#3d6b5e]">
         Go to workspace
       </Link>
     </>
@@ -143,7 +142,7 @@ export default function AcceptInvite() {
 
   if (state === 'accepting') return wrapper(
     <>
-      <div className="animate-spin w-8 h-8 border-2 border-coral border-t-transparent rounded-full mx-auto mb-4" />
+      <div className="animate-spin w-8 h-8 border-2 border-[#4B7C6F] border-t-transparent rounded-full mx-auto mb-4" />
       <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Joining workspace...</h1>
       <p className="text-gray-500 dark:text-slate-400 text-sm">Just a moment</p>
     </>
@@ -163,7 +162,7 @@ export default function AcceptInvite() {
     <>
       <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Something went wrong</h1>
       <p className="text-gray-500 dark:text-slate-400 text-sm mb-4">{errorMessage}</p>
-      <button onClick={acceptInvite} className="px-6 py-2.5 bg-coral text-white rounded-xl text-sm font-medium hover:bg-coral-dark">
+      <button onClick={acceptInvite} className="px-6 py-2.5 bg-[#16A34A] text-white rounded-xl text-sm font-medium hover:bg-[#3d6b5e]">
         Try again
       </button>
     </>
@@ -178,7 +177,7 @@ export default function AcceptInvite() {
         </span>
       </div>
       <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">You've been invited to join</h1>
-      <p className="text-2xl font-bold text-coral mb-1">{invite?.workspaces?.name}</p>
+      <p className="text-2xl font-bold text-[#4B7C6F] mb-1">{invite?.workspaces?.name}</p>
       <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
         You'll join as a <strong className="text-gray-700 dark:text-slate-300">{roleLabel(invite?.role ?? 'member')}</strong>
         {invite?.email && ` · Sent to ${invite.email}`}
@@ -188,7 +187,7 @@ export default function AcceptInvite() {
         <div className="space-y-3">
           <button
             onClick={acceptInvite}
-            className="w-full py-3 bg-coral text-white rounded-xl font-semibold hover:bg-coral-dark transition-colors text-sm"
+            className="w-full py-3 bg-[#16A34A] text-white rounded-xl font-semibold hover:bg-[#3d6b5e] transition-colors text-sm"
           >
             Accept invitation
           </button>
@@ -199,13 +198,13 @@ export default function AcceptInvite() {
           <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">Sign in or create an account to accept.</p>
           <Link
             to={`/login?redirect=/invite/${token}`}
-            className="block w-full py-2.5 bg-coral text-white rounded-xl font-medium hover:bg-coral-dark transition-colors text-sm text-center"
+            className="block w-full py-2.5 bg-[#16A34A] text-white rounded-xl font-medium hover:bg-[#3d6b5e] transition-colors text-sm text-center"
           >
             Sign in to accept
           </Link>
           <Link
             to={`/register?redirect=/invite/${token}`}
-            className="block w-full py-2.5 border-2 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-xl font-medium hover:border-coral hover:text-coral transition-colors text-sm text-center"
+            className="block w-full py-2.5 border-2 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-xl font-medium hover:border-[#4B7C6F] hover:text-[#4B7C6F] transition-colors text-sm text-center"
           >
             Create account
           </Link>

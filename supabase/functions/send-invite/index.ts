@@ -42,7 +42,7 @@ serve(async (req: Request) => {
       )
     }
 
-    const fromAddress = Deno.env.get('RESEND_FROM_EMAIL') ?? 'TaskFlow <onboarding@resend.dev>'
+    const fromAddress = Deno.env.get('RESEND_FROM_EMAIL') ?? 'Revenue Precision <onboarding@resend.dev>'
 
     const html = buildEmailHtml({ email, inviteLink, workspaceName, inviterName })
     const text = buildEmailText({ inviteLink, workspaceName, inviterName })
@@ -56,7 +56,7 @@ serve(async (req: Request) => {
       body: JSON.stringify({
         from: fromAddress,
         to: [email],
-        subject: `${inviterName} invited you to join ${workspaceName} on TaskFlow`,
+        subject: `${inviterName} invited you to join ${workspaceName} on Revenue Precision`,
         html,
         text,
       }),
@@ -109,8 +109,8 @@ function buildEmailHtml({
             <td align="center" style="padding-bottom:32px;">
               <table cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="background:#F97316;border-radius:14px;padding:14px 18px;">
-                    <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">TaskFlow</span>
+                  <td style="background:#4B7C6F;border-radius:14px;padding:14px 18px;">
+                    <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Revenue Precision</span>
                   </td>
                 </tr>
               </table>
@@ -119,7 +119,7 @@ function buildEmailHtml({
           <tr>
             <td style="background:#fff;border-radius:20px;border:1px solid #E2E8F0;overflow:hidden;">
               <tr>
-                <td style="background:linear-gradient(135deg,#F97316,#FB923C);height:6px;display:block;"></td>
+                <td style="background:linear-gradient(135deg,#4B7C6F,#FB923C);height:6px;display:block;"></td>
               </tr>
               <tr>
                 <td style="padding:40px 40px 32px;">
@@ -135,11 +135,11 @@ function buildEmailHtml({
                   </h1>
                   <p style="margin:0 0 32px;font-size:16px;color:#64748B;line-height:1.6;">
                     <strong style="color:#374151;">${inviterName}</strong> has invited you to collaborate
-                    on <strong style="color:#374151;">${workspaceName}</strong> in TaskFlow.
+                    on <strong style="color:#374151;">${workspaceName}</strong> in Revenue Precision.
                   </p>
                   <table cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
                     <tr>
-                      <td style="background:#F97316;border-radius:12px;">
+                      <td style="background:#4B7C6F;border-radius:12px;">
                         <a href="${inviteLink}" style="display:block;padding:16px 36px;color:#fff;font-size:16px;font-weight:600;text-decoration:none;letter-spacing:-0.2px;white-space:nowrap;">
                           Accept invitation &#8594;
                         </a>
@@ -148,17 +148,17 @@ function buildEmailHtml({
                   </table>
                   <hr style="border:none;border-top:1px solid #F1F5F9;margin:0 0 24px;">
                   <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.5px;">
-                    What is TaskFlow?
+                    What is Revenue Precision?
                   </p>
                   <p style="margin:0 0 24px;font-size:14px;color:#64748B;line-height:1.6;">
-                    TaskFlow is a modern task management platform — organize projects in List,
+                    Revenue Precision is a modern task management platform — organize projects in List,
                     Board, Timeline, or Calendar view. Collaborate with your team in real time.
                   </p>
                   <div style="background:#F8FAFC;border-radius:10px;padding:16px;border:1px solid #E2E8F0;">
                     <p style="margin:0 0 6px;font-size:12px;color:#94A3B8;">
                       Button not working? Copy and paste this link:
                     </p>
-                    <p style="margin:0;font-size:12px;color:#F97316;word-break:break-all;font-family:monospace;">
+                    <p style="margin:0;font-size:12px;color:#4B7C6F;word-break:break-all;font-family:monospace;">
                       ${inviteLink}
                     </p>
                   </div>
@@ -176,7 +176,7 @@ function buildEmailHtml({
           </tr>
           <tr>
             <td align="center" style="padding-top:24px;">
-              <p style="margin:0;font-size:12px;color:#94A3B8;">Sent by TaskFlow</p>
+              <p style="margin:0;font-size:12px;color:#94A3B8;">Sent by Revenue Precision</p>
             </td>
           </tr>
         </table>
@@ -193,7 +193,7 @@ function buildEmailText({
   inviterName,
 }: Omit<InvitePayload, 'email'>): string {
   return `
-You're invited to join ${workspaceName} on TaskFlow
+You're invited to join ${workspaceName} on Revenue Precision
 
 ${inviterName} has invited you to collaborate on ${workspaceName}.
 

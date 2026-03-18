@@ -62,7 +62,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
               onClick={() => onViewChange(id)}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors',
-                currentView === id ? 'bg-coral/10 text-coral font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'
+                currentView === id ? 'bg-[#4B7C6F]/10 text-[#4B7C6F] font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'
               )}
             >
               <Icon className="w-4 h-4" />
@@ -73,7 +73,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowQuickAdd(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-coral hover:bg-coral/90 rounded-lg font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-[#16A34A] hover:bg-[#16A34A]/90 rounded-lg font-medium"
           >
             <Plus className="w-4 h-4" /> Add Task
           </button>

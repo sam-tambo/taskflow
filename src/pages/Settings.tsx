@@ -89,7 +89,7 @@ export default function Settings() {
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={cn('relative inline-flex h-5 w-9 items-center rounded-full transition-colors', checked ? 'bg-coral' : 'bg-gray-300 dark:bg-slate-600')}
+      className={cn('relative inline-flex h-5 w-9 items-center rounded-full transition-colors', checked ? 'bg-[#16A34A]' : 'bg-gray-300 dark:bg-slate-600')}
     >
       <span className={cn('inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform', checked ? 'translate-x-4.5' : 'translate-x-1')} />
     </button>
@@ -106,7 +106,7 @@ export default function Settings() {
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={cn('flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap', tab === id ? 'bg-coral/10 text-coral font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800')}
+              className={cn('flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap', tab === id ? 'bg-[#4B7C6F]/10 text-[#4B7C6F] font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800')}
             >
               <Icon className="w-4 h-4" /> {label}
             </button>
@@ -121,13 +121,13 @@ export default function Settings() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Profile Settings</h2>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Full Name</label>
-                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-coral/30" />
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#4B7C6F]/30" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email</label>
                   <input value={profile?.email || ''} disabled className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-500 cursor-not-allowed" />
                 </div>
-                <button onClick={handleSaveProfile} disabled={saving} className="px-4 py-2 bg-coral text-white text-sm font-medium rounded-xl hover:bg-coral-dark disabled:opacity-50">
+                <button onClick={handleSaveProfile} disabled={saving} className="px-4 py-2 bg-[#16A34A] text-white text-sm font-medium rounded-xl hover:bg-[#3d6b5e] disabled:opacity-50">
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -136,13 +136,13 @@ export default function Settings() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h2>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">New Password</label>
-                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-coral/30" />
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#4B7C6F]/30" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Confirm Password</label>
-                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-coral/30" />
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#4B7C6F]/30" />
                 </div>
-                <button onClick={handleChangePassword} disabled={passwordSaving || !newPassword} className="px-4 py-2 bg-coral text-white text-sm font-medium rounded-xl hover:bg-coral-dark disabled:opacity-50">
+                <button onClick={handleChangePassword} disabled={passwordSaving || !newPassword} className="px-4 py-2 bg-[#16A34A] text-white text-sm font-medium rounded-xl hover:bg-[#3d6b5e] disabled:opacity-50">
                   {passwordSaving ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
@@ -159,7 +159,7 @@ export default function Settings() {
                     <button
                       key={t}
                       onClick={() => setTheme(t)}
-                      className={cn('px-4 py-2 text-sm rounded-xl border transition-colors', theme === t ? 'border-coral bg-coral/10 text-coral font-medium' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700')}
+                      className={cn('px-4 py-2 text-sm rounded-xl border transition-colors', theme === t ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F] font-medium' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700')}
                     >
                       {t.charAt(0).toUpperCase() + t.slice(1)}
                     </button>
@@ -221,7 +221,7 @@ export default function Settings() {
                       <button
                         key={f}
                         onClick={() => setNotifPrefs(p => ({ ...p, digest_frequency: f }))}
-                        className={cn('px-3 py-1.5 text-sm rounded-lg border', notifPrefs.digest_frequency === f ? 'border-coral bg-coral/10 text-coral' : 'border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400')}
+                        className={cn('px-3 py-1.5 text-sm rounded-lg border', notifPrefs.digest_frequency === f ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400')}
                       >
                         {f.charAt(0).toUpperCase() + f.slice(1)}
                       </button>
@@ -246,7 +246,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              <button onClick={handleSaveNotifications} className="px-4 py-2 bg-coral text-white text-sm font-medium rounded-xl hover:bg-coral-dark">
+              <button onClick={handleSaveNotifications} className="px-4 py-2 bg-[#16A34A] text-white text-sm font-medium rounded-xl hover:bg-[#3d6b5e]">
                 Save Preferences
               </button>
             </div>
@@ -256,11 +256,11 @@ export default function Settings() {
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Billing</h2>
               <div className="text-center py-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-coral/10 text-coral rounded-full text-sm font-medium mb-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#4B7C6F]/10 text-[#4B7C6F] rounded-full text-sm font-medium mb-4">
                   <CreditCard className="w-4 h-4" /> Pro Plan
                 </div>
                 <p className="text-gray-500 dark:text-slate-400 mb-2">Payment management coming soon.</p>
-                <p className="text-xs text-gray-400 dark:text-slate-500">Need help? Contact support@taskflow.app</p>
+                <p className="text-xs text-gray-400 dark:text-slate-500">Need help? Contact support@revenueprecision.app</p>
               </div>
             </div>
           )}

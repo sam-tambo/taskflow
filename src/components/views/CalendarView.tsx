@@ -85,7 +85,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <button onClick={() => setCurrentMonth(new Date())} className="text-sm text-coral hover:underline">Today</button>
+          <button onClick={() => setCurrentMonth(new Date())} className="text-sm text-[#4B7C6F] hover:underline">Today</button>
         </div>
 
         {/* Weekday headers */}
@@ -111,11 +111,11 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                 className={cn(
                   'bg-white dark:bg-slate-900 p-1.5 min-h-[80px] cursor-pointer transition-colors',
                   !isCurrentMonth && 'opacity-40',
-                  isSelected && 'ring-2 ring-coral ring-inset',
-                  isToday(day) && 'bg-coral/5'
+                  isSelected && 'ring-2 ring-[#4B7C6F] ring-inset',
+                  isToday(day) && 'bg-[#4B7C6F]/5'
                 )}
               >
-                <div className={cn('text-xs font-medium mb-1', isToday(day) ? 'text-coral' : 'text-gray-700 dark:text-slate-300')}>
+                <div className={cn('text-xs font-medium mb-1', isToday(day) ? 'text-[#4B7C6F]' : 'text-gray-700 dark:text-slate-300')}>
                   {format(day, 'd')}
                 </div>
                 <div className="space-y-0.5">
@@ -124,7 +124,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                       key={task.id}
                       onClick={(e) => { e.stopPropagation(); openTaskDetail(task.id); }}
                       className="text-[10px] px-1.5 py-0.5 rounded truncate cursor-pointer hover:opacity-80"
-                      style={{ backgroundColor: task.project?.color || '#F97316', color: 'white' }}
+                      style={{ backgroundColor: task.project?.color || '#4B7C6F', color: 'white' }}
                     >
                       {task.title}
                     </div>
@@ -144,7 +144,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                       onBlur={handleSubmitNewTask}
                       onClick={(e) => e.stopPropagation()}
                       placeholder="Task name"
-                      className="w-full text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-coral outline-none text-gray-900 dark:text-white"
+                      className="w-full text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-[#4B7C6F] outline-none text-gray-900 dark:text-white"
                     />
                   )}
                 </div>
@@ -166,7 +166,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                 {task.assignee && <p className="text-xs text-gray-500 mt-1">{task.assignee.full_name}</p>}
               </div>
             ))}
-            <button onClick={() => handleCreateOnDate(selectedDate)} className="flex items-center gap-1 mt-2 text-xs text-coral hover:underline">
+            <button onClick={() => handleCreateOnDate(selectedDate)} className="flex items-center gap-1 mt-2 text-xs text-[#4B7C6F] hover:underline">
               <Plus className="w-3 h-3" /> Add task
             </button>
             {selectedTasks.length === 0 && !addingTaskDate && (

@@ -41,7 +41,7 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
           <span className="text-sm font-semibold text-gray-700 dark:text-white">{section.name}</span>
           <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{activeTasks.length}</span>
         </div>
-        <button onClick={handlePlusClick} className="p-1 text-gray-400 hover:text-coral rounded">
+        <button onClick={handlePlusClick} className="p-1 text-gray-400 hover:text-[#4B7C6F] rounded">
           <Plus className="w-4 h-4" />
         </button>
       </div>

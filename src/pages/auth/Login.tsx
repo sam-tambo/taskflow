@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -34,10 +34,10 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-coral rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-[#4B7C6F] rounded-xl flex items-center justify-center">
+              <span className="text-white text-sm font-bold">RP</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">TaskFlow</h1>
+            <h1 className="text-2xl font-bold text-white">Revenue Precision</h1>
           </div>
           <p className="text-slate-400">Welcome back. Sign in to continue.</p>
         </div>
@@ -51,7 +51,7 @@ export default function Login() {
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F] focus:border-transparent"
                 required
               />
             </div>
@@ -63,7 +63,7 @@ export default function Login() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F] focus:border-transparent"
                 required
               />
             </div>
@@ -71,7 +71,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2.5 bg-[#16A34A] hover:bg-[#3d6b5e] text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? 'Please wait...' : 'Sign In'}
               <ArrowRight className="w-4 h-4" />
@@ -80,7 +80,7 @@ export default function Login() {
 
           <div className="mt-6 text-center text-sm text-gray-500">
             Don't have an account?{' '}
-            <Link to="/register" className="text-coral hover:underline font-medium">
+            <Link to="/register" className="text-[#4B7C6F] hover:underline font-medium">
               Sign up
             </Link>
           </div>

@@ -50,7 +50,7 @@ export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-coral hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-[#4B7C6F] hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
         Add task

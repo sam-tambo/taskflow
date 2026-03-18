@@ -66,7 +66,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 function getCapacityHours(): number {
-  const stored = localStorage.getItem('taskflow_capacity_hours');
+  const stored = localStorage.getItem('rp_capacity_hours');
   if (stored) {
     const n = Number(stored);
     if (!isNaN(n) && n > 0) return n;
@@ -77,7 +77,7 @@ function getCapacityHours(): number {
 function hoursStyle(hours: number) {
   if (hours === 0) return 'text-gray-400 dark:text-gray-500';
   if (hours <= 6) return 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400';
-  if (hours <= 8) return 'text-orange-600 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-400';
+  if (hours <= 8) return 'text-[#4B7C6F] bg-[#f0f7f5] dark:bg-orange-900/30 dark:text-orange-400';
   return 'text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400';
 }
 
@@ -298,7 +298,7 @@ function CapacityModal({
 
   function handleSave() {
     const val = Math.max(1, Math.min(24, hours));
-    localStorage.setItem('taskflow_capacity_hours', String(val));
+    localStorage.setItem('rp_capacity_hours', String(val));
     toast.success(`Capacity set to ${val} hours/day`);
     onClose();
   }

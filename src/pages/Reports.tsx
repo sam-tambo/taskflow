@@ -13,7 +13,7 @@ import {
 import { format, subDays, parseISO, startOfDay, eachDayOfInterval } from 'date-fns';
 import type { Task, Profile } from '@/types';
 
-const CHART_COLORS = ['#F97316', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#F59E0B', '#14B8A6', '#EF4444'];
+const CHART_COLORS = ['#4B7C6F', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#F59E0B', '#14B8A6', '#EF4444'];
 
 export default function Reports() {
   usePageTitle('Reports');
@@ -53,7 +53,7 @@ export default function Reports() {
       const proj = t.project;
       if (proj) {
         const key = proj.id;
-        if (!map.has(key)) map.set(key, { name: proj.name, count: 0, color: proj.color || '#F97316' });
+        if (!map.has(key)) map.set(key, { name: proj.name, count: 0, color: proj.color || '#4B7C6F' });
         map.get(key)!.count++;
       }
     });
@@ -121,7 +121,7 @@ export default function Reports() {
         {[
           { label: 'Total Tasks', value: stats.total, icon: BarChart3, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
           { label: 'Completed', value: stats.completed, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
-          { label: 'In Progress', value: stats.inProgress, icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+          { label: 'In Progress', value: stats.inProgress, icon: Clock, color: 'text-[#4B7C6F]', bg: 'bg-[#f0f7f5] dark:bg-orange-900/20' },
           { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/20' },
         ].map(card => (
           <div key={card.label} className={cn('p-4 rounded-xl', card.bg)}>
@@ -138,10 +138,10 @@ export default function Reports() {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Completion Rate</span>
-          <span className="text-sm font-bold text-coral">{stats.completionRate}%</span>
+          <span className="text-sm font-bold text-[#4B7C6F]">{stats.completionRate}%</span>
         </div>
         <div className="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-full">
-          <div className="h-full bg-coral rounded-full transition-all" style={{ width: `${stats.completionRate}%` }} />
+          <div className="h-full bg-[#16A34A] rounded-full transition-all" style={{ width: `${stats.completionRate}%` }} />
         </div>
       </div>
 
@@ -178,7 +178,7 @@ export default function Reports() {
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: axisColor }} interval={Math.max(Math.floor(completedOverTime.length / 6), 1)} />
               <YAxis tick={{ fontSize: 11, fill: axisColor }} allowDecimals={false} />
               <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
-              <Line type="monotone" dataKey="count" stroke="#F97316" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="count" stroke="#4B7C6F" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -194,7 +194,7 @@ export default function Reports() {
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: axisColor }} />
               <YAxis tick={{ fontSize: 11, fill: axisColor }} allowDecimals={false} />
               <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
-              <Bar dataKey="open" name="Open" fill="#F97316" stackId="a" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="open" name="Open" fill="#4B7C6F" stackId="a" radius={[0, 0, 0, 0]} />
               <Bar dataKey="done" name="Done" fill="#10B981" stackId="a" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

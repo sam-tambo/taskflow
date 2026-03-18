@@ -84,7 +84,7 @@ export function CommentThread({ taskId }: CommentThreadProps) {
                 <div className="mt-1">
                   <textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="w-full text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none resize-none" rows={2} autoFocus />
                   <div className="flex gap-2 mt-1">
-                    <button onClick={() => updateComment.mutate({ id: comment.id, body: editText })} className="text-xs text-coral hover:underline">Save</button>
+                    <button onClick={() => updateComment.mutate({ id: comment.id, body: editText })} className="text-xs text-[#4B7C6F] hover:underline">Save</button>
                     <button onClick={() => setEditingId(null)} className="text-xs text-gray-500 hover:underline">Cancel</button>
                   </div>
                 </div>
@@ -117,9 +117,9 @@ export function CommentThread({ taskId }: CommentThreadProps) {
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
             placeholder="Write a comment..."
-            className="flex-1 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-coral/30"
+            className="flex-1 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4B7C6F]/30"
           />
-          <button onClick={handleSubmit} disabled={!newComment.trim()} className="p-2 bg-coral text-white rounded-lg hover:bg-coral-dark disabled:opacity-50">
+          <button onClick={handleSubmit} disabled={!newComment.trim()} className="p-2 bg-[#16A34A] text-white rounded-lg hover:bg-[#3d6b5e] disabled:opacity-50">
             <Send className="w-4 h-4" />
           </button>
         </div>

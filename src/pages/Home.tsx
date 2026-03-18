@@ -35,7 +35,7 @@ export default function Home() {
     });
 
     return [
-      { id: 'today', label: 'Today', icon: Sun, tasks: today, color: 'text-coral' },
+      { id: 'today', label: 'Today', icon: Sun, tasks: today, color: 'text-[#4B7C6F]' },
       { id: 'upcoming', label: 'Upcoming', icon: CalendarClock, tasks: upcoming, color: 'text-blue-500' },
       { id: 'later', label: 'Later', icon: Calendar, tasks: later, color: 'text-gray-500' },
       { id: 'no-date', label: 'No Due Date', icon: CircleDashed, tasks: noDate, color: 'text-gray-400' },

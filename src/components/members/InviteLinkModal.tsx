@@ -71,8 +71,8 @@ export function InviteLinkModal({
       <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-orange-100 dark:bg-orange-950/30 rounded-lg flex items-center justify-center">
-              <Link2 className="w-4 h-4 text-orange-500" />
+            <div className="w-8 h-8 bg-[#f0f7f5] dark:bg-[#4B7C6F]/10 rounded-lg flex items-center justify-center">
+              <Link2 className="w-4 h-4 text-[#4B7C6F]" />
             </div>
             <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">
               Invite link generated
@@ -97,13 +97,13 @@ export function InviteLinkModal({
 
           {loading ? (
             <div className="flex items-center justify-center py-6 gap-3">
-              <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+              <Loader2 className="w-5 h-5 text-[#4B7C6F] animate-spin" />
               <span className="text-sm text-gray-500 dark:text-slate-400">Generating link...</span>
             </div>
           ) : error ? (
             <div className="py-4 text-center space-y-3">
               <p className="text-sm text-red-500">{error}</p>
-              <button onClick={generate} className="text-sm text-orange-500 hover:text-orange-600 underline">
+              <button onClick={generate} className="text-sm text-[#4B7C6F] hover:text-[#4B7C6F] underline">
                 Try again
               </button>
             </div>
@@ -118,18 +118,18 @@ export function InviteLinkModal({
                     readOnly
                     value={link ?? ''}
                     onFocus={e => e.target.select()}
-                    className="w-full px-3 py-2.5 pr-8 text-xs font-mono rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500 truncate"
+                    className="w-full px-3 py-2.5 pr-8 text-xs font-mono rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7C6F] truncate"
                   />
                 </div>
                 <button
                   onClick={copy}
-                  className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 ${copied ? 'bg-green-500 text-white' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 ${copied ? 'bg-green-500 text-white' : 'bg-[#16A34A] text-white hover:bg-[#15803d]'}`}
                 >
                   {copied ? (<><Check className="w-4 h-4" /> Copied!</>) : (<><Copy className="w-4 h-4" /> Copy</>)}
                 </button>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={copy} className="text-xs text-gray-400 dark:text-slate-500 hover:text-orange-500 dark:hover:text-orange-400 transition-colors">
+                <button onClick={copy} className="text-xs text-gray-400 dark:text-slate-500 hover:text-[#4B7C6F] dark:hover:text-[#4B7C6F] transition-colors">
                   Copy to clipboard
                 </button>
               </div>

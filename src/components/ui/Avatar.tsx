@@ -30,7 +30,7 @@ const fontSizeMap: Record<string, string> = {
 };
 
 const colors = [
-  '#F97316', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B',
+  '#4B7C6F', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B',
   '#EF4444', '#EC4899', '#3B82F6', '#84CC16', '#6366F1',
 ];
 

@@ -13,7 +13,7 @@ const FIELD_TYPES: { value: CustomField['field_type']; label: string }[] = [
   { value: 'checkbox', label: 'Checkbox' },
 ];
 
-const OPTION_COLORS = ['#F97316', '#EF4444', '#EC4899', '#8B5CF6', '#3B82F6', '#14B8A6', '#10B981', '#F59E0B'];
+const OPTION_COLORS = ['#4B7C6F', '#EF4444', '#EC4899', '#8B5CF6', '#3B82F6', '#14B8A6', '#10B981', '#F59E0B'];
 
 interface CustomFieldBuilderProps {
   projectId: string;
@@ -62,7 +62,7 @@ export function CustomFieldBuilder({ projectId }: CustomFieldBuilderProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Custom Fields</h3>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-1 text-xs text-coral hover:underline">
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-1 text-xs text-[#4B7C6F] hover:underline">
           <Plus className="w-3.5 h-3.5" /> Add Field
         </button>
       </div>
@@ -125,7 +125,7 @@ export function CustomFieldBuilder({ projectId }: CustomFieldBuilderProps) {
                   placeholder="Option name"
                   className="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded outline-none text-gray-900 dark:text-white"
                 />
-                <button onClick={addOption} className="px-2 py-1 text-xs text-coral hover:bg-coral/10 rounded">
+                <button onClick={addOption} className="px-2 py-1 text-xs text-[#4B7C6F] hover:bg-[#4B7C6F]/10 rounded">
                   Add
                 </button>
               </div>
@@ -136,7 +136,7 @@ export function CustomFieldBuilder({ projectId }: CustomFieldBuilderProps) {
             <button onClick={() => { setShowAdd(false); setNewName(''); setOptions([]); }} className="flex-1 px-3 py-1.5 text-xs text-gray-600 dark:text-slate-400 bg-gray-100 dark:bg-slate-600 rounded-lg">
               Cancel
             </button>
-            <button onClick={handleCreate} disabled={!newName.trim()} className="flex-1 px-3 py-1.5 text-xs text-white bg-coral rounded-lg disabled:opacity-50">
+            <button onClick={handleCreate} disabled={!newName.trim()} className="flex-1 px-3 py-1.5 text-xs text-white bg-[#16A34A] rounded-lg disabled:opacity-50">
               Create
             </button>
           </div>

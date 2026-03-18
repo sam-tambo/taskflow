@@ -35,7 +35,7 @@ export function TaskCard({ task, projectId, isDragging }: TaskCardProps) {
           onClick={handleComplete}
           className={cn(
             'w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
-            task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-coral'
+            task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-[#4B7C6F]'
           )}
         >
           {task.status === 'done' && <Check className="w-2.5 h-2.5 text-white" />}

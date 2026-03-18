@@ -139,7 +139,7 @@ export function QuickAddTaskModal({ open, onClose, projectId }: QuickAddTaskModa
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add details..."
               rows={3}
-              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-coral/30 resize-none text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 resize-none text-gray-900 dark:text-white"
             />
           </div>
 
@@ -150,7 +150,7 @@ export function QuickAddTaskModal({ open, onClose, projectId }: QuickAddTaskModa
             <button
               type="submit"
               disabled={!title.trim() || createTask.isPending}
-              className="flex-1 px-4 py-2 text-sm text-white bg-coral rounded-lg hover:bg-coral-dark disabled:opacity-50"
+              className="flex-1 px-4 py-2 text-sm text-white bg-[#16A34A] rounded-lg hover:bg-[#3d6b5e] disabled:opacity-50"
             >
               {createTask.isPending ? 'Creating...' : 'Create Task'}
             </button>

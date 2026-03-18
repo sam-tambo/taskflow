@@ -69,7 +69,7 @@ export function CustomFieldRenderer({ taskId, field, compact }: CustomFieldRende
         onClick={() => handleChange(checked ? 'false' : 'true')}
         className={cn(
           'w-4 h-4 rounded border-2 flex items-center justify-center transition-colors',
-          checked ? 'bg-coral border-coral' : 'border-gray-300 dark:border-slate-600'
+          checked ? 'bg-[#16A34A] border-[#4B7C6F]' : 'border-gray-300 dark:border-slate-600'
         )}
       >
         {checked && <Check className="w-2.5 h-2.5 text-white" />}

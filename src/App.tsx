@@ -50,7 +50,7 @@ function PrivateRoute({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950">
-        <div className="animate-spin w-8 h-8 border-2 border-coral border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-2 border-[#4B7C6F] border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -63,7 +63,7 @@ function PublicRoute({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="animate-spin w-8 h-8 border-2 border-coral border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-2 border-[#4B7C6F] border-t-transparent rounded-full" />
       </div>
     );
   }

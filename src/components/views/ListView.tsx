@@ -163,7 +163,7 @@ export default function ListView({ projectId, workspaceId }: ListViewProps) {
             />
           </div>
         ) : (
-          <button onClick={() => setIsAddingSection(true)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-coral">
+          <button onClick={() => setIsAddingSection(true)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-[#4B7C6F]">
             <Plus className="w-4 h-4" /> Add section
           </button>
         )}

@@ -11,7 +11,7 @@ interface CreateProjectModalProps {
 }
 
 const PRESET_COLORS = [
-  '#F97316', '#EF4444', '#EC4899', '#8B5CF6',
+  '#4B7C6F', '#EF4444', '#EC4899', '#8B5CF6',
   '#3B82F6', '#14B8A6', '#10B981', '#F59E0B',
 ];
 
@@ -77,7 +77,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Marketing Campaign"
-              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-coral/30 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 text-gray-900 dark:text-white"
               autoFocus
             />
           </div>
@@ -112,7 +112,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
                   key={i}
                   type="button"
                   onClick={() => setIcon(i)}
-                  className={`px-3 py-1.5 text-xs rounded-lg border ${icon === i ? 'border-coral bg-coral/10 text-coral' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+                  className={`px-3 py-1.5 text-xs rounded-lg border ${icon === i ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
                 >
                   {i}
                 </button>
@@ -126,14 +126,14 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
               <button
                 type="button"
                 onClick={() => setPrivacy('workspace')}
-                className={`flex-1 px-3 py-2 text-sm rounded-lg border ${privacy === 'workspace' ? 'border-coral bg-coral/10 text-coral' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400'}`}
+                className={`flex-1 px-3 py-2 text-sm rounded-lg border ${privacy === 'workspace' ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400'}`}
               >
                 Workspace
               </button>
               <button
                 type="button"
                 onClick={() => setPrivacy('private')}
-                className={`flex-1 px-3 py-2 text-sm rounded-lg border ${privacy === 'private' ? 'border-coral bg-coral/10 text-coral' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400'}`}
+                className={`flex-1 px-3 py-2 text-sm rounded-lg border ${privacy === 'private' ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400'}`}
               >
                 Private
               </button>
@@ -147,7 +147,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this project about?"
               rows={2}
-              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-coral/30 resize-none text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 resize-none text-gray-900 dark:text-white"
             />
           </div>
 
@@ -158,7 +158,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
             <button
               type="submit"
               disabled={!name.trim() || createProject.isPending}
-              className="flex-1 px-4 py-2 text-sm text-white bg-coral rounded-lg hover:bg-coral-dark disabled:opacity-50"
+              className="flex-1 px-4 py-2 text-sm text-white bg-[#16A34A] rounded-lg hover:bg-[#3d6b5e] disabled:opacity-50"
             >
               {createProject.isPending ? 'Creating...' : 'Create Project'}
             </button>

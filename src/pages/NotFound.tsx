@@ -13,7 +13,7 @@ export default function NotFound() {
           <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700">
             Go back
           </button>
-          <button onClick={() => navigate('/')} className="px-4 py-2 text-sm font-medium text-white bg-coral rounded-xl hover:bg-coral-dark">
+          <button onClick={() => navigate('/')} className="px-4 py-2 text-sm font-medium text-white bg-[#16A34A] rounded-xl hover:bg-[#3d6b5e]">
             Go to Home
           </button>
         </div>

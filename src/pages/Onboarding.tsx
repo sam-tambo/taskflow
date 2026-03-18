@@ -5,16 +5,16 @@ import { supabase } from '@/lib/supabase';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { toast } from 'sonner';
 import { slugify } from '@/lib/utils';
-import { Building2, Users, FolderKanban, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
+import { Building2, Users, FolderKanban, ArrowRight, ArrowLeft } from 'lucide-react';
 
-const PROJECT_COLORS = ['#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#3B82F6', '#EF4444', '#10B981', '#F59E0B'];
+const PROJECT_COLORS = ['#4B7C6F', '#8B5CF6', '#EC4899', '#14B8A6', '#3B82F6', '#EF4444', '#10B981', '#F59E0B'];
 
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [workspaceName, setWorkspaceName] = useState('');
   const [inviteEmails, setInviteEmails] = useState('');
   const [projectName, setProjectName] = useState('');
-  const [projectColor, setProjectColor] = useState('#F97316');
+  const [projectColor, setProjectColor] = useState('#4B7C6F');
   const [loading, setLoading] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
@@ -121,15 +121,15 @@ export default function Onboarding() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-coral rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-[#4B7C6F] rounded-xl flex items-center justify-center">
+              <span className="text-white text-sm font-bold">RP</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">TaskFlow</h1>
+            <h1 className="text-2xl font-bold text-white">Revenue Precision</h1>
           </div>
           <p className="text-slate-400">Let's set up your workspace</p>
           <div className="flex items-center justify-center gap-2 mt-4">
             {[1, 2, 3, 4].map((s) => (
-              <div key={s} className={`h-2 rounded-full transition-all ${s === step ? 'w-8 bg-coral' : s < step ? 'w-8 bg-coral/50' : 'w-8 bg-slate-700'}`} />
+              <div key={s} className={`h-2 rounded-full transition-all ${s === step ? 'w-8 bg-[#16A34A]' : s < step ? 'w-8 bg-[#4B7C6F]/50' : 'w-8 bg-slate-700'}`} />
             ))}
           </div>
         </div>
@@ -151,13 +151,13 @@ export default function Onboarding() {
                 placeholder="e.g., Acme Corp"
                 value={workspaceName}
                 onChange={(e) => setWorkspaceName(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F]"
                 autoFocus
               />
               <button
                 onClick={() => setStep(2)}
                 disabled={!workspaceName.trim()}
-                className="w-full py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-2.5 bg-[#16A34A] hover:bg-[#3d6b5e] text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 Continue <ArrowRight className="w-4 h-4" />
               </button>
@@ -180,13 +180,13 @@ export default function Onboarding() {
                 value={inviteEmails}
                 onChange={(e) => setInviteEmails(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral resize-none"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F] resize-none"
               />
               <div className="flex gap-3">
                 <button onClick={() => setStep(1)} className="flex-1 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium flex items-center justify-center gap-2">
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
-                <button onClick={() => setStep(3)} className="flex-1 py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2">
+                <button onClick={() => setStep(3)} className="flex-1 py-2.5 bg-[#16A34A] hover:bg-[#3d6b5e] text-white rounded-xl font-medium flex items-center justify-center gap-2">
                   {inviteEmails.trim() ? 'Continue' : 'Skip'} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -209,7 +209,7 @@ export default function Onboarding() {
                 placeholder="e.g., Product Launch"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F]"
                 autoFocus
               />
               <div className="flex gap-2">
@@ -229,7 +229,7 @@ export default function Onboarding() {
                 <button
                   onClick={handleCreateWorkspace}
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-[#16A34A] hover:bg-[#3d6b5e] text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? 'Setting up...' : 'Continue'} <ArrowRight className="w-4 h-4" />
                 </button>
@@ -241,7 +241,7 @@ export default function Onboarding() {
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-purple/10 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-purple" />
+                  <span className="text-purple text-sm font-bold">✓</span>
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add your first task</h2>
@@ -253,7 +253,7 @@ export default function Onboarding() {
                 placeholder="e.g., Review project requirements"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F]"
                 autoFocus
               />
               <div className="flex gap-3">
@@ -263,7 +263,7 @@ export default function Onboarding() {
                 <button
                   onClick={handleFinish}
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-coral hover:bg-coral-dark text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-[#16A34A] hover:bg-[#3d6b5e] text-white rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? 'Setting up...' : 'Get Started!'} <ArrowRight className="w-4 h-4" />
                 </button>
