@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead } from '@/hooks/useNotifications';
 import { useRealtimeNotifications } from '@/hooks/useRealtime';
 import { useUIStore } from '@/stores/useUIStore';
@@ -16,6 +17,7 @@ const notificationIcons: Record<string, typeof Bell> = {
 };
 
 export default function Inbox() {
+  usePageTitle('Inbox');
   const { user } = useAuth();
   const { data: notifications = [], isLoading } = useNotifications(user?.id);
   const markAsRead = useMarkAsRead();

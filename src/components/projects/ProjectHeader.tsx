@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2 } from 'lucide-react';
+import { exportTasksAsCsv } from '@/lib/exportCsv';
+import { exportProjectAsPdf } from '@/lib/exportPdf';
+import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download } from 'lucide-react';
 import type { Project } from '@/types';
 
 interface ProjectHeaderProps {
@@ -19,6 +21,7 @@ const views = [
 
 export function ProjectHeader({ project, currentView, onViewChange }: ProjectHeaderProps) {
   const { data: tasks = [] } = useTasks(project.id);
+  const [showExport, setShowExport] = useState(false);
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'done').length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -74,6 +77,30 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
           <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
             <ArrowUpDown className="w-4 h-4" /> Sort
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowExport(!showExport)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
+            >
+              <Download className="w-4 h-4" /> Export
+            </button>
+            {showExport && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-1 z-20">
+                <button
+                  onClick={() => { exportTasksAsCsv(tasks, project.name); setShowExport(false); }}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  Export as CSV
+                </button>
+                <button
+                  onClick={() => { exportProjectAsPdf(project, tasks); setShowExport(false); }}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  Export as PDF
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

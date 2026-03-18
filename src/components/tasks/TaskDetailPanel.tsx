@@ -75,7 +75,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
   if (isLoading || !task) {
     return (
-      <div className="fixed right-0 top-0 h-screen w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl z-40 flex items-center justify-center">
+      <div className="h-full w-full md:w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-2 border-coral border-t-transparent rounded-full" />
       </div>
     );
@@ -105,7 +105,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   const statusLabels: Record<string, string> = { todo: 'To Do', in_progress: 'In Progress', done: 'Done', cancelled: 'Cancelled' };
 
   return (
-    <div className="fixed right-0 top-0 h-screen w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl z-40 flex flex-col animate-in slide-in-from-right duration-200">
+    <div className="h-full w-full md:w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 dark:border-slate-800">
         <button onClick={handleComplete} className={cn('w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors', task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-coral')}>

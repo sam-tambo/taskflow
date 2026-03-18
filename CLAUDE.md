@@ -1,6 +1,10 @@
-## Git Workflow
-- Always commit directly to main
-- Never create feature branches
-- Never create pull requests
-- After completing each feature, run: git add -A && git commit -m "feat: [description]" && git push origin main
-- Keep commits granular — one per feature
+## Git Workflow Rules
+- After completing each feature, always run these exact commands:
+  git stash -u 2>/dev/null || true
+  git pull origin master
+  git stash pop 2>/dev/null || true
+  git add -A
+  git commit -m "feat: [describe what was built]"
+  git push origin master
+- Never create branches, never open PRs
+- If git pull has conflicts, prefer the local version

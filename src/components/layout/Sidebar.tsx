@@ -6,6 +6,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useNotifications';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
+import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import {
   Home, Inbox, Search, BarChart3, Users, Settings, Plus, ChevronDown, ChevronRight,
   FolderKanban, LogOut, PanelLeftClose, PanelLeft, Sparkles, Hash,
@@ -30,6 +31,7 @@ export default function Sidebar() {
   const [showWorkspaceSwitcher, setShowWorkspaceSwitcher] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showCreateProject, setShowCreateProject] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -130,7 +132,7 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto px-3 space-y-1">
         <div className="flex items-center justify-between mb-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Projects</span>
-          <button onClick={() => navigate('/projects/new')} className="p-1 text-slate-500 hover:text-white rounded">
+          <button onClick={() => setShowCreateProject(true)} className="p-1 text-slate-500 hover:text-white rounded">
             <Plus className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -225,6 +227,7 @@ export default function Sidebar() {
           <span className="text-xs">Collapse</span>
         </button>
       </div>
+      <CreateProjectModal open={showCreateProject} onClose={() => setShowCreateProject(false)} />
     </div>
   );
 }

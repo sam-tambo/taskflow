@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useUIStore } from '@/stores/useUIStore';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils';
 type Tab = 'profile' | 'workspace' | 'appearance';
 
 export default function Settings() {
+  usePageTitle('Settings');
   const { user, profile, updateProfile } = useAuth();
   const { theme, setTheme } = useUIStore();
   const { currentWorkspace } = useWorkspaceStore();

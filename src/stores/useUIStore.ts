@@ -4,12 +4,14 @@ interface UIState {
   sidebarCollapsed: boolean;
   taskDetailId: string | null;
   commandPaletteOpen: boolean;
+  shortcutsModalOpen: boolean;
   theme: 'light' | 'dark' | 'system';
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   openTaskDetail: (taskId: string) => void;
   closeTaskDetail: () => void;
   setCommandPaletteOpen: (open: boolean) => void;
+  setShortcutsModalOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
@@ -27,6 +29,7 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: getInitialSidebarState(),
   taskDetailId: null,
   commandPaletteOpen: false,
+  shortcutsModalOpen: false,
   theme: getInitialTheme(),
   toggleSidebar: () => set((state) => {
     const collapsed = !state.sidebarCollapsed;
@@ -40,6 +43,7 @@ export const useUIStore = create<UIState>((set) => ({
   openTaskDetail: (taskId) => set({ taskDetailId: taskId }),
   closeTaskDetail: () => set({ taskDetailId: null }),
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
+  setShortcutsModalOpen: (open) => set({ shortcutsModalOpen: open }),
   setTheme: (theme) => {
     localStorage.setItem('taskflow-theme', theme);
     const root = document.documentElement;

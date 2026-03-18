@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useGoals, useGoalMilestones, useCreateGoal } from '@/hooks/useGoals';
@@ -247,6 +248,7 @@ function CreateGoalModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function Goals() {
+  usePageTitle('Goals');
   const { currentWorkspace } = useWorkspaceStore();
   const { data: goals = [], isLoading } = useGoals(currentWorkspace?.id);
   const [showCreate, setShowCreate] = useState(false);

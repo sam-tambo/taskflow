@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useParams } from 'react-router-dom';
 import { useProject } from '@/hooks/useProjects';
 import { useProjectStore } from '@/stores/useProjectStore';
@@ -13,6 +14,7 @@ import CalendarView from '@/components/views/CalendarView';
 export default function Project() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: project, isLoading } = useProject(projectId);
+  usePageTitle(project?.name ?? 'Project');
   const { setCurrentProject } = useProjectStore();
   const { currentWorkspace } = useWorkspaceStore();
   const [view, setView] = useState<'list' | 'board' | 'timeline' | 'calendar'>('list');

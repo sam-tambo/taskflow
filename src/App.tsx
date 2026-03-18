@@ -6,10 +6,11 @@ import { supabaseMisconfigured } from '@/lib/supabase';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/useUIStore';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
+import { ShortcutsModal } from '@/components/ShortcutsModal';
 import AppShell from '@/components/layout/AppShell';
 import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
-import { lazy, Suspense, useState, useEffect, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { PageSkeleton } from '@/components/ui/Skeleton';
 
 // Lazy-loaded pages
@@ -29,6 +30,7 @@ const GoalDetail = lazy(() => import('@/pages/GoalDetail'));
 const FormBuilder = lazy(() => import('@/pages/FormBuilder'));
 const PublicForm = lazy(() => import('@/pages/PublicForm'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function ThemeInitializer() {
   const { theme } = useUIStore();
@@ -68,73 +70,6 @@ function PublicRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-function KeyboardShortcuts() {
-  const { setCommandPaletteOpen, toggleSidebar } = useUIStore();
-  const [showShortcuts, setShowShortcuts] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
-      if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
-        setShowShortcuts(s => !s);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
-        e.preventDefault();
-        toggleSidebar();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [toggleSidebar]);
-
-  useEffect(() => {
-    if (!showShortcuts) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowShortcuts(false);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [showShortcuts]);
-
-  if (!showShortcuts) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowShortcuts(false)} />
-      <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6" role="dialog" aria-modal="true">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Keyboard Shortcuts</h2>
-        <div className="space-y-2 text-sm">
-          {[
-            ['Cmd + K', 'Open search'],
-            ['Cmd + \\', 'Toggle sidebar'],
-            ['N', 'New task (in project)'],
-            ['C', 'Complete selected task'],
-            ['Escape', 'Close panel/modal'],
-            ['?', 'Show this help'],
-          ].map(([key, desc]) => (
-            <div key={key} className="flex items-center justify-between">
-              <span className="text-gray-600 dark:text-slate-300">{desc}</span>
-              <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-slate-700 rounded text-gray-700 dark:text-slate-300 font-mono">{key}</kbd>
-            </div>
-          ))}
-        </div>
-        <button onClick={() => setShowShortcuts(false)} className="mt-4 w-full px-4 py-2 text-sm text-gray-600 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600">
-          Close
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function ConfigError() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950 p-8">
@@ -164,8 +99,8 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <ThemeInitializer />
-          <KeyboardShortcuts />
           <CommandPalette />
+          <ShortcutsModal />
           <Toaster position="bottom-right" richColors closeButton />
           <Suspense fallback={<PageSkeleton />}>
             <Routes>
@@ -189,7 +124,7 @@ export default function App() {
                 <Route path="/goals" element={<Goals />} />
                 <Route path="/goals/:id" element={<GoalDetail />} />
               </Route>
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

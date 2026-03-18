@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/lib/supabase';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useProjects } from '@/hooks/useProjects';
@@ -15,6 +16,7 @@ import type { Task, Profile } from '@/types';
 const CHART_COLORS = ['#F97316', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#F59E0B', '#14B8A6', '#EF4444'];
 
 export default function Reports() {
+  usePageTitle('Reports');
   const { currentWorkspace, members } = useWorkspaceStore();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const [dateRange, setDateRange] = useState(30);

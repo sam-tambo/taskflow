@@ -65,6 +65,14 @@ export function useCreateProject(workspaceId?: string) {
         .select()
         .single();
       if (error) throw error;
+      // Add creator as project member
+      if (data.owner_id) {
+        await supabase.from('project_members').insert({
+          project_id: data.id,
+          user_id: data.owner_id,
+          role: 'owner',
+        });
+      }
       // Create default sections
       const defaultSections = ['To Do', 'In Progress', 'Done'];
       for (let i = 0; i < defaultSections.length; i++) {

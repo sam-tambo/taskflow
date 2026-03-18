@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyTasks } from '@/hooks/useTasks';
 import { TaskRow } from '@/components/tasks/TaskRow';
@@ -8,6 +9,7 @@ import { ClipboardList, Sun, CalendarClock, Calendar, CircleDashed } from 'lucid
 import type { Task } from '@/types';
 
 export default function Home() {
+  usePageTitle('My Tasks');
   const { user } = useAuth();
   const { data: tasks = [], isLoading } = useMyTasks(user?.id);
 
