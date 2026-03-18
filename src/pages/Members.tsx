@@ -12,7 +12,7 @@ import type { WorkspaceMember } from '@/types';
 
 export default function Members() {
   usePageTitle('Members');
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { currentWorkspace } = useWorkspaceStore();
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const queryClient = useQueryClient();
@@ -230,16 +230,14 @@ export default function Members() {
         </div>
       )}
 
-      {showInvitePanel && (
-        <InvitePanel
-          workspaceId={currentWorkspace?.id ?? ''}
-          userId={user?.id ?? ''}
-          onClose={() => setShowInvitePanel(false)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['workspace-invites', currentWorkspace?.id] });
-          }}
-        />
-      )}
+      <InvitePanel
+        open={showInvitePanel}
+        onClose={() => setShowInvitePanel(false)}
+        workspaceId={currentWorkspace?.id ?? ''}
+        userId={user?.id ?? ''}
+        workspaceName={currentWorkspace?.name ?? 'Workspace'}
+        inviterName={profile?.full_name ?? user?.email ?? 'Someone'}
+      />
     </div>
   );
 }
