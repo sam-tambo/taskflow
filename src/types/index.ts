@@ -218,6 +218,7 @@ export interface GoalMilestone {
   goal_id: string;
   title: string;
   is_completed: boolean;
+  completed_at: string | null;
   due_date: string | null;
   position: number;
   created_at: string;

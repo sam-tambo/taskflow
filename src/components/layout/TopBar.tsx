@@ -4,7 +4,7 @@ import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useNotifications';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { Bell, Search, Moon, Sun, ChevronRight } from 'lucide-react';
+import { Bell, Search, Moon, Sun, ChevronRight, Menu } from 'lucide-react';
 
 export default function TopBar() {
   const location = useLocation();
@@ -38,6 +38,13 @@ export default function TopBar() {
   return (
     <div className="h-14 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 flex-shrink-0">
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => useUIStore.getState().setSidebarCollapsed(!useUIStore.getState().sidebarCollapsed)}
+          className="md:hidden p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg -ml-2 mr-1"
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
         {breadcrumbs.map((crumb, i) => (
           <div key={i} className="flex items-center gap-2">
             <Link to={crumb.path} className="text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200">

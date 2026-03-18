@@ -8,13 +8,21 @@ import { useUnreadCount } from '@/hooks/useNotifications';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import {
   Home, Inbox, Search, BarChart3, Users, Settings, Plus, ChevronDown, ChevronRight,
-  FolderKanban, LogOut, PanelLeftClose, PanelLeft, Sparkles, Hash
+  FolderKanban, LogOut, PanelLeftClose, PanelLeft, Sparkles, Hash,
+  Target, Zap, LayoutGrid, LineChart
 } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { sidebarCollapsed, toggleSidebar, setCommandPaletteOpen } = useUIStore();
+  const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed, setCommandPaletteOpen } = useUIStore();
+
+  // Auto-close sidebar on mobile when navigating
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setSidebarCollapsed(true);
+    }
+  };
   const { currentWorkspace, workspaces, teams, setCurrentWorkspace } = useWorkspaceStore();
   const { user, profile, signOut } = useAuth();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
@@ -105,6 +113,7 @@ export default function Sidebar() {
           <Link
             key={path}
             to={path}
+            onClick={handleNavClick}
             className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors', isActive(path) ? 'bg-coral/20 text-coral' : 'text-slate-300 hover:bg-slate-800 hover:text-white')}
           >
             <Icon className="w-4 h-4" />
@@ -164,13 +173,25 @@ export default function Sidebar() {
 
       {/* Bottom nav */}
       <div className="px-3 py-2 border-t border-slate-800 space-y-0.5">
-        <Link to="/portfolios" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/portfolios') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
+        <Link onClick={handleNavClick} to="/goals" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/goals') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
+          <Target className="w-4 h-4" /> Goals
+        </Link>
+        <Link onClick={handleNavClick} to="/portfolios" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/portfolios') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
           <BarChart3 className="w-4 h-4" /> Portfolios
         </Link>
-        <Link to="/members" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/members') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
+        <Link onClick={handleNavClick} to="/reports" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/reports') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
+          <LineChart className="w-4 h-4" /> Reports
+        </Link>
+        <Link onClick={handleNavClick} to="/workload" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/workload') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
+          <LayoutGrid className="w-4 h-4" /> Workload
+        </Link>
+        <Link onClick={handleNavClick} to="/automations" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/automations') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
+          <Zap className="w-4 h-4" /> Automations
+        </Link>
+        <Link onClick={handleNavClick} to="/members" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/members') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
           <Users className="w-4 h-4" /> Members
         </Link>
-        <Link to="/settings" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/settings') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
+        <Link onClick={handleNavClick} to="/settings" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/settings') ? 'bg-coral/20 text-coral' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
           <Settings className="w-4 h-4" /> Settings
         </Link>
       </div>

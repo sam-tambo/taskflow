@@ -4,9 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>taskflow</title>
+    <title>TaskFlow</title>
+    <meta name="description" content="TaskFlow — Modern task management for teams" />
+    <meta name="theme-color" content="#F97316" />
   </head>
   <body>
+    <script>
+      (function(){
+        var t = localStorage.getItem('taskflow-theme');
+        var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (t === 'dark' || (!t && d) || (t === 'system' && d)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
