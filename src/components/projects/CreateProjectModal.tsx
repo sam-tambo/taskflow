@@ -51,18 +51,23 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
     // Get workspace ID from store, or fetch directly as fallback
     let workspaceId = currentWorkspace?.id;
     if (!workspaceId) {
-      const { data: membership } = await supabase
+      const { data: membership, error: memErr } = await supabase
         .from('workspace_members')
         .select('workspace_id, workspace:workspaces(*)')
         .eq('user_id', user.id)
         .limit(1)
-        .single();
+        .maybeSingle();
+
+      if (memErr) {
+        console.error('[CreateProject] Fallback workspace query error:', memErr.message);
+      }
 
       if (membership?.workspace_id) {
         workspaceId = membership.workspace_id;
         // Also fix the store for future use
-        if (membership.workspace) {
-          setCurrentWorkspace(membership.workspace as any);
+        const ws = membership.workspace;
+        if (ws) {
+          setCurrentWorkspace(Array.isArray(ws) ? ws[0] : ws);
         }
       }
     }
