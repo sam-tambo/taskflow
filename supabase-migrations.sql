@@ -1032,3 +1032,70 @@ ALTER TABLE public.workspace_invites
 ALTER TABLE public.comments
   ADD COLUMN IF NOT EXISTS visibility text DEFAULT 'all'
   CHECK (visibility IN ('all', 'internal'));
+
+-- =============================================================================
+-- PROJECT MILESTONES
+-- =============================================================================
+
+create table if not exists public.project_milestones (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references public.projects(id) on delete cascade not null,
+  title text not null,
+  description text,
+  due_date date,
+  status text not null default 'pending' check (status in ('pending', 'in_progress', 'completed')),
+  completed_at timestamptz,
+  position integer not null default 0,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_project_milestones_project on public.project_milestones(project_id);
+
+alter table public.project_milestones enable row level security;
+
+drop policy if exists "project_milestones_select" on public.project_milestones;
+create policy "project_milestones_select" on public.project_milestones
+  for select using (
+    exists (
+      select 1 from public.projects p
+      where p.id = project_milestones.project_id
+      and (
+        (p.privacy = 'workspace' and exists (
+          select 1 from public.workspace_members wm where wm.workspace_id = p.workspace_id and wm.user_id = auth.uid()
+        ))
+        or (p.privacy = 'team' and exists (
+          select 1 from public.team_members tm where tm.team_id = p.team_id and tm.user_id = auth.uid()
+        ))
+        or (p.privacy = 'private' and exists (
+          select 1 from public.project_members pm where pm.project_id = p.id and pm.user_id = auth.uid()
+        ))
+      )
+    )
+  );
+
+drop policy if exists "project_milestones_insert" on public.project_milestones;
+create policy "project_milestones_insert" on public.project_milestones
+  for insert with check (
+    exists (
+      select 1 from public.project_members pm
+      where pm.project_id = project_milestones.project_id and pm.user_id = auth.uid() and pm.role in ('owner', 'editor')
+    )
+  );
+
+drop policy if exists "project_milestones_update" on public.project_milestones;
+create policy "project_milestones_update" on public.project_milestones
+  for update using (
+    exists (
+      select 1 from public.project_members pm
+      where pm.project_id = project_milestones.project_id and pm.user_id = auth.uid() and pm.role in ('owner', 'editor')
+    )
+  );
+
+drop policy if exists "project_milestones_delete" on public.project_milestones;
+create policy "project_milestones_delete" on public.project_milestones
+  for delete using (
+    exists (
+      select 1 from public.project_members pm
+      where pm.project_id = project_milestones.project_id and pm.user_id = auth.uid() and pm.role in ('owner', 'editor')
+    )
+  );

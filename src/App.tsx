@@ -32,6 +32,8 @@ const FormBuilder = lazy(() => import('@/pages/FormBuilder'));
 const PublicForm = lazy(() => import('@/pages/PublicForm'));
 const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const GanttChart = lazy(() => import('@/pages/GanttChart'));
+const ClientReport = lazy(() => import('@/pages/ClientReport'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function ThemeInitializer() {
@@ -126,6 +128,8 @@ export default function App() {
                 <Route path="/automations" element={<RoleGuard minRole="admin"><Automations /></RoleGuard>} />
                 <Route path="/goals" element={<Goals />} />
                 <Route path="/goals/:id" element={<GoalDetail />} />
+                <Route path="/gantt" element={<RoleGuard minRole="employee"><GanttChart /></RoleGuard>} />
+                <Route path="/client-report" element={<ClientReport />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

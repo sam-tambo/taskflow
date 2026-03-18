@@ -12,7 +12,7 @@ import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import {
   Home, Inbox, Search, BarChart3, Users, Settings, Plus, ChevronDown, ChevronRight,
   FolderKanban, LogOut, PanelLeftClose, PanelLeft, Hash,
-  Target, Zap, LayoutGrid, LineChart
+  Target, Zap, LayoutGrid, LineChart, GanttChart, FileText
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -192,8 +192,14 @@ export default function Sidebar() {
             <Link onClick={handleNavClick} to="/workload" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/workload') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
               <LayoutGrid className="w-4 h-4" /> Workload
             </Link>
+            <Link onClick={handleNavClick} to="/gantt" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/gantt') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <GanttChart className="w-4 h-4" /> Gantt Chart
+            </Link>
           </>
         )}
+        <Link onClick={handleNavClick} to="/client-report" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/client-report') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+          <FileText className="w-4 h-4" /> Client Report
+        </Link>
         {rbac.isAdmin && (
           <Link onClick={handleNavClick} to="/automations" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/automations') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
             <Zap className="w-4 h-4" /> Automations

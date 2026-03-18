@@ -228,6 +228,19 @@ export interface GoalMilestone {
   created_at: string;
 }
 
+export interface ProjectMilestone {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: 'pending' | 'in_progress' | 'completed';
+  completed_at: string | null;
+  position: number;
+  created_at: string;
+  project?: Project;
+}
+
 export interface FormField {
   id: string;
   type: 'text' | 'textarea' | 'email' | 'select' | 'date' | 'checkbox';
