@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { startOfMonth, endOfMonth, eachDayOfInterval, getDay, format, isSameMonth, isToday, isSameDay, parseISO, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { useTasks, useCreateTask } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +15,9 @@ interface CalendarViewProps {
 export default function CalendarView({ projectId, workspaceId }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [addingTaskDate, setAddingTaskDate] = useState<string | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const addTaskInputRef = useRef<HTMLInputElement>(null);
   const { data: tasks = [] } = useTasks(projectId);
   const { openTaskDetail } = useUIStore();
   const { user } = useAuth();
@@ -40,17 +43,32 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
 
   const selectedTasks = selectedDate ? (tasksByDate.get(format(selectedDate, 'yyyy-MM-dd')) || []) : [];
 
-  const handleCreateOnDate = (date: Date) => {
-    const title = prompt('Task name:');
-    if (title?.trim()) {
-      createTask.mutate({
-        title: title.trim(),
-        project_id: projectId,
-        workspace_id: workspaceId,
-        due_date: format(date, 'yyyy-MM-dd'),
-        created_by: user?.id,
-      });
+  useEffect(() => {
+    if (addingTaskDate && addTaskInputRef.current) {
+      addTaskInputRef.current.focus();
     }
+  }, [addingTaskDate]);
+
+  const handleCreateOnDate = (date: Date) => {
+    setAddingTaskDate(format(date, 'yyyy-MM-dd'));
+    setNewTaskTitle('');
+  };
+
+  const handleSubmitNewTask = () => {
+    if (!newTaskTitle.trim() || !addingTaskDate || !user?.id) {
+      setAddingTaskDate(null);
+      setNewTaskTitle('');
+      return;
+    }
+    createTask.mutate({
+      title: newTaskTitle.trim(),
+      project_id: projectId,
+      workspace_id: workspaceId,
+      due_date: addingTaskDate,
+      created_by: user.id,
+    });
+    setAddingTaskDate(null);
+    setNewTaskTitle('');
   };
 
   return (
@@ -114,6 +132,21 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                   {dayTasks.length > 3 && (
                     <div className="text-[10px] text-gray-500 px-1">+{dayTasks.length - 3} more</div>
                   )}
+                  {addingTaskDate === dateKey && (
+                    <input
+                      ref={addTaskInputRef}
+                      value={newTaskTitle}
+                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSubmitNewTask();
+                        if (e.key === 'Escape') { setAddingTaskDate(null); setNewTaskTitle(''); }
+                      }}
+                      onBlur={handleSubmitNewTask}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder="Task name"
+                      className="w-full text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-coral outline-none text-gray-900 dark:text-white"
+                    />
+                  )}
                 </div>
               </div>
             );
@@ -133,12 +166,12 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                 {task.assignee && <p className="text-xs text-gray-500 mt-1">{task.assignee.full_name}</p>}
               </div>
             ))}
-            {selectedTasks.length === 0 && (
+            <button onClick={() => handleCreateOnDate(selectedDate)} className="flex items-center gap-1 mt-2 text-xs text-coral hover:underline">
+              <Plus className="w-3 h-3" /> Add task
+            </button>
+            {selectedTasks.length === 0 && !addingTaskDate && (
               <div className="text-center py-4">
-                <p className="text-xs text-gray-400">No tasks</p>
-                <button onClick={() => handleCreateOnDate(selectedDate)} className="flex items-center gap-1 mx-auto mt-2 text-xs text-coral hover:underline">
-                  <Plus className="w-3 h-3" /> Add task
-                </button>
+                <p className="text-xs text-gray-400">No tasks on this day</p>
               </div>
             )}
           </div>

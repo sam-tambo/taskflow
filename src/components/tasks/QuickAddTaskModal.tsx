@@ -38,6 +38,10 @@ export function QuickAddTaskModal({ open, onClose, projectId }: QuickAddTaskModa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    if (!currentWorkspace?.id) {
+      toast.error('No workspace selected');
+      return;
+    }
 
     const targetSectionId = sectionId || sections[0]?.id;
     createTask.mutate(

@@ -112,8 +112,11 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
           {task.status === 'done' && <Check className="w-4 h-4 text-white" />}
         </button>
         <div className="flex-1" />
-        <button className="p-1.5 text-gray-400 hover:text-yellow-500 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
-          <Star className="w-4 h-4" />
+        <button
+          onClick={() => updateTask.mutate({ id: task.id, is_favorite: !task.is_favorite })}
+          className={cn('p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800', task.is_favorite ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500')}
+        >
+          <Star className={cn('w-4 h-4', task.is_favorite && 'fill-current')} />
         </button>
         <div className="relative">
           <button onClick={() => setShowActions(!showActions)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">

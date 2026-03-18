@@ -39,7 +39,7 @@ export default function TopBar() {
     <div className="h-14 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-4 flex-shrink-0">
       <div className="flex items-center gap-2">
         <button
-          onClick={() => useUIStore.getState().setSidebarCollapsed(!useUIStore.getState().sidebarCollapsed)}
+          onClick={() => { const s = useUIStore.getState(); s.setSidebarCollapsed(!s.sidebarCollapsed); }}
           className="md:hidden p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg -ml-2 mr-1"
           aria-label="Toggle sidebar"
         >

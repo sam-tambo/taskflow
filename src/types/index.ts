@@ -94,6 +94,7 @@ export interface Task {
   completed_at: string | null;
   position: number;
   is_milestone: boolean;
+  is_favorite: boolean;
   estimated_hours: number | null;
   tags: string[];
   created_at: string;

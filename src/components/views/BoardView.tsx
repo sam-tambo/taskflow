@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -25,7 +25,14 @@ function SortableCard({ task, projectId }: { task: Task; projectId: string }) {
 }
 
 function Column({ section, tasks, projectId, workspaceId }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string }) {
+  const [addTaskTrigger, setAddTaskTrigger] = useState(0);
+  const formRef = useRef<HTMLDivElement>(null);
   const activeTasks = tasks.filter(t => t.status !== 'done');
+
+  const handlePlusClick = () => {
+    setAddTaskTrigger(n => n + 1);
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
 
   return (
     <div className="flex-shrink-0 w-72 flex flex-col bg-gray-50 dark:bg-slate-800/30 rounded-xl max-h-full">
@@ -34,7 +41,7 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
           <span className="text-sm font-semibold text-gray-700 dark:text-white">{section.name}</span>
           <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{activeTasks.length}</span>
         </div>
-        <button className="p-1 text-gray-400 hover:text-coral rounded">
+        <button onClick={handlePlusClick} className="p-1 text-gray-400 hover:text-coral rounded">
           <Plus className="w-4 h-4" />
         </button>
       </div>
@@ -44,7 +51,9 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
             <SortableCard key={task.id} task={task} projectId={projectId} />
           ))}
         </SortableContext>
-        <TaskForm projectId={projectId} sectionId={section.id} workspaceId={workspaceId} position={tasks.length} />
+        <div ref={formRef}>
+          <TaskForm projectId={projectId} sectionId={section.id} workspaceId={workspaceId} position={tasks.length} autoOpen={addTaskTrigger} />
+        </div>
       </div>
     </div>
   );

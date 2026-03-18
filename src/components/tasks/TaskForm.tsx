@@ -8,9 +8,10 @@ interface TaskFormProps {
   sectionId: string;
   workspaceId: string;
   position: number;
+  autoOpen?: number;
 }
 
-export function TaskForm({ projectId, sectionId, workspaceId, position }: TaskFormProps) {
+export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen }: TaskFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,6 +23,12 @@ export function TaskForm({ projectId, sectionId, workspaceId, position }: TaskFo
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (autoOpen && autoOpen > 0) {
+      setIsOpen(true);
+    }
+  }, [autoOpen]);
 
   const handleSubmit = () => {
     if (!title.trim()) {

@@ -1002,3 +1002,7 @@ create policy "Workspace admins and owners can update invites"
 create policy "Anyone can read invite by token"
   on public.workspace_invites for select
   using (true);
+
+-- Add is_favorite column to tasks
+ALTER TABLE public.tasks
+  ADD COLUMN IF NOT EXISTS is_favorite boolean DEFAULT false;

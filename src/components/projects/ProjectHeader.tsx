@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
+import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
 import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download } from 'lucide-react';
 import type { Project } from '@/types';
 
@@ -20,6 +21,7 @@ const views = [
 export function ProjectHeader({ project, currentView, onViewChange }: ProjectHeaderProps) {
   const { data: tasks = [] } = useTasks(project.id);
   const [showExport, setShowExport] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'done').length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -69,8 +71,11 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
-            <Filter className="w-4 h-4" /> Filter
+          <button
+            onClick={() => setShowQuickAdd(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-coral hover:bg-coral/90 rounded-lg font-medium"
+          >
+            <Plus className="w-4 h-4" /> Add Task
           </button>
           <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
             <ArrowUpDown className="w-4 h-4" /> Sort
@@ -101,6 +106,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
           </div>
         </div>
       </div>
+      <QuickAddTaskModal open={showQuickAdd} onClose={() => setShowQuickAdd(false)} projectId={project.id} />
     </div>
   );
 }
