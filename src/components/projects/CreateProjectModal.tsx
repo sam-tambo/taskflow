@@ -4,6 +4,7 @@ import { useCreateProject } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [icon, setIcon] = useState('folder');
   const [privacy, setPrivacy] = useState<'workspace' | 'private'>('workspace');
+  const [error, setError] = useState<string | null>(null);
   const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
   const createProject = useCreateProject(currentWorkspace?.id);
@@ -32,7 +34,24 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !currentWorkspace) return;
+    setError(null);
+
+    if (!name.trim()) {
+      setError('Project name is required.');
+      return;
+    }
+
+    if (!currentWorkspace?.id) {
+      setError('No workspace selected. Please refresh the page.');
+      toast.error('No workspace selected');
+      return;
+    }
+
+    if (!user?.id) {
+      setError('You must be logged in to create a project.');
+      return;
+    }
+
     createProject.mutate(
       {
         name: name.trim(),
@@ -41,19 +60,23 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
         icon,
         privacy,
         workspace_id: currentWorkspace.id,
-        owner_id: user?.id || null,
+        owner_id: user.id,
         status: 'active',
         default_view: 'list',
       },
       {
         onSuccess: (data) => {
-          onClose();
           setName('');
           setDescription('');
           setColor(PRESET_COLORS[0]);
           setIcon('folder');
           setPrivacy('workspace');
+          setError(null);
+          onClose();
           navigate(`/projects/${data.id}`);
+        },
+        onError: (err: Error) => {
+          setError(err.message || 'Failed to create project. Please try again.');
         },
       }
     );
@@ -71,6 +94,11 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-700 dark:text-red-400">
+              {error}
+            </div>
+          )}
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-slate-300 block mb-1">Project name *</label>
             <input
