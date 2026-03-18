@@ -33,8 +33,9 @@ export function useWorkspaceLoader() {
 
       if (workspaces && workspaces.length > 0) {
         setWorkspaces(workspaces);
-        // Set current workspace to first if none selected
-        if (!currentWorkspace || !workspaces.find(w => w.id === currentWorkspace.id)) {
+        // Read current value directly from store to avoid stale closure
+        const current = useWorkspaceStore.getState().currentWorkspace;
+        if (!current || !workspaces.find(w => w.id === current.id)) {
           setCurrentWorkspace(workspaces[0]);
         }
       }

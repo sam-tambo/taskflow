@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -25,14 +26,15 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const [icon, setIcon] = useState('folder');
   const [privacy, setPrivacy] = useState<'workspace' | 'private'>('workspace');
   const [error, setError] = useState<string | null>(null);
-  const { currentWorkspace } = useWorkspaceStore();
+  const [loading, setLoading] = useState(false);
+  const { currentWorkspace, setCurrentWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
   const createProject = useCreateProject(currentWorkspace?.id);
   const navigate = useNavigate();
 
   if (!open) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -41,17 +43,36 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
       return;
     }
 
-    if (!currentWorkspace?.id) {
-      setError('No workspace selected. Please refresh the page.');
-      toast.error('No workspace selected');
-      return;
-    }
-
     if (!user?.id) {
       setError('You must be logged in to create a project.');
       return;
     }
 
+    // Get workspace ID from store, or fetch directly as fallback
+    let workspaceId = currentWorkspace?.id;
+    if (!workspaceId) {
+      const { data: membership } = await supabase
+        .from('workspace_members')
+        .select('workspace_id, workspace:workspaces(*)')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+
+      if (membership?.workspace_id) {
+        workspaceId = membership.workspace_id;
+        // Also fix the store for future use
+        if (membership.workspace) {
+          setCurrentWorkspace(membership.workspace as any);
+        }
+      }
+    }
+
+    if (!workspaceId) {
+      setError('No workspace found. Please create a workspace first or refresh the page.');
+      return;
+    }
+
+    setLoading(true);
     createProject.mutate(
       {
         name: name.trim(),
@@ -59,7 +80,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
         color,
         icon,
         privacy,
-        workspace_id: currentWorkspace.id,
+        workspace_id: workspaceId,
         owner_id: user.id,
         status: 'active',
         default_view: 'list',
@@ -72,11 +93,13 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
           setIcon('folder');
           setPrivacy('workspace');
           setError(null);
+          setLoading(false);
           onClose();
           navigate(`/projects/${data.id}`);
         },
         onError: (err: Error) => {
           setError(err.message || 'Failed to create project. Please try again.');
+          setLoading(false);
         },
       }
     );
@@ -185,10 +208,10 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
             </button>
             <button
               type="submit"
-              disabled={!name.trim() || createProject.isPending}
+              disabled={!name.trim() || loading || createProject.isPending}
               className="flex-1 px-4 py-2 text-sm text-white bg-[#16A34A] rounded-lg hover:bg-[#3d6b5e] disabled:opacity-50"
             >
-              {createProject.isPending ? 'Creating...' : 'Create Project'}
+              {loading || createProject.isPending ? 'Creating...' : 'Create Project'}
             </button>
           </div>
         </form>
