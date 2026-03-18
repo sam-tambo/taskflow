@@ -58,7 +58,7 @@ export function TaskRow({ task, projectId, listeners, attributes, isDragging }: 
         onClick={handleComplete}
         className={cn(
           'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all',
-          task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-coral'
+          task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-[#4B7C6F]'
         )}
       >
         {task.status === 'done' && <Check className="w-3 h-3 text-white" />}

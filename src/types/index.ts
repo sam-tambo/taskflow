@@ -15,11 +15,13 @@ export interface Workspace {
   created_at: string;
 }
 
+export type WorkspaceRole = 'owner' | 'admin' | 'employee' | 'client';
+
 export interface WorkspaceMember {
   id: string;
   workspace_id: string;
   user_id: string;
-  role: 'owner' | 'admin' | 'member' | 'guest';
+  role: WorkspaceRole;
   joined_at: string;
   profiles?: Profile;
 }
@@ -94,6 +96,7 @@ export interface Task {
   completed_at: string | null;
   position: number;
   is_milestone: boolean;
+  is_favorite: boolean;
   estimated_hours: number | null;
   tags: string[];
   created_at: string;
@@ -123,6 +126,7 @@ export interface Comment {
   user_id: string;
   body: string;
   is_edited: boolean;
+  visibility: 'all' | 'internal';
   created_at: string;
   updated_at: string;
   user?: Profile;
@@ -193,4 +197,98 @@ export interface Portfolio {
   owner_id: string;
   created_at: string;
   projects?: Project[];
+}
+
+export interface Goal {
+  id: string;
+  workspace_id: string;
+  title: string;
+  description: string | null;
+  owner_id: string | null;
+  status: 'on_track' | 'at_risk' | 'missed' | 'completed';
+  due_date: string | null;
+  current_value: number;
+  target_value: number;
+  unit: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+  owner?: Profile | null;
+  projects?: Project[];
+}
+
+export interface GoalMilestone {
+  id: string;
+  goal_id: string;
+  title: string;
+  is_completed: boolean;
+  completed_at: string | null;
+  due_date: string | null;
+  position: number;
+  created_at: string;
+}
+
+export interface ProjectMilestone {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: 'pending' | 'in_progress' | 'completed';
+  completed_at: string | null;
+  position: number;
+  created_at: string;
+  project?: Project;
+}
+
+export interface FormField {
+  id: string;
+  type: 'text' | 'textarea' | 'email' | 'select' | 'date' | 'checkbox';
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  options: string[];
+  maps_to: 'title' | 'description' | 'due_date' | 'priority' | 'assignee' | 'tag' | null;
+}
+
+export interface ProjectForm {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  is_public: boolean;
+  slug: string;
+  fields: FormField[];
+  submit_button_text: string;
+  success_message: string;
+  target_section_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FormSubmission {
+  id: string;
+  form_id: string;
+  task_id: string | null;
+  submitted_data: Record<string, any>;
+  submitter_email: string | null;
+  submitted_at: string;
+}
+
+export interface AutomationRule {
+  id: string;
+  workspace_id: string;
+  project_id: string | null;
+  name: string;
+  is_active: boolean;
+  trigger_type: string;
+  trigger_config: Record<string, any>;
+  condition_config: Record<string, any> | null;
+  action_type: string;
+  action_config: Record<string, any>;
+  run_count: number;
+  last_run_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }

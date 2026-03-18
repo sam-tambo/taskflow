@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyTasks } from '@/hooks/useTasks';
 import { TaskRow } from '@/components/tasks/TaskRow';
@@ -8,6 +9,7 @@ import { ClipboardList, Sun, CalendarClock, Calendar, CircleDashed } from 'lucid
 import type { Task } from '@/types';
 
 export default function Home() {
+  usePageTitle('My Tasks');
   const { user } = useAuth();
   const { data: tasks = [], isLoading } = useMyTasks(user?.id);
 
@@ -33,7 +35,7 @@ export default function Home() {
     });
 
     return [
-      { id: 'today', label: 'Today', icon: Sun, tasks: today, color: 'text-coral' },
+      { id: 'today', label: 'Today', icon: Sun, tasks: today, color: 'text-[#4B7C6F]' },
       { id: 'upcoming', label: 'Upcoming', icon: CalendarClock, tasks: upcoming, color: 'text-blue-500' },
       { id: 'later', label: 'Later', icon: Calendar, tasks: later, color: 'text-gray-500' },
       { id: 'no-date', label: 'No Due Date', icon: CircleDashed, tasks: noDate, color: 'text-gray-400' },

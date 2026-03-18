@@ -64,15 +64,26 @@ export function useCreateProject(workspaceId?: string) {
         .insert(project)
         .select()
         .single();
-      if (error) throw error;
-      // Create default sections
+      if (error) throw new Error(error.message);
+      if (!data) throw new Error('Project was not created. Check RLS policies.');
+      // Add creator as project member (non-blocking — don't fail the whole flow)
+      if (data.owner_id) {
+        const { error: memberError } = await supabase.from('project_members').insert({
+          project_id: data.id,
+          user_id: data.owner_id,
+          role: 'owner',
+        });
+        if (memberError) console.warn('Failed to add project member:', memberError.message);
+      }
+      // Create default sections (non-blocking)
       const defaultSections = ['To Do', 'In Progress', 'Done'];
       for (let i = 0; i < defaultSections.length; i++) {
-        await supabase.from('sections').insert({
+        const { error: sectionError } = await supabase.from('sections').insert({
           project_id: data.id,
           name: defaultSections[i],
           position: i,
         });
+        if (sectionError) console.warn('Failed to create section:', sectionError.message);
       }
       return data as Project;
     },
@@ -80,8 +91,8 @@ export function useCreateProject(workspaceId?: string) {
       queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
       toast.success('Project created');
     },
-    onError: () => {
-      toast.error('Failed to create project');
+    onError: (err: Error) => {
+      toast.error(err.message || 'Failed to create project');
     },
   });
 }

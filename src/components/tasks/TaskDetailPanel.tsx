@@ -75,8 +75,8 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
   if (isLoading || !task) {
     return (
-      <div className="fixed right-0 top-0 h-screen w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl z-40 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-coral border-t-transparent rounded-full" />
+      <div className="h-full w-full md:w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-[#4B7C6F] border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -105,15 +105,18 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   const statusLabels: Record<string, string> = { todo: 'To Do', in_progress: 'In Progress', done: 'Done', cancelled: 'Cancelled' };
 
   return (
-    <div className="fixed right-0 top-0 h-screen w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl z-40 flex flex-col animate-in slide-in-from-right duration-200">
+    <div className="h-full w-full md:w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 dark:border-slate-800">
-        <button onClick={handleComplete} className={cn('w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors', task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-coral')}>
+        <button onClick={handleComplete} className={cn('w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors', task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-[#4B7C6F]')}>
           {task.status === 'done' && <Check className="w-4 h-4 text-white" />}
         </button>
         <div className="flex-1" />
-        <button className="p-1.5 text-gray-400 hover:text-yellow-500 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
-          <Star className="w-4 h-4" />
+        <button
+          onClick={() => updateTask.mutate({ id: task.id, is_favorite: !task.is_favorite })}
+          className={cn('p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800', task.is_favorite ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500')}
+        >
+          <Star className={cn('w-4 h-4', task.is_favorite && 'fill-current')} />
         </button>
         <div className="relative">
           <button onClick={() => setShowActions(!showActions)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
@@ -223,7 +226,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
             onBlur={() => { if (description !== (task.description || '')) updateTask.mutate({ id: task.id, description }); }}
             placeholder="Add a description..."
             rows={3}
-            className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-coral/30 resize-none"
+            className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 resize-none"
           />
         </div>
 

@@ -76,7 +76,7 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Attachments ({attachments.length})</span>
-        <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 text-xs text-coral hover:underline">
+        <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 text-xs text-[#4B7C6F] hover:underline">
           <Upload className="w-3 h-3" /> Upload
         </button>
         <input ref={fileInputRef} type="file" className="hidden" multiple onChange={handleFileChange} />
@@ -109,7 +109,7 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
       {attachments.length === 0 && (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg p-4 text-center cursor-pointer hover:border-coral transition-colors"
+          className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg p-4 text-center cursor-pointer hover:border-[#4B7C6F] transition-colors"
         >
           <Paperclip className="w-5 h-5 text-gray-400 mx-auto mb-1" />
           <p className="text-xs text-gray-500">Drop files or click to upload</p>

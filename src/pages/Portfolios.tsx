@@ -43,9 +43,9 @@ export default function Portfolios() {
           <button
             key={id}
             onClick={() => setStatusFilter(id)}
-            className={cn('flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors', statusFilter === id ? 'bg-coral/10 text-coral font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800')}
+            className={cn('flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors', statusFilter === id ? 'bg-[#4B7C6F]/10 text-[#4B7C6F] font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800')}
           >
-            <Icon className={cn('w-4 h-4', statusFilter === id ? 'text-coral' : color)} /> {label}
+            <Icon className={cn('w-4 h-4', statusFilter === id ? 'text-[#4B7C6F]' : color)} /> {label}
           </button>
         ))}
       </div>

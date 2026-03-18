@@ -116,7 +116,7 @@ export function CommandPalette() {
             <button
               key={`${item.type}-${item.id}`}
               onClick={() => handleSelect(item)}
-              className={cn('w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors', index === selectedIndex ? 'bg-coral/10 text-coral' : 'text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700')}
+              className={cn('w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors', index === selectedIndex ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700')}
             >
               <item.icon className="w-4 h-4 flex-shrink-0" />
               <div className="flex-1 min-w-0">

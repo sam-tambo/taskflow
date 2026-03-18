@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead } from '@/hooks/useNotifications';
 import { useRealtimeNotifications } from '@/hooks/useRealtime';
 import { useUIStore } from '@/stores/useUIStore';
@@ -16,6 +17,7 @@ const notificationIcons: Record<string, typeof Bell> = {
 };
 
 export default function Inbox() {
+  usePageTitle('Inbox');
   const { user } = useAuth();
   const { data: notifications = [], isLoading } = useNotifications(user?.id);
   const markAsRead = useMarkAsRead();
@@ -48,7 +50,7 @@ export default function Inbox() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inbox</h1>
         {notifications.some(n => !n.is_read) && (
-          <button onClick={() => markAllAsRead.mutate()} className="flex items-center gap-1.5 text-sm text-coral hover:underline">
+          <button onClick={() => markAllAsRead.mutate()} className="flex items-center gap-1.5 text-sm text-[#4B7C6F] hover:underline">
             <CheckCheck className="w-4 h-4" /> Mark all read
           </button>
         )}
@@ -73,7 +75,7 @@ export default function Inbox() {
               onClick={() => handleClick(n)}
               className={cn(
                 'flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors',
-                n.is_read ? 'hover:bg-gray-50 dark:hover:bg-slate-800/50' : 'bg-coral/5 hover:bg-coral/10'
+                n.is_read ? 'hover:bg-gray-50 dark:hover:bg-slate-800/50' : 'bg-[#4B7C6F]/5 hover:bg-[#4B7C6F]/10'
               )}
             >
               {n.actor ? (
@@ -92,7 +94,7 @@ export default function Inbox() {
                 {n.body && <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 truncate">{n.body}</p>}
                 <p className="text-xs text-gray-400 mt-1">{format(new Date(n.created_at), 'MMM d, h:mm a')}</p>
               </div>
-              {!n.is_read && <div className="w-2 h-2 rounded-full bg-coral flex-shrink-0 mt-2" />}
+              {!n.is_read && <div className="w-2 h-2 rounded-full bg-[#16A34A] flex-shrink-0 mt-2" />}
             </div>
           );
         })}

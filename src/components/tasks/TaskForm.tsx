@@ -8,9 +8,10 @@ interface TaskFormProps {
   sectionId: string;
   workspaceId: string;
   position: number;
+  autoOpen?: number;
 }
 
-export function TaskForm({ projectId, sectionId, workspaceId, position }: TaskFormProps) {
+export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen }: TaskFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,6 +23,12 @@ export function TaskForm({ projectId, sectionId, workspaceId, position }: TaskFo
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (autoOpen && autoOpen > 0) {
+      setIsOpen(true);
+    }
+  }, [autoOpen]);
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -43,7 +50,7 @@ export function TaskForm({ projectId, sectionId, workspaceId, position }: TaskFo
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-coral hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-[#4B7C6F] hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
         Add task

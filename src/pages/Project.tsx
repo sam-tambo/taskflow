@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useParams } from 'react-router-dom';
 import { useProject } from '@/hooks/useProjects';
 import { useProjectStore } from '@/stores/useProjectStore';
@@ -9,10 +10,12 @@ import ListView from '@/components/views/ListView';
 import BoardView from '@/components/views/BoardView';
 import TimelineView from '@/components/views/TimelineView';
 import CalendarView from '@/components/views/CalendarView';
+import { MilestonePanel } from '@/components/projects/MilestonePanel';
 
 export default function Project() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: project, isLoading } = useProject(projectId);
+  usePageTitle(project?.name ?? 'Project');
   const { setCurrentProject } = useProjectStore();
   const { currentWorkspace } = useWorkspaceStore();
   const [view, setView] = useState<'list' | 'board' | 'timeline' | 'calendar'>('list');
@@ -55,11 +58,16 @@ export default function Project() {
   return (
     <div className="h-full flex flex-col">
       <ProjectHeader project={project} currentView={view} onViewChange={setView} />
-      <div className="flex-1 overflow-hidden">
-        {view === 'list' && <ListView projectId={project.id} workspaceId={workspaceId} />}
-        {view === 'board' && <BoardView projectId={project.id} workspaceId={workspaceId} />}
-        {view === 'timeline' && <TimelineView projectId={project.id} workspaceId={workspaceId} />}
-        {view === 'calendar' && <CalendarView projectId={project.id} workspaceId={workspaceId} />}
+      <div className="flex-1 overflow-hidden flex">
+        <div className="flex-1 overflow-hidden">
+          {view === 'list' && <ListView projectId={project.id} workspaceId={workspaceId} />}
+          {view === 'board' && <BoardView projectId={project.id} workspaceId={workspaceId} />}
+          {view === 'timeline' && <TimelineView projectId={project.id} workspaceId={workspaceId} />}
+          {view === 'calendar' && <CalendarView projectId={project.id} workspaceId={workspaceId} />}
+        </div>
+        <div className="w-80 flex-shrink-0 border-l border-gray-200 dark:border-slate-800 overflow-y-auto p-4 hidden lg:block">
+          <MilestonePanel projectId={project.id} />
+        </div>
       </div>
     </div>
   );

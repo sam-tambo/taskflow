@@ -926,3 +926,176 @@ $$ language sql stable;
 alter publication supabase_realtime add table tasks;
 alter publication supabase_realtime add table comments;
 alter publication supabase_realtime add table notifications;
+
+-- Phase 5 migrations
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS theme text DEFAULT 'system',
+  ADD COLUMN IF NOT EXISTS notification_preferences jsonb DEFAULT '{
+    "in_app": {
+      "task_assigned": true,
+      "task_commented": true,
+      "mentioned": true,
+      "task_completed": false,
+      "due_soon": true
+    },
+    "email": {
+      "digest_enabled": true,
+      "digest_frequency": "daily",
+      "task_assigned": false,
+      "mentioned": false,
+      "due_soon": false
+    }
+  }'::jsonb;
+
+ALTER TABLE public.workspaces
+  ADD COLUMN IF NOT EXISTS member_limit integer DEFAULT NULL;
+
+-- ============================================================
+-- 6. WORKSPACE INVITES
+-- ============================================================
+
+create table if not exists public.workspace_invites (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid references public.workspaces(id) on delete cascade not null,
+  email text,
+  role text not null default 'member' check (role in ('admin', 'member', 'guest')),
+  token uuid not null default gen_random_uuid(),
+  invited_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now(),
+  expires_at timestamptz not null default (now() + interval '7 days'),
+  used_at timestamptz,
+  used_by uuid references public.profiles(id) on delete set null
+);
+
+create unique index if not exists idx_workspace_invites_token on public.workspace_invites(token);
+create index if not exists idx_workspace_invites_workspace on public.workspace_invites(workspace_id);
+
+-- RLS policies for workspace_invites
+alter table public.workspace_invites enable row level security;
+
+create policy "Workspace members can view invites"
+  on public.workspace_invites for select
+  using (
+    workspace_id in (
+      select workspace_id from public.workspace_members where user_id = auth.uid()
+    )
+  );
+
+create policy "Workspace admins and owners can create invites"
+  on public.workspace_invites for insert
+  with check (
+    workspace_id in (
+      select workspace_id from public.workspace_members
+      where user_id = auth.uid() and role in ('owner', 'admin')
+    )
+  );
+
+create policy "Workspace admins and owners can update invites"
+  on public.workspace_invites for update
+  using (
+    workspace_id in (
+      select workspace_id from public.workspace_members
+      where user_id = auth.uid() and role in ('owner', 'admin')
+    )
+  );
+
+create policy "Anyone can read invite by token"
+  on public.workspace_invites for select
+  using (true);
+
+-- Add is_favorite column to tasks
+ALTER TABLE public.tasks
+  ADD COLUMN IF NOT EXISTS is_favorite boolean DEFAULT false;
+
+-- =============================================================================
+-- RBAC: Migrate workspace_members roles from (owner/admin/member/guest)
+-- to 3-tier system (owner/admin/employee/client)
+-- =============================================================================
+
+-- Migrate existing data: member → employee, guest → client
+UPDATE public.workspace_members SET role = 'employee' WHERE role = 'member';
+UPDATE public.workspace_members SET role = 'client' WHERE role = 'guest';
+
+-- Update the check constraint
+ALTER TABLE public.workspace_members DROP CONSTRAINT IF EXISTS workspace_members_role_check;
+ALTER TABLE public.workspace_members
+  ADD CONSTRAINT workspace_members_role_check
+  CHECK (role IN ('owner', 'admin', 'employee', 'client'));
+
+-- Update workspace_invites role constraint similarly
+ALTER TABLE public.workspace_invites DROP CONSTRAINT IF EXISTS workspace_invites_role_check;
+ALTER TABLE public.workspace_invites
+  ADD CONSTRAINT workspace_invites_role_check
+  CHECK (role IN ('admin', 'employee', 'client'));
+
+-- Add comment visibility column: 'all' (visible to everyone) or 'internal' (employees/admins only)
+ALTER TABLE public.comments
+  ADD COLUMN IF NOT EXISTS visibility text DEFAULT 'all'
+  CHECK (visibility IN ('all', 'internal'));
+
+-- =============================================================================
+-- PROJECT MILESTONES
+-- =============================================================================
+
+create table if not exists public.project_milestones (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references public.projects(id) on delete cascade not null,
+  title text not null,
+  description text,
+  due_date date,
+  status text not null default 'pending' check (status in ('pending', 'in_progress', 'completed')),
+  completed_at timestamptz,
+  position integer not null default 0,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_project_milestones_project on public.project_milestones(project_id);
+
+alter table public.project_milestones enable row level security;
+
+drop policy if exists "project_milestones_select" on public.project_milestones;
+create policy "project_milestones_select" on public.project_milestones
+  for select using (
+    exists (
+      select 1 from public.projects p
+      where p.id = project_milestones.project_id
+      and (
+        (p.privacy = 'workspace' and exists (
+          select 1 from public.workspace_members wm where wm.workspace_id = p.workspace_id and wm.user_id = auth.uid()
+        ))
+        or (p.privacy = 'team' and exists (
+          select 1 from public.team_members tm where tm.team_id = p.team_id and tm.user_id = auth.uid()
+        ))
+        or (p.privacy = 'private' and exists (
+          select 1 from public.project_members pm where pm.project_id = p.id and pm.user_id = auth.uid()
+        ))
+      )
+    )
+  );
+
+drop policy if exists "project_milestones_insert" on public.project_milestones;
+create policy "project_milestones_insert" on public.project_milestones
+  for insert with check (
+    exists (
+      select 1 from public.project_members pm
+      where pm.project_id = project_milestones.project_id and pm.user_id = auth.uid() and pm.role in ('owner', 'editor')
+    )
+  );
+
+drop policy if exists "project_milestones_update" on public.project_milestones;
+create policy "project_milestones_update" on public.project_milestones
+  for update using (
+    exists (
+      select 1 from public.project_members pm
+      where pm.project_id = project_milestones.project_id and pm.user_id = auth.uid() and pm.role in ('owner', 'editor')
+    )
+  );
+
+drop policy if exists "project_milestones_delete" on public.project_milestones;
+create policy "project_milestones_delete" on public.project_milestones
+  for delete using (
+    exists (
+      select 1 from public.project_members pm
+      where pm.project_id = project_milestones.project_id and pm.user_id = auth.uid() and pm.role in ('owner', 'editor')
+    )
+  );

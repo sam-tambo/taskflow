@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2 } from 'lucide-react';
+import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
+import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download } from 'lucide-react';
 import type { Project } from '@/types';
 
 interface ProjectHeaderProps {
@@ -19,6 +20,8 @@ const views = [
 
 export function ProjectHeader({ project, currentView, onViewChange }: ProjectHeaderProps) {
   const { data: tasks = [] } = useTasks(project.id);
+  const [showExport, setShowExport] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'done').length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -59,7 +62,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
               onClick={() => onViewChange(id)}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors',
-                currentView === id ? 'bg-coral/10 text-coral font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'
+                currentView === id ? 'bg-[#4B7C6F]/10 text-[#4B7C6F] font-medium' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'
               )}
             >
               <Icon className="w-4 h-4" />
@@ -68,14 +71,42 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
-            <Filter className="w-4 h-4" /> Filter
+          <button
+            onClick={() => setShowQuickAdd(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-[#16A34A] hover:bg-[#16A34A]/90 rounded-lg font-medium"
+          >
+            <Plus className="w-4 h-4" /> Add Task
           </button>
           <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
             <ArrowUpDown className="w-4 h-4" /> Sort
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowExport(!showExport)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
+            >
+              <Download className="w-4 h-4" /> Export
+            </button>
+            {showExport && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-1 z-20">
+                <button
+                  onClick={async () => { const { exportTasksAsCsv } = await import('@/lib/exportCsv'); exportTasksAsCsv(tasks, project.name); setShowExport(false); }}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  Export as CSV
+                </button>
+                <button
+                  onClick={async () => { const { exportProjectAsPdf } = await import('@/lib/exportPdf'); exportProjectAsPdf(project, tasks); setShowExport(false); }}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  Export as PDF
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+      <QuickAddTaskModal open={showQuickAdd} onClose={() => setShowQuickAdd(false)} projectId={project.id} />
     </div>
   );
 }

@@ -13,7 +13,7 @@ export function getInitials(name: string | null): string {
 
 export function getAvatarColor(id: string): string {
   const colors = [
-    '#F97316', '#8B5CF6', '#EC4899', '#14B8A6', '#3B82F6',
+    '#4B7C6F', '#8B5CF6', '#EC4899', '#14B8A6', '#3B82F6',
     '#EF4444', '#10B981', '#F59E0B', '#6366F1', '#84CC16',
   ];
   let hash = 0;
@@ -27,7 +27,7 @@ export function getDueDateColor(dateStr: string | null): string {
   if (!dateStr) return 'text-gray-400';
   const date = parseISO(dateStr);
   if (isPast(date) && !isToday(date)) return 'text-red-500';
-  if (isToday(date)) return 'text-orange-500';
+  if (isToday(date)) return 'text-[#4B7C6F]';
   if (isTomorrow(date) || isThisWeek(date)) return 'text-yellow-600';
   return 'text-gray-500';
 }
@@ -43,7 +43,7 @@ export function formatDueDate(dateStr: string | null): string {
 export function getPriorityColor(priority: string): string {
   switch (priority) {
     case 'urgent': return 'text-red-500 bg-red-50';
-    case 'high': return 'text-orange-500 bg-orange-50';
+    case 'high': return 'text-[#4B7C6F] bg-[#f0f7f5]';
     case 'medium': return 'text-yellow-600 bg-yellow-50';
     case 'low': return 'text-blue-500 bg-blue-50';
     default: return 'text-gray-400 bg-gray-50';
