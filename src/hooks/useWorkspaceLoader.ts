@@ -1,27 +1,28 @@
 import { useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { supabase } from '@/lib/supabase';
 
 export function useWorkspaceLoader() {
-  const { user } = useAuth();
   const { setWorkspaces, setCurrentWorkspace, setMembers, setTeams } = useWorkspaceStore();
 
   useEffect(() => {
-    if (!user) {
-      setWorkspaces([]);
-      setCurrentWorkspace(null);
-      setMembers([]);
-      setTeams([]);
-      return;
-    }
-
     async function loadWorkspaces() {
+      // Call supabase.auth.getUser() directly instead of relying on useAuth
+      // which may have null user when the effect runs
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setWorkspaces([]);
+        setCurrentWorkspace(null);
+        setMembers([]);
+        setTeams([]);
+        return;
+      }
+
       // Step 1: Get workspace memberships
       const { data: memberships, error: memErr } = await supabase
         .from('workspace_members')
         .select('workspace_id')
-        .eq('user_id', user!.id);
+        .eq('user_id', user.id);
 
       if (memErr) {
         console.error('[workspace] Error fetching memberships:', memErr.message);
@@ -34,14 +35,14 @@ export function useWorkspaceLoader() {
         const { data: owned } = await supabase
           .from('workspaces')
           .select('id')
-          .eq('owner_id', user!.id);
+          .eq('owner_id', user.id);
 
         if (owned && owned.length > 0) {
           // Repair missing workspace_members rows
           for (const ws of owned) {
             await supabase.from('workspace_members')
               .upsert(
-                { workspace_id: ws.id, user_id: user!.id, role: 'admin' },
+                { workspace_id: ws.id, user_id: user.id, role: 'admin' },
                 { onConflict: 'workspace_id,user_id' }
               );
           }
@@ -51,12 +52,12 @@ export function useWorkspaceLoader() {
 
       // Step 3: If still no workspace, auto-create one
       if (wsIds.length === 0) {
-        const email = user!.email ?? 'user';
+        const email = user.email ?? 'user';
         const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20)
           + '-' + Math.random().toString(36).slice(2, 6);
         const { data: newWs, error: createErr } = await supabase
           .from('workspaces')
-          .insert({ name: 'Revenue Precision', slug, owner_id: user!.id })
+          .insert({ name: 'Revenue Precision', slug, owner_id: user.id })
           .select()
           .single();
 
@@ -67,7 +68,7 @@ export function useWorkspaceLoader() {
 
         if (newWs) {
           await supabase.from('workspace_members')
-            .insert({ workspace_id: newWs.id, user_id: user!.id, role: 'admin' });
+            .insert({ workspace_id: newWs.id, user_id: user.id, role: 'admin' });
           setWorkspaces([newWs]);
           setCurrentWorkspace(newWs);
           return;
@@ -90,7 +91,16 @@ export function useWorkspaceLoader() {
     }
 
     loadWorkspaces();
-  }, [user]);
+
+    // Re-run when auth state changes to SIGNED_IN
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        loadWorkspaces();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Load members and teams when workspace changes
   const currentWorkspace = useWorkspaceStore(s => s.currentWorkspace);
