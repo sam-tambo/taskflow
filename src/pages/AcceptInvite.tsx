@@ -9,7 +9,7 @@ interface InviteData {
   role: string;
   email: string | null;
   expires_at: string;
-  used_at: string | null;
+  accepted_at: string | null;
   workspaces: { id: string; name: string; logo_url: string | null };
 }
 
@@ -33,7 +33,7 @@ export default function AcceptInvite() {
     try {
       const { data, error } = await supabase
         .from('workspace_invites')
-        .select('id, workspace_id, role, email, expires_at, used_at, workspaces!workspace_id(id, name, logo_url)')
+        .select('id, workspace_id, role, email, expires_at, accepted_at, workspaces!workspace_id(id, name, logo_url)')
         .eq('token', token!)
         .single();
 
@@ -41,7 +41,7 @@ export default function AcceptInvite() {
 
       const inviteData = data as unknown as InviteData;
 
-      if (inviteData.used_at) { setState('already_used'); setInvite(inviteData); return; }
+      if (inviteData.accepted_at) { setState('already_used'); setInvite(inviteData); return; }
       if (new Date(inviteData.expires_at) < new Date()) { setState('expired'); setInvite(inviteData); return; }
 
       setInvite(inviteData);
@@ -76,7 +76,7 @@ export default function AcceptInvite() {
 
       await supabase
         .from('workspace_invites')
-        .update({ used_at: new Date().toISOString(), used_by: user.id })
+        .update({ accepted_at: new Date().toISOString(), used_by: user.id })
         .eq('id', invite.id);
 
       setState('success');
