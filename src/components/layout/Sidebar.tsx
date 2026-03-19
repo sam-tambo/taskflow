@@ -12,7 +12,7 @@ import { RoleBadge } from '@/components/ui/RoleBadge';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import {
   Home, Inbox, Search, BarChart3, Users, Settings, Plus, ChevronDown, ChevronRight,
-  FolderKanban, LogOut, PanelLeftClose, PanelLeft, Hash, Star,
+  FolderKanban, LogOut, PanelLeftClose, PanelLeft, Hash, Star, ListTodo,
   Target, Zap, LayoutGrid, LineChart, GanttChart, FileText
 } from 'lucide-react';
 
@@ -64,6 +64,7 @@ export default function Sidebar() {
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home', badge: null },
+    { path: '/my-tasks', icon: ListTodo, label: 'My Tasks', badge: null },
     { path: '/inbox', icon: Inbox, label: 'Inbox', badge: unreadCount > 0 ? unreadCount : null },
     { path: '/favorites', icon: Star, label: 'Favorites', badge: null },
   ];

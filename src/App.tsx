@@ -36,6 +36,7 @@ const GanttChart = lazy(() => import('@/pages/GanttChart'));
 const ClientReport = lazy(() => import('@/pages/ClientReport'));
 const Favorites = lazy(() => import('@/pages/Favorites'));
 const Teams = lazy(() => import('@/pages/Teams'));
+const MyTasks = lazy(() => import('@/pages/MyTasks'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function ThemeInitializer() {
@@ -119,6 +120,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/inbox" element={<Inbox />} />
                 <Route path="/favorites" element={<Favorites />} />
+                <Route path="/my-tasks" element={<MyTasks />} />
                 <Route path="/projects/:projectId" element={<Project />} />
                 <Route path="/projects/:projectId/forms/:formId" element={<FormBuilder />} />
                 <Route path="/search" element={<Search />} />
