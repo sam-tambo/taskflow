@@ -186,6 +186,31 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
         </button>
       </div>
 
+      {/* Move to project dropdown */}
+      {showMoveProject && (
+        <div className="px-4 py-2 border-b border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/50">
+          <p className="text-xs text-gray-500 mb-1">Move to project:</p>
+          <div className="max-h-40 overflow-y-auto space-y-0.5">
+            {allProjects.filter(p => p.id !== task.project_id).map(p => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  updateTask.mutate({ id: task.id, project_id: p.id, section_id: null });
+                  queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                  toast.success(`Moved to ${p.name}`);
+                  setShowMoveProject(false);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-left"
+              >
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                <span className="text-gray-700 dark:text-slate-300">{p.name}</span>
+              </button>
+            ))}
+          </div>
+          <button onClick={() => setShowMoveProject(false)} className="text-xs text-gray-400 hover:text-gray-600 mt-1">Cancel</button>
+        </div>
+      )}
+
       {/* Body - scrollable */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         {/* Title */}
