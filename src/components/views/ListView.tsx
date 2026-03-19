@@ -9,11 +9,13 @@ import { useTasks, useUpdateTask } from '@/hooks/useTasks';
 import { useSections, useCreateSection } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, Plus, Check } from 'lucide-react';
+import { type TaskFilters, applyFilters, DEFAULT_FILTERS } from '@/components/projects/FilterBar';
 import type { Task, Section } from '@/types';
 
 interface ListViewProps {
   projectId: string;
   workspaceId: string;
+  filters?: TaskFilters;
 }
 
 function SortableTaskRow({ task, projectId }: { task: Task; projectId: string }) {
@@ -69,8 +71,9 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
   );
 }
 
-export default function ListView({ projectId, workspaceId }: ListViewProps) {
-  const { data: tasks = [], isLoading } = useTasks(projectId);
+export default function ListView({ projectId, workspaceId, filters = DEFAULT_FILTERS }: ListViewProps) {
+  const { data: rawTasks = [], isLoading } = useTasks(projectId);
+  const tasks = useMemo(() => applyFilters(rawTasks, filters), [rawTasks, filters]);
   const { data: sections = [] } = useSections(projectId);
   const updateTask = useUpdateTask(projectId);
   const createSection = useCreateSection(projectId);

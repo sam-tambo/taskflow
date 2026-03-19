@@ -6,6 +6,7 @@ import { useProjectStore } from '@/stores/useProjectStore';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useRealtimeTasks } from '@/hooks/useRealtime';
 import { ProjectHeader } from '@/components/projects/ProjectHeader';
+import { FilterBar, DEFAULT_FILTERS, type TaskFilters } from '@/components/projects/FilterBar';
 import ListView from '@/components/views/ListView';
 import BoardView from '@/components/views/BoardView';
 import TimelineView from '@/components/views/TimelineView';
@@ -19,6 +20,7 @@ export default function Project() {
   const { setCurrentProject } = useProjectStore();
   const { currentWorkspace } = useWorkspaceStore();
   const [view, setView] = useState<'list' | 'board' | 'timeline' | 'calendar'>('list');
+  const [filters, setFilters] = useState<TaskFilters>(DEFAULT_FILTERS);
 
   useRealtimeTasks(projectId);
 
@@ -58,10 +60,11 @@ export default function Project() {
   return (
     <div className="h-full flex flex-col">
       <ProjectHeader project={project} currentView={view} onViewChange={setView} />
+      <FilterBar filters={filters} onChange={setFilters} />
       <div className="flex-1 overflow-hidden flex">
         <div className="flex-1 overflow-hidden">
-          {view === 'list' && <ListView projectId={project.id} workspaceId={workspaceId} />}
-          {view === 'board' && <BoardView projectId={project.id} workspaceId={workspaceId} />}
+          {view === 'list' && <ListView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
+          {view === 'board' && <BoardView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
           {view === 'timeline' && <TimelineView projectId={project.id} workspaceId={workspaceId} />}
           {view === 'calendar' && <CalendarView projectId={project.id} workspaceId={workspaceId} />}
         </div>

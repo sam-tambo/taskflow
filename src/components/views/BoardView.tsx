@@ -7,11 +7,13 @@ import { TaskForm } from '@/components/tasks/TaskForm';
 import { useTasks, useUpdateTask } from '@/hooks/useTasks';
 import { useSections } from '@/hooks/useProjects';
 import { Plus } from 'lucide-react';
+import { type TaskFilters, applyFilters, DEFAULT_FILTERS } from '@/components/projects/FilterBar';
 import type { Task, Section } from '@/types';
 
 interface BoardViewProps {
   projectId: string;
   workspaceId: string;
+  filters?: TaskFilters;
 }
 
 function SortableCard({ task, projectId }: { task: Task; projectId: string }) {
@@ -59,8 +61,9 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
   );
 }
 
-export default function BoardView({ projectId, workspaceId }: BoardViewProps) {
-  const { data: tasks = [], isLoading } = useTasks(projectId);
+export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FILTERS }: BoardViewProps) {
+  const { data: rawTasks = [], isLoading } = useTasks(projectId);
+  const tasks = useMemo(() => applyFilters(rawTasks, filters), [rawTasks, filters]);
   const { data: sections = [] } = useSections(projectId);
   const updateTask = useUpdateTask(projectId);
 
