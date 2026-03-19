@@ -11,9 +11,10 @@ interface TaskRowProps {
   listeners?: any;
   attributes?: any;
   isDragging?: boolean;
+  showProject?: boolean;
 }
 
-export function TaskRow({ task, projectId, listeners, attributes, isDragging }: TaskRowProps) {
+export function TaskRow({ task, projectId, listeners, attributes, isDragging, showProject }: TaskRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +83,13 @@ export function TaskRow({ task, projectId, listeners, attributes, isDragging }: 
           onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
         >
           {task.title}
+        </span>
+      )}
+
+      {/* Project badge */}
+      {showProject && task.project && (
+        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400 flex-shrink-0 truncate max-w-[120px]" title={task.project.name}>
+          {task.project.name}
         </span>
       )}
 
