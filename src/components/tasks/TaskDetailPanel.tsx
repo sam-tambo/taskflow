@@ -7,6 +7,7 @@ import { useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { cn, formatDueDate, getDueDateColor, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { SubtaskList } from './SubtaskList';
+import { DependencySection } from './DependencySection';
 import { CommentThread } from './CommentThread';
 import { AttachmentList } from './AttachmentList';
 import { format } from 'date-fns';
@@ -288,6 +289,11 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
         {/* Subtasks */}
         <SubtaskList parentTask={task} />
+
+        <hr className="border-gray-100 dark:border-slate-800" />
+
+        {/* Dependencies */}
+        <DependencySection taskId={task.id} projectId={task.project_id} />
 
         <hr className="border-gray-100 dark:border-slate-800" />
 
