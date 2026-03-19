@@ -41,6 +41,8 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [localStartDate, setLocalStartDate] = useState('');
+  const [localEstHours, setLocalEstHours] = useState('');
 
   const { data: task, isLoading } = useQuery({
     queryKey: ['task', taskId],
@@ -80,6 +82,8 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
     if (task) {
       setTitle(task.title);
       setDescription(task.description || '');
+      setLocalStartDate(task.start_date || '');
+      setLocalEstHours(task.estimated_hours != null ? String(task.estimated_hours) : '');
     }
   }, [task]);
 
@@ -319,7 +323,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
           {/* Start date */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Start date</span>
           <div>
-            <input type="date" value={task.start_date || ''} onChange={(e) => updateTask.mutate({ id: task.id, start_date: e.target.value || null })} className="text-sm bg-transparent outline-none text-gray-900 dark:text-white" />
+            <input type="date" value={localStartDate} onChange={(e) => { setLocalStartDate(e.target.value); updateTask.mutate({ id: task.id, start_date: e.target.value || null }); }} className="text-sm bg-transparent outline-none text-gray-900 dark:text-white" />
           </div>
 
           {/* Priority */}
@@ -354,7 +358,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
           {/* Estimated hours */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Est. hours</span>
-          <input type="number" step="0.5" min="0" value={task.estimated_hours || ''} onChange={(e) => updateTask.mutate({ id: task.id, estimated_hours: e.target.value ? parseFloat(e.target.value) : null })} placeholder="—" className="text-sm bg-transparent outline-none text-gray-900 dark:text-white w-20" />
+          <input type="number" step="0.5" min="0" value={localEstHours} onChange={(e) => setLocalEstHours(e.target.value)} onBlur={(e) => updateTask.mutate({ id: task.id, estimated_hours: e.target.value ? parseFloat(e.target.value) : null })} placeholder="—" className="text-sm bg-transparent outline-none text-gray-900 dark:text-white w-20" />
 
           {/* Recurrence */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Repeat</span>
