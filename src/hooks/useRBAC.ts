@@ -8,6 +8,7 @@ export interface RBACPermissions {
   isAdmin: boolean;
   isEmployee: boolean;
   isClient: boolean;
+  isGuest: boolean;
   isOwner: boolean;
   canManageMembers: boolean;
   canManageProjects: boolean;
@@ -22,10 +23,11 @@ export interface RBACPermissions {
 }
 
 const ROLE_HIERARCHY: Record<WorkspaceRole, number> = {
-  owner: 4,
-  admin: 3,
-  employee: 2,
-  client: 1,
+  owner: 5,
+  admin: 4,
+  employee: 3,
+  client: 2,
+  guest: 1,
 };
 
 export function useRBAC(): RBACPermissions {
@@ -40,6 +42,7 @@ export function useRBAC(): RBACPermissions {
     const isAdmin = role === 'admin' || isOwner;
     const isEmployee = role === 'employee' || isAdmin;
     const isClient = role === 'client';
+    const isGuest = role === 'guest';
 
     return {
       role,
@@ -47,6 +50,7 @@ export function useRBAC(): RBACPermissions {
       isAdmin,
       isEmployee,
       isClient,
+      isGuest,
       canManageMembers: isAdmin,
       canManageProjects: isAdmin,
       canCreateTasks: isEmployee,

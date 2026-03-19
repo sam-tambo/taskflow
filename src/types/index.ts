@@ -15,7 +15,7 @@ export interface Workspace {
   created_at: string;
 }
 
-export type WorkspaceRole = 'owner' | 'admin' | 'employee' | 'client';
+export type WorkspaceRole = 'owner' | 'admin' | 'employee' | 'client' | 'guest';
 
 export interface WorkspaceMember {
   id: string;
@@ -62,11 +62,17 @@ export interface Project {
   owner?: Profile;
 }
 
+export type ProjectRole = 'owner' | 'editor' | 'commenter' | 'viewer';
+
 export interface ProjectMember {
   id: string;
   project_id: string;
   user_id: string;
-  role: 'owner' | 'editor' | 'commenter' | 'viewer';
+  role: ProjectRole;
+  status: 'active' | 'pending';
+  invited_by: string | null;
+  invited_email: string | null;
+  notify_on_task_add: boolean;
   profiles?: Profile;
 }
 

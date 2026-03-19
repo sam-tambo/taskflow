@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useNotifications';
+import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { useRBAC } from '@/hooks/useRBAC';
 import { RoleBadge } from '@/components/ui/RoleBadge';
@@ -14,6 +15,21 @@ import {
   FolderKanban, LogOut, PanelLeftClose, PanelLeft, Hash,
   Target, Zap, LayoutGrid, LineChart, GanttChart, FileText
 } from 'lucide-react';
+
+function ProjectAvatars({ projectId }: { projectId: string }) {
+  const { data: members = [] } = useProjectMembers(projectId);
+  const active = members.filter(m => m.status === 'active').slice(0, 3);
+  if (active.length === 0) return null;
+  return (
+    <div className="flex -space-x-1 ml-auto">
+      {active.map((m) => (
+        <div key={m.id} className="w-4.5 h-4.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-white text-[7px] font-medium ring-1 ring-white dark:ring-slate-900" style={{ backgroundColor: getAvatarColor(m.user_id) }} title={m.profiles?.full_name || ''}>
+          {getInitials(m.profiles?.full_name || null)}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Sidebar() {
   const location = useLocation();
@@ -155,7 +171,8 @@ export default function Sidebar() {
                     className={cn('flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors', isActive(`/projects/${project.id}`) ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}
                   >
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: project.color }} />
-                    <span className="truncate">{project.name}</span>
+                    <span className="truncate flex-1">{project.name}</span>
+                    <ProjectAvatars projectId={project.id} />
                   </Link>
                 ))}
               </div>
@@ -171,14 +188,15 @@ export default function Sidebar() {
             className={cn('flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors', isActive(`/projects/${project.id}`) ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}
           >
             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: project.color }} />
-            <span className="truncate">{project.name}</span>
+            <span className="truncate flex-1">{project.name}</span>
+            <ProjectAvatars projectId={project.id} />
           </Link>
         ))}
       </div>
 
       {/* Bottom nav */}
       <div className="px-3 py-2 border-t border-gray-200 dark:border-slate-800 space-y-0.5">
-        {rbac.isEmployee && (
+        {rbac.isEmployee && !rbac.isClient && (
           <>
             <Link onClick={handleNavClick} to="/goals" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/goals') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
               <Target className="w-4 h-4" /> Goals
@@ -210,9 +228,11 @@ export default function Sidebar() {
             <Users className="w-4 h-4" /> Members
           </Link>
         )}
-        <Link onClick={handleNavClick} to="/settings" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/settings') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <Settings className="w-4 h-4" /> Settings
-        </Link>
+        {!rbac.isClient && (
+          <Link onClick={handleNavClick} to="/settings" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/settings') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+            <Settings className="w-4 h-4" /> Settings
+          </Link>
+        )}
       </div>
 
       {/* User */}

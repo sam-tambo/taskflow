@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
+import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
+import { ShareProjectModal } from '@/components/projects/ShareProjectModal';
 import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download } from 'lucide-react';
 import type { Project } from '@/types';
 
@@ -20,8 +22,10 @@ const views = [
 
 export function ProjectHeader({ project, currentView, onViewChange }: ProjectHeaderProps) {
   const { data: tasks = [] } = useTasks(project.id);
+  const { data: projectMembers = [] } = useProjectMembers(project.id);
   const [showExport, setShowExport] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'done').length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -36,11 +40,25 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
           <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{project.name}</h1>
           {project.description && <p className="text-xs text-gray-500 dark:text-slate-400">{project.description}</p>}
         </div>
-        {project.owner && (
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium" style={{ backgroundColor: getAvatarColor(project.owner.id) }} title={project.owner.full_name || ''}>
-            {getInitials(project.owner.full_name)}
-          </div>
-        )}
+        {/* Member avatars */}
+        <div className="flex items-center -space-x-1.5">
+          {projectMembers.filter(m => m.status === 'active').slice(0, 4).map((pm) => (
+            <div key={pm.id} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium ring-2 ring-white dark:ring-slate-900" style={{ backgroundColor: getAvatarColor(pm.user_id) }} title={pm.profiles?.full_name || ''}>
+              {getInitials(pm.profiles?.full_name || null)}
+            </div>
+          ))}
+          {projectMembers.filter(m => m.status === 'active').length > 4 && (
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-medium bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 ring-2 ring-white dark:ring-slate-900">
+              +{projectMembers.filter(m => m.status === 'active').length - 4}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => setShowShare(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
+        >
+          <Share2 className="w-4 h-4" /> Share
+        </button>
       </div>
 
       {/* Progress bar */}
@@ -107,6 +125,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
         </div>
       </div>
       <QuickAddTaskModal open={showQuickAdd} onClose={() => setShowQuickAdd(false)} projectId={project.id} />
+      <ShareProjectModal open={showShare} onClose={() => setShowShare(false)} project={project} />
     </div>
   );
 }
