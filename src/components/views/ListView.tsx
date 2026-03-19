@@ -4,6 +4,7 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { CSS } from '@dnd-kit/utilities';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { TaskForm } from '@/components/tasks/TaskForm';
+import { BulkActionBar } from '@/components/tasks/BulkActionBar';
 import { useTasks, useUpdateTask } from '@/hooks/useTasks';
 import { useSections, useCreateSection } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
@@ -20,7 +21,7 @@ function SortableTaskRow({ task, projectId }: { task: Task; projectId: string })
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
     <div ref={setNodeRef} style={style}>
-      <TaskRow task={task} projectId={projectId} listeners={listeners} attributes={attributes} isDragging={isDragging} />
+      <TaskRow task={task} projectId={projectId} listeners={listeners} attributes={attributes} isDragging={isDragging} selectable />
     </div>
   );
 }
@@ -167,6 +168,7 @@ export default function ListView({ projectId, workspaceId }: ListViewProps) {
             <Plus className="w-4 h-4" /> Add section
           </button>
         )}
+        <BulkActionBar projectId={projectId} />
       </div>
     </DndContext>
   );

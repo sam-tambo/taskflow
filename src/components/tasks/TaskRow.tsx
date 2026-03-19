@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Check, GripVertical, Calendar, Flag, User } from 'lucide-react';
 import { cn, formatDueDate, getDueDateColor, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
+import { useSelectionStore } from '@/stores/useSelectionStore';
 import { useUpdateTask } from '@/hooks/useTasks';
 import type { Task } from '@/types';
 
@@ -12,13 +13,16 @@ interface TaskRowProps {
   attributes?: any;
   isDragging?: boolean;
   showProject?: boolean;
+  selectable?: boolean;
 }
 
-export function TaskRow({ task, projectId, listeners, attributes, isDragging, showProject }: TaskRowProps) {
+export function TaskRow({ task, projectId, listeners, attributes, isDragging, showProject, selectable }: TaskRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const inputRef = useRef<HTMLInputElement>(null);
   const { openTaskDetail } = useUIStore();
+  const { selectedTaskIds, toggle: toggleSelection } = useSelectionStore();
+  const isSelected = selectedTaskIds.has(task.id);
   const updateTask = useUpdateTask(projectId);
 
   const handleComplete = (e: React.MouseEvent) => {
@@ -45,10 +49,22 @@ export function TaskRow({ task, projectId, listeners, attributes, isDragging, sh
       className={cn(
         'group flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors',
         isDragging && 'opacity-50 bg-gray-100 dark:bg-slate-800',
-        task.status === 'done' && 'task-complete-flash'
+        task.status === 'done' && 'task-complete-flash',
+        isSelected && 'bg-[#4B7C6F]/5 dark:bg-[#4B7C6F]/10'
       )}
       onClick={() => openTaskDetail(task.id)}
     >
+      {/* Selection checkbox */}
+      {selectable && (
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => { e.stopPropagation(); toggleSelection(task.id); }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-4 h-4 rounded border-gray-300 text-[#4B7C6F] focus:ring-[#4B7C6F] opacity-0 group-hover:opacity-100 checked:opacity-100"
+        />
+      )}
+
       {/* Drag handle */}
       <div {...listeners} {...attributes} className="opacity-0 group-hover:opacity-100 cursor-grab">
         <GripVertical className="w-4 h-4 text-gray-400" />
