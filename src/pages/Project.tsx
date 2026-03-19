@@ -12,6 +12,7 @@ import BoardView from '@/components/views/BoardView';
 import TimelineView from '@/components/views/TimelineView';
 import CalendarView from '@/components/views/CalendarView';
 import { MilestonePanel } from '@/components/projects/MilestonePanel';
+import { StatusUpdatePanel } from '@/components/projects/StatusUpdatePanel';
 
 export default function Project() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -68,7 +69,8 @@ export default function Project() {
           {view === 'timeline' && <TimelineView projectId={project.id} workspaceId={workspaceId} />}
           {view === 'calendar' && <CalendarView projectId={project.id} workspaceId={workspaceId} />}
         </div>
-        <div className="w-80 flex-shrink-0 border-l border-gray-200 dark:border-slate-800 overflow-y-auto p-4 hidden lg:block">
+        <div className="w-80 flex-shrink-0 border-l border-gray-200 dark:border-slate-800 overflow-y-auto p-4 hidden lg:block space-y-6">
+          <StatusUpdatePanel projectId={project.id} />
           <MilestonePanel projectId={project.id} />
         </div>
       </div>
