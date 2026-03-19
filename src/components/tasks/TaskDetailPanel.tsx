@@ -13,6 +13,7 @@ import { AttachmentList } from './AttachmentList';
 import { TimeTracker } from './TimeTracker';
 import { CustomFieldsSection } from './CustomFieldsSection';
 import { RecurrencePicker } from './RecurrencePicker';
+import { SaveAsTemplateButton } from './TaskTemplates';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { format } from 'date-fns';
 import {
@@ -140,6 +141,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
               <button onClick={() => { updateTask.mutate({ id: task.id, is_milestone: !task.is_milestone }); setShowActions(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                 <Diamond className="w-4 h-4" /> {task.is_milestone ? 'Remove milestone' : 'Mark as milestone'}
               </button>
+              <SaveAsTemplateButton task={task} />
               <hr className="my-1 border-gray-100 dark:border-slate-700" />
               <button onClick={handleDelete} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                 <Trash2 className="w-4 h-4" /> Delete task
