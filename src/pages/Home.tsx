@@ -160,12 +160,15 @@ export default function Home() {
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}
-                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors group"
                 >
                   <div className="w-6 h-6 rounded flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" style={{ backgroundColor: project.color }}>
                     {project.name[0]}
                   </div>
-                  <span className="text-sm text-gray-700 dark:text-slate-300 truncate flex-1">{project.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm text-gray-700 dark:text-slate-300 truncate block">{project.name}</span>
+                    <ProjectProgressBar projectId={project.id} />
+                  </div>
                 </Link>
               ))}
               {projects.length === 0 && <p className="text-xs text-gray-400">No projects yet</p>}
@@ -209,6 +212,33 @@ function StatCard({ icon: Icon, label, value, color, bg }: { icon: any; label: s
       <Icon className={cn('w-5 h-5 mb-2', color)} />
       <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
       <p className="text-xs text-gray-500 dark:text-slate-400">{label}</p>
+    </div>
+  );
+}
+
+function ProjectProgressBar({ projectId }: { projectId: string }) {
+  const { data: projectTasks = [] } = useQuery({
+    queryKey: ['project-tasks-count', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('status')
+        .eq('project_id', projectId)
+        .is('parent_task_id', null);
+      if (error) throw error;
+      return data;
+    },
+  });
+  const total = projectTasks.length;
+  const done = projectTasks.filter(t => t.status === 'done').length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  if (total === 0) return null;
+  return (
+    <div className="flex items-center gap-2 mt-1">
+      <div className="flex-1 h-1 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-[10px] text-gray-400">{pct}%</span>
     </div>
   );
 }

@@ -4,13 +4,14 @@ import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
 import { ShareProjectModal } from '@/components/projects/ShareProjectModal';
-import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal, LayoutDashboard } from 'lucide-react';
+import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal, LayoutDashboard, Archive, Trash2 } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateProject, useSections } from '@/hooks/useProjects';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Project } from '@/types';
 
 interface ProjectHeaderProps {
@@ -39,6 +40,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
   const { data: sections = [] } = useSections(project.id);
   const createProject = useCreateProject(currentWorkspace?.id);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleDuplicate = async () => {
     if (!currentWorkspace?.id || !user?.id) return;
@@ -204,6 +206,34 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
                   className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
                 >
                   <Copy className="w-4 h-4" /> Duplicate project
+                </button>
+                <button
+                  onClick={async () => {
+                    const newStatus = project.status === 'archived' ? 'active' : 'archived';
+                    await supabase.from('projects').update({ status: newStatus }).eq('id', project.id);
+                    queryClient.invalidateQueries({ queryKey: ['projects'] });
+                    queryClient.invalidateQueries({ queryKey: ['project', project.id] });
+                    toast.success(newStatus === 'archived' ? 'Project archived' : 'Project restored');
+                    if (newStatus === 'archived') navigate('/');
+                    setShowMore(false);
+                  }}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  <Archive className="w-4 h-4" /> {project.status === 'archived' ? 'Restore project' : 'Archive project'}
+                </button>
+                <hr className="my-1 border-gray-100 dark:border-slate-700" />
+                <button
+                  onClick={async () => {
+                    if (!confirm('Permanently delete this project and all its tasks? This cannot be undone.')) return;
+                    await supabase.from('projects').delete().eq('id', project.id);
+                    queryClient.invalidateQueries({ queryKey: ['projects'] });
+                    toast.success('Project deleted');
+                    navigate('/');
+                    setShowMore(false);
+                  }}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete project
                 </button>
               </div>
             )}
