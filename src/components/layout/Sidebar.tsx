@@ -6,6 +6,8 @@ import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useNotifications';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { useRBAC } from '@/hooks/useRBAC';
 import { RoleBadge } from '@/components/ui/RoleBadge';
@@ -16,6 +18,34 @@ import {
   FolderKanban, LogOut, PanelLeftClose, PanelLeft, Hash, Star, ListTodo,
   Target, Zap, LayoutGrid, LineChart, GanttChart, FileText
 } from 'lucide-react';
+
+const STATUS_COLORS: Record<string, string> = {
+  on_track: '#22c55e',
+  at_risk: '#f59e0b',
+  off_track: '#ef4444',
+  on_hold: '#6b7280',
+  complete: '#3b82f6',
+};
+
+function ProjectStatusDot({ projectId }: { projectId: string }) {
+  const { data } = useQuery({
+    queryKey: ['project-latest-status', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_status_updates')
+        .select('status')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) return null;
+      return data?.status as string | null;
+    },
+    staleTime: 60000,
+  });
+  if (!data) return null;
+  return <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: STATUS_COLORS[data] || '#6b7280' }} title={data.replace('_', ' ')} />;
+}
 
 function ProjectAvatars({ projectId }: { projectId: string }) {
   const { data: members = [] } = useProjectMembers(projectId);
@@ -181,6 +211,7 @@ export default function Sidebar() {
                   >
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: project.color }} />
                     <span className="truncate flex-1">{project.name}</span>
+                    <ProjectStatusDot projectId={project.id} />
                     <ProjectAvatars projectId={project.id} />
                   </Link>
                 ))}

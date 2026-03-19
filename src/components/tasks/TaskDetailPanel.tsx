@@ -233,8 +233,29 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
           {/* Due date */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Due date</span>
-          <div>
+          <div className="flex items-center gap-1.5 flex-wrap">
             <input type="date" value={task.due_date || ''} onChange={(e) => updateTask.mutate({ id: task.id, due_date: e.target.value || null })} className="text-sm bg-transparent outline-none text-gray-900 dark:text-white" />
+            <div className="flex items-center gap-1">
+              {[
+                { label: 'Today', days: 0 },
+                { label: 'Tomorrow', days: 1 },
+                { label: 'Next week', days: 7 },
+              ].map(({ label, days }) => {
+                const d = new Date();
+                d.setDate(d.getDate() + days);
+                const val = d.toISOString().split('T')[0];
+                return (
+                  <button key={label} onClick={() => updateTask.mutate({ id: task.id, due_date: val })} className={cn('text-[10px] px-1.5 py-0.5 rounded border transition-colors', task.due_date === val ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'border-gray-200 dark:border-slate-700 text-gray-500 hover:border-[#4B7C6F] hover:text-[#4B7C6F]')}>
+                    {label}
+                  </button>
+                );
+              })}
+              {task.due_date && (
+                <button onClick={() => updateTask.mutate({ id: task.id, due_date: null })} className="text-[10px] px-1.5 py-0.5 text-gray-400 hover:text-red-500">
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Start date */}
