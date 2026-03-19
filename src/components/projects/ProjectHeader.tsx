@@ -4,7 +4,7 @@ import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
 import { ShareProjectModal } from '@/components/projects/ShareProjectModal';
-import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal } from 'lucide-react';
+import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal, LayoutDashboard } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateProject, useSections } from '@/hooks/useProjects';
@@ -16,10 +16,11 @@ import type { Project } from '@/types';
 interface ProjectHeaderProps {
   project: Project;
   currentView: string;
-  onViewChange: (view: 'list' | 'board' | 'timeline' | 'calendar') => void;
+  onViewChange: (view: 'overview' | 'list' | 'board' | 'timeline' | 'calendar') => void;
 }
 
 const views = [
+  { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
   { id: 'list' as const, label: 'List', icon: List },
   { id: 'board' as const, label: 'Board', icon: Columns3 },
   { id: 'timeline' as const, label: 'Timeline', icon: GanttChart },

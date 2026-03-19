@@ -11,6 +11,7 @@ import ListView from '@/components/views/ListView';
 import BoardView from '@/components/views/BoardView';
 import TimelineView from '@/components/views/TimelineView';
 import CalendarView from '@/components/views/CalendarView';
+import ProjectOverview from '@/components/projects/ProjectOverview';
 import { MilestonePanel } from '@/components/projects/MilestonePanel';
 import { StatusUpdatePanel } from '@/components/projects/StatusUpdatePanel';
 
@@ -20,7 +21,7 @@ export default function Project() {
   usePageTitle(project?.name ?? 'Project');
   const { setCurrentProject } = useProjectStore();
   const { currentWorkspace } = useWorkspaceStore();
-  const [view, setView] = useState<'list' | 'board' | 'timeline' | 'calendar'>('list');
+  const [view, setView] = useState<'overview' | 'list' | 'board' | 'timeline' | 'calendar'>('list');
   const [filters, setFilters] = useState<TaskFilters>(DEFAULT_FILTERS);
 
   useRealtimeTasks(projectId);
@@ -61,19 +62,27 @@ export default function Project() {
   return (
     <div className="h-full flex flex-col">
       <ProjectHeader project={project} currentView={view} onViewChange={setView} />
-      <FilterBar filters={filters} onChange={setFilters} />
-      <div className="flex-1 overflow-hidden flex">
-        <div className="flex-1 overflow-hidden">
-          {view === 'list' && <ListView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
-          {view === 'board' && <BoardView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
-          {view === 'timeline' && <TimelineView projectId={project.id} workspaceId={workspaceId} />}
-          {view === 'calendar' && <CalendarView projectId={project.id} workspaceId={workspaceId} />}
+      {view === 'overview' ? (
+        <div className="flex-1 overflow-y-auto">
+          <ProjectOverview project={project} />
         </div>
-        <div className="w-80 flex-shrink-0 border-l border-gray-200 dark:border-slate-800 overflow-y-auto p-4 hidden lg:block space-y-6">
-          <StatusUpdatePanel projectId={project.id} />
-          <MilestonePanel projectId={project.id} />
-        </div>
-      </div>
+      ) : (
+        <>
+          <FilterBar filters={filters} onChange={setFilters} />
+          <div className="flex-1 overflow-hidden flex">
+            <div className="flex-1 overflow-hidden">
+              {view === 'list' && <ListView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
+              {view === 'board' && <BoardView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
+              {view === 'timeline' && <TimelineView projectId={project.id} workspaceId={workspaceId} />}
+              {view === 'calendar' && <CalendarView projectId={project.id} workspaceId={workspaceId} />}
+            </div>
+            <div className="w-80 flex-shrink-0 border-l border-gray-200 dark:border-slate-800 overflow-y-auto p-4 hidden lg:block space-y-6">
+              <StatusUpdatePanel projectId={project.id} />
+              <MilestonePanel projectId={project.id} />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
