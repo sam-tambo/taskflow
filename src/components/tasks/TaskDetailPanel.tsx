@@ -11,6 +11,7 @@ import { DependencySection } from './DependencySection';
 import { CommentThread } from './CommentThread';
 import { AttachmentList } from './AttachmentList';
 import { TimeTracker } from './TimeTracker';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { format } from 'date-fns';
 import {
   X, Check, Star, MoreHorizontal, Calendar, Flag, User, Tag, Clock,
@@ -278,13 +279,17 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
         {/* Description */}
         <div>
           <span className="text-xs font-medium text-gray-500 dark:text-slate-400 mb-2 block">Description</span>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onBlur={() => { if (description !== (task.description || '')) updateTask.mutate({ id: task.id, description }); }}
+          <RichTextEditor
+            content={description}
+            onBlur={(html) => {
+              const cleaned = html === '<p></p>' ? '' : html;
+              if (cleaned !== (task.description || '')) {
+                setDescription(cleaned);
+                updateTask.mutate({ id: task.id, description: cleaned });
+              }
+            }}
             placeholder="Add a description..."
-            rows={3}
-            className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 resize-none"
+            members={workspaceMembers.map(m => ({ id: m.user_id, label: m.profiles?.full_name || m.profiles?.email || '' }))}
           />
         </div>
 
