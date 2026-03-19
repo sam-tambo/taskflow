@@ -35,12 +35,32 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState(project.name);
   const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
   const { data: sections = [] } = useSections(project.id);
   const createProject = useCreateProject(currentWorkspace?.id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const handleNameSave = async () => {
+    const trimmed = editName.trim();
+    if (trimmed && trimmed !== project.name) {
+      const { error } = await supabase.from('projects').update({ name: trimmed }).eq('id', project.id);
+      if (!error) {
+        queryClient.invalidateQueries({ queryKey: ['projects'] });
+        queryClient.invalidateQueries({ queryKey: ['project', project.id] });
+        toast.success('Portfolio name updated');
+      } else {
+        toast.error('Failed to update name');
+        setEditName(project.name);
+      }
+    } else {
+      setEditName(project.name);
+    }
+    setIsEditingName(false);
+  };
 
   const handleDuplicate = async () => {
     if (!currentWorkspace?.id || !user?.id) return;
@@ -108,7 +128,24 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
           <span className="text-white text-sm font-bold">{project.name[0]}</span>
         </div>
         <div className="flex-1">
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{project.name}</h1>
+          {isEditingName ? (
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onBlur={handleNameSave}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleNameSave(); if (e.key === 'Escape') { setEditName(project.name); setIsEditingName(false); } }}
+              className="text-lg font-semibold bg-transparent border-b border-[#4B7C6F] outline-none text-gray-900 dark:text-white w-full"
+              autoFocus
+            />
+          ) : (
+            <h1
+              onClick={() => { setEditName(project.name); setIsEditingName(true); }}
+              className="text-lg font-semibold text-gray-900 dark:text-white cursor-text hover:text-[#4B7C6F] transition-colors"
+              title="Click to edit portfolio name"
+            >
+              {project.name}
+            </h1>
+          )}
           {project.description && <p className="text-xs text-gray-500 dark:text-slate-400">{project.description}</p>}
         </div>
         {/* Member avatars */}
