@@ -10,6 +10,7 @@ import { SubtaskList } from './SubtaskList';
 import { DependencySection } from './DependencySection';
 import { CommentThread } from './CommentThread';
 import { AttachmentList } from './AttachmentList';
+import { TimeTracker } from './TimeTracker';
 import { format } from 'date-fns';
 import {
   X, Check, Star, MoreHorizontal, Calendar, Flag, User, Tag, Clock,
@@ -299,6 +300,11 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
         {/* Comments */}
         <CommentThread taskId={taskId} />
+
+        <hr className="border-gray-100 dark:border-slate-800" />
+
+        {/* Time Tracking */}
+        <TimeTracker taskId={taskId} />
 
         <hr className="border-gray-100 dark:border-slate-800" />
 
