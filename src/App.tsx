@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/useUIStore';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
 import { ShortcutsModal } from '@/components/ShortcutsModal';
+import { GlobalQuickAdd } from '@/components/tasks/GlobalQuickAdd';
 import AppShell from '@/components/layout/AppShell';
 import { RoleGuard } from '@/components/ui/RoleGuard';
 import Login from '@/pages/auth/Login';
@@ -108,6 +109,7 @@ export default function App() {
           <ThemeInitializer />
           <CommandPalette />
           <ShortcutsModal />
+          <GlobalQuickAdd />
           <Toaster position="bottom-right" richColors closeButton />
           <Suspense fallback={<PageSkeleton />}>
             <Routes>

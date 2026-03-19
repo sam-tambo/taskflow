@@ -17,6 +17,7 @@ const shortcuts = [
     { keys: '/', desc: 'Focus search' },
   ]},
   { category: 'Tasks', items: [
+    { keys: 'Q', desc: 'Quick add task' },
     { keys: 'Enter', desc: 'Open selected task' },
     { keys: 'Esc', desc: 'Close task panel' },
     { keys: '⌘ Enter', desc: 'Mark task complete' },
