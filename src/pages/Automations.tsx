@@ -194,8 +194,8 @@ export default function Automations() {
               <Zap className="w-6 h-6 text-amber-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Automations</h1>
-              <p className="text-sm text-zinc-400">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Automations</h1>
+              <p className="text-sm text-gray-500 dark:text-zinc-400">
                 Automate repetitive tasks with rules
               </p>
             </div>
