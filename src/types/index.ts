@@ -85,6 +85,15 @@ export interface Section {
   created_at: string;
 }
 
+export type RecurrencePattern = {
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  interval: number;
+  days_of_week?: number[]; // 0=Sun, 1=Mon, ...
+  day_of_month?: number;
+  end_date?: string;
+  end_after_count?: number;
+};
+
 export interface Task {
   id: string;
   workspace_id: string;
@@ -104,6 +113,7 @@ export interface Task {
   is_milestone: boolean;
   is_favorite: boolean;
   estimated_hours: number | null;
+  recurrence: RecurrencePattern | null;
   tags: string[];
   created_at: string;
   updated_at: string;

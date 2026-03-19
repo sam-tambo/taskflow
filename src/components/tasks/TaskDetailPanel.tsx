@@ -12,6 +12,7 @@ import { CommentThread } from './CommentThread';
 import { AttachmentList } from './AttachmentList';
 import { TimeTracker } from './TimeTracker';
 import { CustomFieldsSection } from './CustomFieldsSection';
+import { RecurrencePicker } from './RecurrencePicker';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { format } from 'date-fns';
 import {
@@ -275,6 +276,13 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
           {/* Estimated hours */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Est. hours</span>
           <input type="number" step="0.5" min="0" value={task.estimated_hours || ''} onChange={(e) => updateTask.mutate({ id: task.id, estimated_hours: e.target.value ? parseFloat(e.target.value) : null })} placeholder="—" className="text-sm bg-transparent outline-none text-gray-900 dark:text-white w-20" />
+
+          {/* Recurrence */}
+          <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Repeat</span>
+          <RecurrencePicker
+            value={task.recurrence || null}
+            onChange={(recurrence) => updateTask.mutate({ id: task.id, recurrence })}
+          />
         </div>
 
         {/* Custom Fields */}
