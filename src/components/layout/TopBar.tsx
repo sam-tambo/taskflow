@@ -17,7 +17,7 @@ export default function TopBar() {
     const parts = location.pathname.split('/').filter(Boolean);
     const crumbs: { label: string; path: string }[] = [];
     if (parts[0] === 'projects' && parts[1]) {
-      crumbs.push({ label: 'Projects', path: '/projects' });
+      crumbs.push({ label: 'Portfolios', path: '/portfolios' });
     }
     return crumbs;
   };
