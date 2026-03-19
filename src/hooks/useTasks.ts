@@ -191,9 +191,11 @@ export function useUpdateTask(projectId?: string) {
       }
       toast.error('Failed to update task');
     },
-    onSettled: () => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['favorite-tasks'] });
     },
   });
 }
