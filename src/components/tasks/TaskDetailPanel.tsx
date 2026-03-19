@@ -19,8 +19,9 @@ import { TagEditor } from './TagEditor';
 import { format } from 'date-fns';
 import {
   X, Check, Star, MoreHorizontal, Calendar, Flag, User, Tag, Clock,
-  ChevronDown, Copy, Trash2, ArrowUpRight, Diamond, Search
+  ChevronDown, Copy, Trash2, ArrowUpRight, Diamond, Search, FolderOpen, CopyPlus
 } from 'lucide-react';
+import { useProjects } from '@/hooks/useProjects';
 import type { Task, ActivityLog } from '@/types';
 import { toast } from 'sonner';
 
@@ -32,7 +33,10 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   const { closeTaskDetail } = useUIStore();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { currentWorkspace } = useWorkspaceStore();
+  const { data: allProjects = [] } = useProjects(currentWorkspace?.id);
   const [showActions, setShowActions] = useState(false);
+  const [showMoveProject, setShowMoveProject] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -143,6 +147,33 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
                 <Diamond className="w-4 h-4" /> {task.is_milestone ? 'Remove milestone' : 'Mark as milestone'}
               </button>
               <SaveAsTemplateButton task={task} />
+              <button onClick={() => { setShowMoveProject(true); setShowActions(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
+                <FolderOpen className="w-4 h-4" /> Move to project
+              </button>
+              <button
+                onClick={async () => {
+                  const { data: newTask } = await supabase.from('tasks').insert({
+                    workspace_id: task.workspace_id,
+                    project_id: task.project_id,
+                    section_id: task.section_id,
+                    title: `${task.title} (copy)`,
+                    description: task.description,
+                    priority: task.priority,
+                    tags: task.tags,
+                    estimated_hours: task.estimated_hours,
+                    position: task.position + 1,
+                    created_by: user?.id,
+                  }).select().single();
+                  if (newTask) {
+                    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                    toast.success('Task duplicated');
+                  }
+                  setShowActions(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+              >
+                <CopyPlus className="w-4 h-4" /> Duplicate task
+              </button>
               <hr className="my-1 border-gray-100 dark:border-slate-700" />
               <button onClick={handleDelete} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                 <Trash2 className="w-4 h-4" /> Delete task

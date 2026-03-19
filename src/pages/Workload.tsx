@@ -48,7 +48,7 @@ interface WorkspaceMember {
   id: string;
   workspace_id: string;
   user_id: string;
-  role: 'owner' | 'admin' | 'employee' | 'client';
+  role: 'owner' | 'admin' | 'employee' | 'client' | 'guest';
   joined_at: string;
   profiles?: Profile;
 }

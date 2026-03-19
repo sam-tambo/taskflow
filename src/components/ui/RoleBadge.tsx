@@ -13,6 +13,7 @@ const roleConfig: Record<WorkspaceRole, { label: string; color: string; bg: stri
   admin: { label: 'Admin', color: 'text-[#4B7C6F]', bg: 'bg-[#4B7C6F]/10', icon: Shield },
   employee: { label: 'Employee', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', icon: Briefcase },
   client: { label: 'Client', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', icon: Eye },
+  guest: { label: 'Guest', color: 'text-gray-500 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800', icon: Eye },
 };
 
 export function RoleBadge({ role, size = 'sm', className }: RoleBadgeProps) {

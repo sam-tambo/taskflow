@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -61,7 +61,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
             !minimal && 'min-h-[80px]',
           ),
         },
-        handleKeyDown: (_view, event) => {
+        handleKeyDown: (_view: any, event: KeyboardEvent) => {
           if (event.key === 'Enter' && !event.shiftKey && minimal && onSubmit) {
             event.preventDefault();
             const html = editor?.getHTML() || '';
@@ -73,10 +73,10 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
           return false;
         },
       },
-      onUpdate: ({ editor }) => {
+      onUpdate: ({ editor }: { editor: any }) => {
         onChange?.(editor.getHTML());
       },
-      onBlur: ({ editor }) => {
+      onBlur: ({ editor }: { editor: any }) => {
         onBlur?.(editor.getHTML());
       },
     });
@@ -90,7 +90,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
     // Sync content from outside
     useEffect(() => {
       if (editor && content !== editor.getHTML()) {
-        editor.commands.setContent(content, false);
+        editor.commands.setContent(content, { emitUpdate: false });
       }
     }, [content, editor]);
 
@@ -121,25 +121,19 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
     return (
       <div className={cn('rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden', className)}>
-        {/* Bubble menu for inline formatting */}
-        {editable && (
-          <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex gap-0.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg p-1">
+        {/* Minimal inline toolbar */}
+        {editable && minimal && (
+          <div className="flex items-center gap-0.5 px-2 py-1 border-b border-gray-100 dark:border-slate-700">
             <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="Bold">
               <Bold className="w-3.5 h-3.5" />
             </ToolbarButton>
             <ToolbarButton active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} title="Italic">
               <Italic className="w-3.5 h-3.5" />
             </ToolbarButton>
-            <ToolbarButton active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough">
-              <Strikethrough className="w-3.5 h-3.5" />
-            </ToolbarButton>
-            <ToolbarButton active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()} title="Code">
-              <Code className="w-3.5 h-3.5" />
-            </ToolbarButton>
             <ToolbarButton active={editor.isActive('link')} onClick={addLink} title="Link">
               <LinkIcon className="w-3.5 h-3.5" />
             </ToolbarButton>
-          </BubbleMenu>
+          </div>
         )}
 
         {/* Static toolbar for full editor */}

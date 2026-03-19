@@ -16,7 +16,7 @@ interface ShareProjectModalProps {
 }
 
 const ROLE_OPTIONS: { value: ProjectRole; label: string; description: string }[] = [
-  { value: 'admin', label: 'Admin', description: 'Can manage members and all project settings' },
+  { value: 'owner', label: 'Admin', description: 'Can manage members and all project settings' },
   { value: 'editor', label: 'Editor', description: 'Can add and edit tasks' },
   { value: 'commenter', label: 'Commenter', description: 'Can comment on tasks only' },
   { value: 'viewer', label: 'Viewer', description: 'Can view tasks only' },
