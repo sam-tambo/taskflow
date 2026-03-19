@@ -450,7 +450,7 @@ function RuleBuilderModal({
         project_id: editingRule.project_id,
       };
     }
-    return { ...defaultForm };
+    return { ...defaultForm, name: 'New Automation' };
   });
 
   const saveMutation = useMutation({
@@ -492,7 +492,7 @@ function RuleBuilderModal({
   const canAdvance = () => {
     if (step === 0) return !!form.trigger_type;
     if (step === 1) return true; // conditions are optional
-    if (step === 2) return !!form.action_type && !!form.name.trim();
+    if (step === 2) return !!form.action_type;
     return false;
   };
 

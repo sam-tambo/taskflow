@@ -198,7 +198,7 @@ export default function ListView({ projectId, workspaceId, filters = DEFAULT_FIL
         ))}
 
         {/* Unsectioned tasks */}
-        {(tasksBySection.get('no-section') || []).length > 0 && (
+        {(sections.length === 0 || (tasksBySection.get('no-section') || []).length > 0) && (
           <SectionGroup
             section={{ id: 'no-section', project_id: projectId, name: 'No Section', position: -1, color: null, created_at: '' }}
             tasks={tasksBySection.get('no-section') || []}
