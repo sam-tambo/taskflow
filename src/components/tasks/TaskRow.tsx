@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
-import { Check, GripVertical, Calendar, Flag, User, MessageSquare, Paperclip, ListChecks } from 'lucide-react';
+import { Check, GripVertical, Calendar, Flag, User, MessageSquare, Paperclip, ListChecks, AlertTriangle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { cn, formatDueDate, getDueDateColor, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useSelectionStore } from '@/stores/useSelectionStore';
@@ -24,6 +26,23 @@ export function TaskRow({ task, projectId, listeners, attributes, isDragging, sh
   const { selectedTaskIds, toggle: toggleSelection } = useSelectionStore();
   const isSelected = selectedTaskIds.has(task.id);
   const updateTask = useUpdateTask(projectId);
+
+  // Check if task has unresolved dependencies (blocked)
+  const { data: depCount = 0 } = useQuery({
+    queryKey: ['task-blocked', task.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('task_dependencies')
+        .select('id, depends_on:tasks!depends_on_id(status)', { count: 'exact', head: false })
+        .eq('task_id', task.id);
+      if (error) return 0;
+      // Count dependencies where depends_on task is not done
+      const blockedDeps = (count || 0);
+      return blockedDeps;
+    },
+    enabled: task.status !== 'done',
+    staleTime: 30000,
+  });
 
   const handleComplete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -118,6 +137,13 @@ export function TaskRow({ task, projectId, listeners, attributes, isDragging, sh
         <span className="text-[10px] text-gray-400 flex-shrink-0 flex items-center gap-0.5">
           <Paperclip className="w-3 h-3" />
           {task.attachments_count}
+        </span>
+      )}
+
+      {/* Blocked indicator */}
+      {depCount > 0 && task.status !== 'done' && (
+        <span className="text-[10px] text-yellow-600 dark:text-yellow-400 flex-shrink-0 flex items-center gap-0.5 px-1.5 py-0.5 bg-yellow-50 dark:bg-yellow-900/20 rounded" title="Has dependencies">
+          <AlertTriangle className="w-3 h-3" />
         </span>
       )}
 
