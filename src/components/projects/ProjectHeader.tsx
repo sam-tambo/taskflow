@@ -40,37 +40,60 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
   const createProject = useCreateProject(currentWorkspace?.id);
   const navigate = useNavigate();
 
-  const handleDuplicate = () => {
+  const handleDuplicate = async () => {
     if (!currentWorkspace?.id || !user?.id) return;
-    createProject.mutate(
-      {
-        name: `${project.name} (copy)`,
-        description: project.description,
-        color: project.color,
-        icon: project.icon,
-        privacy: project.privacy,
-        workspace_id: currentWorkspace.id,
-        owner_id: user.id,
-        status: 'active',
-        default_view: project.default_view,
-      },
-      {
-        onSuccess: async (data) => {
-          // Duplicate sections
-          for (let i = 0; i < sections.length; i++) {
-            await supabase.from('sections').insert({
-              project_id: data.id,
-              name: sections[i].name,
-              position: sections[i].position,
-              color: sections[i].color,
-            });
-          }
-          toast.success('Project duplicated');
-          navigate(`/projects/${data.id}`);
-          setShowMore(false);
-        },
+    try {
+      const { data: newProject, error: projErr } = await supabase
+        .from('projects')
+        .insert({
+          name: `${project.name} (copy)`,
+          description: project.description,
+          color: project.color,
+          icon: project.icon,
+          privacy: project.privacy,
+          workspace_id: currentWorkspace.id,
+          owner_id: user.id,
+          status: 'active' as const,
+          default_view: project.default_view,
+        })
+        .select()
+        .single();
+      if (projErr || !newProject) throw projErr;
+
+      // Duplicate sections and map old->new IDs
+      const sectionMap = new Map<string, string>();
+      for (const s of sections) {
+        const { data: newSection } = await supabase
+          .from('sections')
+          .insert({ project_id: newProject.id, name: s.name, position: s.position, color: s.color })
+          .select()
+          .single();
+        if (newSection) sectionMap.set(s.id, newSection.id);
       }
-    );
+
+      // Duplicate tasks (top-level only)
+      for (const t of tasks) {
+        await supabase.from('tasks').insert({
+          workspace_id: currentWorkspace.id,
+          project_id: newProject.id,
+          section_id: t.section_id ? sectionMap.get(t.section_id) || null : null,
+          title: t.title,
+          description: t.description,
+          status: t.status,
+          priority: t.priority,
+          position: t.position,
+          tags: t.tags,
+          estimated_hours: t.estimated_hours,
+          created_by: user.id,
+        });
+      }
+
+      toast.success('Project duplicated with tasks');
+      navigate(`/projects/${newProject.id}`);
+      setShowMore(false);
+    } catch {
+      toast.error('Failed to duplicate project');
+    }
   };
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'done').length;
@@ -167,9 +190,6 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
                 </button>
               </div>
             )}
-          </div>
-        </div>
-      </div>
           <div className="relative">
             <button
               onClick={() => setShowMore(!showMore)}
@@ -187,6 +207,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
                 </button>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>

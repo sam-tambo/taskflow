@@ -10,6 +10,7 @@ import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { useRBAC } from '@/hooks/useRBAC';
 import { RoleBadge } from '@/components/ui/RoleBadge';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 import {
   Home, Inbox, Search, BarChart3, Users, Settings, Plus, ChevronDown, ChevronRight,
   FolderKanban, LogOut, PanelLeftClose, PanelLeft, Hash, Star, ListTodo,
@@ -84,6 +85,7 @@ export default function Sidebar() {
         <button onClick={() => setCommandPaletteOpen(true)} className="p-3 text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl mb-1">
           <Search className="w-5 h-5" />
         </button>
+        <NotificationBell collapsed />
       </div>
     );
   }
@@ -145,6 +147,11 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
+
+      {/* Notification Bell */}
+      <div className="px-3 pt-1">
+        <NotificationBell />
+      </div>
 
       {/* Divider */}
       <div className="mx-3 my-3 border-t border-gray-200 dark:border-slate-800" />

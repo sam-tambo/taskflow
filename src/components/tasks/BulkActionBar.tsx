@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { X, Trash2, CheckCircle, Flag, User, FolderOpen, ChevronDown } from 'lucide-react';
+import { X, Trash2, CheckCircle, Flag, User, FolderOpen, ChevronDown, Calendar, Layers } from 'lucide-react';
 import { useSelectionStore } from '@/stores/useSelectionStore';
 import { useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
+import { useSections } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -16,9 +17,14 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
   const { members } = useWorkspaceStore();
   const updateTask = useUpdateTask(projectId);
   const deleteTask = useDeleteTask(projectId);
+  const { data: sections = [] } = useSections(projectId);
   const [showAssignee, setShowAssignee] = useState(false);
   const [showPriority, setShowPriority] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
+  const [showSection, setShowSection] = useState(false);
+  const [showDueDate, setShowDueDate] = useState(false);
+
+  const closeAll = () => { setShowAssignee(false); setShowPriority(false); setShowStatus(false); setShowSection(false); setShowDueDate(false); };
 
   const count = selectedTaskIds.size;
   if (count === 0) return null;
@@ -44,7 +50,7 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
 
       {/* Status */}
       <div className="relative">
-        <button onClick={() => { setShowStatus(!showStatus); setShowAssignee(false); setShowPriority(false); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
+        <button onClick={() => { closeAll(); setShowStatus(!showStatus); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
           <CheckCircle className="w-4 h-4" /> Status <ChevronDown className="w-3 h-3" />
         </button>
         {showStatus && (
@@ -60,7 +66,7 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
 
       {/* Priority */}
       <div className="relative">
-        <button onClick={() => { setShowPriority(!showPriority); setShowAssignee(false); setShowStatus(false); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
+        <button onClick={() => { closeAll(); setShowPriority(!showPriority); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
           <Flag className="w-4 h-4" /> Priority <ChevronDown className="w-3 h-3" />
         </button>
         {showPriority && (
@@ -76,7 +82,7 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
 
       {/* Assignee */}
       <div className="relative">
-        <button onClick={() => { setShowAssignee(!showAssignee); setShowPriority(false); setShowStatus(false); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
+        <button onClick={() => { closeAll(); setShowAssignee(!showAssignee); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
           <User className="w-4 h-4" /> Assign <ChevronDown className="w-3 h-3" />
         </button>
         {showAssignee && (
@@ -92,6 +98,39 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
                 {m.profiles?.full_name || m.profiles?.email}
               </button>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Section */}
+      {sections.length > 0 && (
+        <div className="relative">
+          <button onClick={() => { closeAll(); setShowSection(!showSection); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
+            <Layers className="w-4 h-4" /> Section <ChevronDown className="w-3 h-3" />
+          </button>
+          {showSection && (
+            <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-1 w-44 max-h-48 overflow-y-auto">
+              {sections.map(s => (
+                <button key={s.id} onClick={() => { bulkUpdate({ section_id: s.id }); setShowSection(false); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700">
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Due Date */}
+      <div className="relative">
+        <button onClick={() => { closeAll(); setShowDueDate(!showDueDate); }} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm hover:bg-gray-800 dark:hover:bg-slate-600 rounded-lg">
+          <Calendar className="w-4 h-4" /> Due
+        </button>
+        {showDueDate && (
+          <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 p-3 w-48">
+            <input type="date" onChange={(e) => { if (e.target.value) { bulkUpdate({ due_date: e.target.value }); setShowDueDate(false); } }} className="w-full text-sm bg-transparent outline-none text-gray-900 dark:text-white" autoFocus />
+            <button onClick={() => { bulkUpdate({ due_date: null }); setShowDueDate(false); }} className="w-full text-left text-xs text-gray-500 hover:text-red-500 mt-2">
+              Clear due date
+            </button>
           </div>
         )}
       </div>

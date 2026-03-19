@@ -121,7 +121,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
         default_view: selectedTemplate?.defaultView || 'list',
       },
       {
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
           // Create template-specific sections if not blank
           if (selectedTemplate && selectedTemplate.name !== 'Blank Project') {
             for (let i = 0; i < selectedTemplate.sections.length; i++) {
