@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Check, GripVertical, Calendar, Flag, User } from 'lucide-react';
+import { Check, GripVertical, Calendar, Flag, User, MessageSquare, Paperclip, ListChecks } from 'lucide-react';
 import { cn, formatDueDate, getDueDateColor, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useSelectionStore } from '@/stores/useSelectionStore';
@@ -99,6 +99,25 @@ export function TaskRow({ task, projectId, listeners, attributes, isDragging, sh
           onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
         >
           {task.title}
+        </span>
+      )}
+
+      {/* Metadata badges */}
+      {task.description && (
+        <span className="text-[10px] text-gray-400 flex-shrink-0" title={task.description.replace(/<[^>]*>/g, '').slice(0, 200)}>
+          <MessageSquare className="w-3 h-3 inline" />
+        </span>
+      )}
+      {(task.subtasks_count ?? 0) > 0 && (
+        <span className="text-[10px] text-gray-400 flex-shrink-0 flex items-center gap-0.5" title={`${task.subtasks_completed ?? 0}/${task.subtasks_count} subtasks`}>
+          <ListChecks className="w-3 h-3" />
+          {task.subtasks_completed ?? 0}/{task.subtasks_count}
+        </span>
+      )}
+      {(task.attachments_count ?? 0) > 0 && (
+        <span className="text-[10px] text-gray-400 flex-shrink-0 flex items-center gap-0.5">
+          <Paperclip className="w-3 h-3" />
+          {task.attachments_count}
         </span>
       )}
 
