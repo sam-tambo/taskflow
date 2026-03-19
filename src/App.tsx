@@ -35,6 +35,7 @@ const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const GanttChart = lazy(() => import('@/pages/GanttChart'));
 const ClientReport = lazy(() => import('@/pages/ClientReport'));
 const Favorites = lazy(() => import('@/pages/Favorites'));
+const Teams = lazy(() => import('@/pages/Teams'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function ThemeInitializer() {
@@ -123,6 +124,7 @@ export default function App() {
                 <Route path="/search" element={<Search />} />
                 <Route path="/portfolios" element={<Portfolios />} />
                 <Route path="/members" element={<RoleGuard minRole="admin"><Members /></RoleGuard>} />
+                <Route path="/teams" element={<RoleGuard minRole="admin"><Teams /></RoleGuard>} />
                 <Route path="/members/:userId" element={<RoleGuard minRole="admin"><MemberProfile /></RoleGuard>} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/reports" element={<RoleGuard minRole="employee"><Reports /></RoleGuard>} />

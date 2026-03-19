@@ -225,9 +225,14 @@ export default function Sidebar() {
           </Link>
         )}
         {rbac.isAdmin && (
-          <Link onClick={handleNavClick} to="/members" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/members') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-            <Users className="w-4 h-4" /> Members
-          </Link>
+          <>
+            <Link onClick={handleNavClick} to="/members" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/members') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <Users className="w-4 h-4" /> Members
+            </Link>
+            <Link onClick={handleNavClick} to="/teams" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/teams') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <Users className="w-4 h-4" /> Teams
+            </Link>
+          </>
         )}
         {!rbac.isClient && (
           <Link onClick={handleNavClick} to="/settings" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/settings') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
