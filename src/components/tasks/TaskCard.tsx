@@ -1,4 +1,4 @@
-import { Check, Calendar, MessageSquare, Paperclip, GitBranch, Flag, Star } from 'lucide-react';
+import { Check, Calendar, MessageSquare, Paperclip, GitBranch, Flag, Star, Repeat } from 'lucide-react';
 import { cn, formatDueDate, getDueDateColor, getPriorityBorderColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUpdateTask } from '@/hooks/useTasks';
@@ -121,6 +121,11 @@ export function TaskCard({ task, projectId, isDragging }: TaskCardProps) {
             {(task.attachments_count ?? 0) > 0 && (
               <span className="text-[11px] text-gray-400 flex items-center gap-0.5">
                 <Paperclip className="w-3 h-3" />{task.attachments_count}
+              </span>
+            )}
+            {task.recurrence && (
+              <span className="text-[11px] text-[#4B7C6F] flex items-center" title="Recurring">
+                <Repeat className="w-3 h-3" />
               </span>
             )}
           </div>
