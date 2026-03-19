@@ -28,8 +28,10 @@ function SortableCard({ task, projectId }: { task: Task; projectId: string }) {
 
 function Column({ section, tasks, projectId, workspaceId }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string }) {
   const [addTaskTrigger, setAddTaskTrigger] = useState(0);
+  const [showDone, setShowDone] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
   const activeTasks = tasks.filter(t => t.status !== 'done');
+  const doneTasks = tasks.filter(t => t.status === 'done');
 
   const handlePlusClick = () => {
     setAddTaskTrigger(n => n + 1);
@@ -38,6 +40,7 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
 
   return (
     <div className="flex-shrink-0 w-72 flex flex-col bg-gray-50 dark:bg-slate-800/30 rounded-xl max-h-full">
+      {section.color && <div className="h-1 rounded-t-xl" style={{ backgroundColor: section.color }} />}
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-gray-700 dark:text-white">{section.name}</span>
@@ -56,6 +59,18 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
         <div ref={formRef}>
           <TaskForm projectId={projectId} sectionId={section.id} workspaceId={workspaceId} position={tasks.length} autoOpen={addTaskTrigger} />
         </div>
+        {doneTasks.length > 0 && (
+          <div className="px-2 pb-2">
+            <button onClick={() => setShowDone(!showDone)} className="w-full text-xs text-gray-400 hover:text-gray-600 py-1.5 text-center">
+              {showDone ? 'Hide' : 'Show'} {doneTasks.length} completed
+            </button>
+            {showDone && doneTasks.map(t => (
+              <div key={t.id} className="mb-2 opacity-60">
+                <TaskCard task={t} projectId={projectId} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

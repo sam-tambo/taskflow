@@ -15,6 +15,7 @@ import { CustomFieldsSection } from './CustomFieldsSection';
 import { RecurrencePicker } from './RecurrencePicker';
 import { SaveAsTemplateButton } from './TaskTemplates';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
+import { TagEditor } from './TagEditor';
 import { format } from 'date-fns';
 import {
   X, Check, Star, MoreHorizontal, Calendar, Flag, User, Tag, Clock,
@@ -289,12 +290,10 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
           {/* Tags */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Tags</span>
-          <div className="flex flex-wrap gap-1">
-            {task.tags?.map((tag) => (
-              <span key={tag} className="text-xs px-2 py-0.5 bg-purple/10 text-purple rounded-full">{tag}</span>
-            ))}
-            {(!task.tags || task.tags.length === 0) && <span className="text-gray-400 text-sm">No tags</span>}
-          </div>
+          <TagEditor
+            tags={task.tags || []}
+            onChange={(tags) => updateTask.mutate({ id: task.id, tags })}
+          />
 
           {/* Estimated hours */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Est. hours</span>
