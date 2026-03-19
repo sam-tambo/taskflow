@@ -321,7 +321,7 @@ function MilestonesSection({ goalId }: { goalId: string }) {
 }
 
 export default function GoalDetail() {
-  const { goalId } = useParams<{ goalId: string }>();
+  const { id: goalId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: goal, isLoading } = useGoal(goalId);
   const deleteGoal = useDeleteGoal();
