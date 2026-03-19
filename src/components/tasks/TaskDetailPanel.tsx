@@ -1,17 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useUIStore } from '@/stores/useUIStore';
+import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { cn, formatDueDate, getDueDateColor, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { SubtaskList } from './SubtaskList';
+import { DependencySection } from './DependencySection';
 import { CommentThread } from './CommentThread';
 import { AttachmentList } from './AttachmentList';
+import { TimeTracker } from './TimeTracker';
+import { CustomFieldsSection } from './CustomFieldsSection';
+import { RecurrencePicker } from './RecurrencePicker';
+import { SaveAsTemplateButton } from './TaskTemplates';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { format } from 'date-fns';
 import {
   X, Check, Star, MoreHorizontal, Calendar, Flag, User, Tag, Clock,
-  ChevronDown, Copy, Trash2, ArrowUpRight, Diamond
+  ChevronDown, Copy, Trash2, ArrowUpRight, Diamond, Search
 } from 'lucide-react';
 import type { Task, ActivityLog } from '@/types';
 import { toast } from 'sonner';
@@ -56,8 +63,12 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
     },
   });
 
+  const { members: workspaceMembers } = useWorkspaceStore();
   const updateTask = useUpdateTask(task?.project_id || undefined);
   const deleteTask = useDeleteTask(task?.project_id || undefined);
+  const [showAssigneePicker, setShowAssigneePicker] = useState(false);
+  const [assigneeSearch, setAssigneeSearch] = useState('');
+  const assigneeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (task) {
@@ -130,6 +141,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
               <button onClick={() => { updateTask.mutate({ id: task.id, is_milestone: !task.is_milestone }); setShowActions(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                 <Diamond className="w-4 h-4" /> {task.is_milestone ? 'Remove milestone' : 'Mark as milestone'}
               </button>
+              <SaveAsTemplateButton task={task} />
               <hr className="my-1 border-gray-100 dark:border-slate-700" />
               <button onClick={handleDelete} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                 <Trash2 className="w-4 h-4" /> Delete task
@@ -157,15 +169,66 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
         <div className="grid grid-cols-[120px_1fr] gap-y-3 gap-x-4 text-sm">
           {/* Assignee */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Assignee</span>
-          <div className="flex items-center gap-2">
-            {task.assignee ? (
-              <>
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium" style={{ backgroundColor: getAvatarColor(task.assignee.id) }}>
-                  {getInitials(task.assignee.full_name)}
+          <div className="relative" ref={assigneeRef}>
+            <button
+              onClick={() => setShowAssigneePicker(!showAssigneePicker)}
+              className="flex items-center gap-2 px-1.5 py-1 -ml-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              {task.assignee ? (
+                <>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium" style={{ backgroundColor: getAvatarColor(task.assignee.id) }}>
+                    {getInitials(task.assignee.full_name)}
+                  </div>
+                  <span className="text-gray-900 dark:text-white text-sm">{task.assignee.full_name}</span>
+                </>
+              ) : <span className="text-gray-400 text-sm">Unassigned</span>}
+            </button>
+            {showAssigneePicker && (
+              <div className="absolute left-0 top-full mt-1 w-64 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="p-2 border-b border-gray-100 dark:border-slate-700">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input
+                      value={assigneeSearch}
+                      onChange={(e) => setAssigneeSearch(e.target.value)}
+                      placeholder="Search members..."
+                      className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none text-gray-900 dark:text-white"
+                      autoFocus
+                    />
+                  </div>
                 </div>
-                <span className="text-gray-900 dark:text-white">{task.assignee.full_name}</span>
-              </>
-            ) : <span className="text-gray-400">Unassigned</span>}
+                <div className="max-h-48 overflow-y-auto py-1">
+                  <button
+                    onClick={() => { updateTask.mutate({ id: task.id, assignee_id: null }); setShowAssigneePicker(false); setAssigneeSearch(''); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-700"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-slate-600 flex items-center justify-center">
+                      <User className="w-3 h-3 text-gray-400" />
+                    </div>
+                    Unassigned
+                  </button>
+                  {workspaceMembers
+                    .filter(m => {
+                      if (!assigneeSearch) return true;
+                      const q = assigneeSearch.toLowerCase();
+                      return (m.profiles?.full_name || '').toLowerCase().includes(q) || (m.profiles?.email || '').toLowerCase().includes(q);
+                    })
+                    .map((wm) => (
+                      <button
+                        key={wm.user_id}
+                        onClick={() => { updateTask.mutate({ id: task.id, assignee_id: wm.user_id }); setShowAssigneePicker(false); setAssigneeSearch(''); }}
+                        className={cn('w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700', task.assignee_id === wm.user_id && 'bg-[#4B7C6F]/5')}
+                      >
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium" style={{ backgroundColor: getAvatarColor(wm.user_id) }}>
+                          {getInitials(wm.profiles?.full_name || null)}
+                        </div>
+                        <span className="text-gray-900 dark:text-white truncate">{wm.profiles?.full_name || wm.profiles?.email}</span>
+                        {task.assignee_id === wm.user_id && <Check className="w-3.5 h-3.5 text-[#4B7C6F] ml-auto" />}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Due date */}
@@ -215,18 +278,37 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
           {/* Estimated hours */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Est. hours</span>
           <input type="number" step="0.5" min="0" value={task.estimated_hours || ''} onChange={(e) => updateTask.mutate({ id: task.id, estimated_hours: e.target.value ? parseFloat(e.target.value) : null })} placeholder="—" className="text-sm bg-transparent outline-none text-gray-900 dark:text-white w-20" />
+
+          {/* Recurrence */}
+          <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Repeat</span>
+          <RecurrencePicker
+            value={task.recurrence || null}
+            onChange={(recurrence) => updateTask.mutate({ id: task.id, recurrence })}
+          />
         </div>
+
+        {/* Custom Fields */}
+        {task.project_id && (
+          <>
+            <CustomFieldsSection taskId={task.id} projectId={task.project_id} />
+            <hr className="border-gray-100 dark:border-slate-800" />
+          </>
+        )}
 
         {/* Description */}
         <div>
           <span className="text-xs font-medium text-gray-500 dark:text-slate-400 mb-2 block">Description</span>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onBlur={() => { if (description !== (task.description || '')) updateTask.mutate({ id: task.id, description }); }}
+          <RichTextEditor
+            content={description}
+            onBlur={(html) => {
+              const cleaned = html === '<p></p>' ? '' : html;
+              if (cleaned !== (task.description || '')) {
+                setDescription(cleaned);
+                updateTask.mutate({ id: task.id, description: cleaned });
+              }
+            }}
             placeholder="Add a description..."
-            rows={3}
-            className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 resize-none"
+            members={workspaceMembers.map(m => ({ id: m.user_id, label: m.profiles?.full_name || m.profiles?.email || '' }))}
           />
         </div>
 
@@ -235,8 +317,18 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
         <hr className="border-gray-100 dark:border-slate-800" />
 
+        {/* Dependencies */}
+        <DependencySection taskId={task.id} projectId={task.project_id} />
+
+        <hr className="border-gray-100 dark:border-slate-800" />
+
         {/* Comments */}
         <CommentThread taskId={taskId} />
+
+        <hr className="border-gray-100 dark:border-slate-800" />
+
+        {/* Time Tracking */}
+        <TimeTracker taskId={taskId} />
 
         <hr className="border-gray-100 dark:border-slate-800" />
 

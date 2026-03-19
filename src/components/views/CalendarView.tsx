@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { startOfMonth, endOfMonth, eachDayOfInterval, getDay, format, isSameMonth, isToday, isSameDay, parseISO, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
-import { useTasks, useCreateTask } from '@/hooks/useTasks';
+import { startOfMonth, endOfMonth, eachDayOfInterval, format, isSameMonth, isToday, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { useTasks, useCreateTask, useUpdateTask } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/useUIStore';
-import { cn, getDueDateColor } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { cn, getDueDateColor, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
+import { ChevronLeft, ChevronRight, Plus, Check, Flag } from 'lucide-react';
 import type { Task } from '@/types';
 
 interface CalendarViewProps {
@@ -12,16 +12,25 @@ interface CalendarViewProps {
   workspaceId: string;
 }
 
+const PRIORITY_DOT: Record<string, string> = {
+  urgent: 'bg-red-500',
+  high: 'bg-orange-400',
+  medium: 'bg-yellow-400',
+  low: 'bg-blue-300',
+};
+
 export default function CalendarView({ projectId, workspaceId }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [addingTaskDate, setAddingTaskDate] = useState<string | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const addTaskInputRef = useRef<HTMLInputElement>(null);
   const { data: tasks = [] } = useTasks(projectId);
   const { openTaskDetail } = useUIStore();
   const { user } = useAuth();
   const createTask = useCreateTask(projectId);
+  const updateTask = useUpdateTask(projectId);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -71,6 +80,30 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
     setNewTaskTitle('');
   };
 
+  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    setDraggedTaskId(taskId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dateKey: string) => {
+    e.preventDefault();
+    if (draggedTaskId) {
+      updateTask.mutate({ id: draggedTaskId, due_date: dateKey });
+      setDraggedTaskId(null);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleToggleComplete = (e: React.MouseEvent, task: Task) => {
+    e.stopPropagation();
+    const newStatus = task.status === 'done' ? 'todo' : 'done';
+    updateTask.mutate({ id: task.id, status: newStatus, completed_at: newStatus === 'done' ? new Date().toISOString() : null });
+  };
+
   return (
     <div className="flex h-[calc(100vh-8rem)]">
       {/* Calendar grid */}
@@ -80,12 +113,12 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             <button onClick={() => setCurrentMonth(m => subMonths(m, 1))} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{format(currentMonth, 'MMMM yyyy')}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white min-w-[180px] text-center">{format(currentMonth, 'MMMM yyyy')}</h2>
             <button onClick={() => setCurrentMonth(m => addMonths(m, 1))} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <button onClick={() => setCurrentMonth(new Date())} className="text-sm text-[#4B7C6F] hover:underline">Today</button>
+          <button onClick={() => setCurrentMonth(new Date())} className="text-sm text-[#4B7C6F] hover:underline px-3 py-1 bg-[#4B7C6F]/5 rounded-lg">Today</button>
         </div>
 
         {/* Weekday headers */}
@@ -108,29 +141,48 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                 key={dateKey}
                 onClick={() => setSelectedDate(day)}
                 onDoubleClick={() => handleCreateOnDate(day)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, dateKey)}
                 className={cn(
                   'bg-white dark:bg-slate-900 p-1.5 min-h-[80px] cursor-pointer transition-colors',
                   !isCurrentMonth && 'opacity-40',
                   isSelected && 'ring-2 ring-[#4B7C6F] ring-inset',
-                  isToday(day) && 'bg-[#4B7C6F]/5'
+                  isToday(day) && 'bg-[#4B7C6F]/5',
+                  draggedTaskId && 'hover:bg-[#4B7C6F]/10'
                 )}
               >
-                <div className={cn('text-xs font-medium mb-1', isToday(day) ? 'text-[#4B7C6F]' : 'text-gray-700 dark:text-slate-300')}>
-                  {format(day, 'd')}
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className={cn(
+                    'text-xs font-medium',
+                    isToday(day) ? 'bg-[#4B7C6F] text-white w-5 h-5 rounded-full flex items-center justify-center' : 'text-gray-700 dark:text-slate-300'
+                  )}>
+                    {format(day, 'd')}
+                  </span>
+                  {dayTasks.length > 0 && (
+                    <span className="text-[9px] text-gray-400 font-medium">{dayTasks.length}</span>
+                  )}
                 </div>
                 <div className="space-y-0.5">
                   {dayTasks.slice(0, 3).map(task => (
                     <div
                       key={task.id}
                       onClick={(e) => { e.stopPropagation(); openTaskDetail(task.id); }}
-                      className="text-[10px] px-1.5 py-0.5 rounded truncate cursor-pointer hover:opacity-80"
-                      style={{ backgroundColor: task.project?.color || '#4B7C6F', color: 'white' }}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, task.id)}
+                      className={cn(
+                        'text-[10px] px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing hover:opacity-80 flex items-center gap-1',
+                        task.status === 'done' ? 'line-through opacity-50' : ''
+                      )}
+                      style={{ backgroundColor: (task.project?.color || '#4B7C6F') + '20', color: task.project?.color || '#4B7C6F' }}
                     >
-                      {task.title}
+                      {task.priority && task.priority !== 'none' && (
+                        <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', PRIORITY_DOT[task.priority])} />
+                      )}
+                      <span className="truncate">{task.title}</span>
                     </div>
                   ))}
                   {dayTasks.length > 3 && (
-                    <div className="text-[10px] text-gray-500 px-1">+{dayTasks.length - 3} more</div>
+                    <div className="text-[10px] text-gray-500 px-1 font-medium">+{dayTasks.length - 3} more</div>
                   )}
                   {addingTaskDate === dateKey && (
                     <input
@@ -156,22 +208,50 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
 
       {/* Day sidebar */}
       {selectedDate && (
-        <div className="w-64 border-l border-gray-200 dark:border-slate-800 p-4 overflow-y-auto">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{format(selectedDate, 'EEEE, MMM d')}</h3>
-          <p className="text-xs text-gray-500 mb-3">{selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''}</p>
-          <div className="space-y-2">
+        <div className="w-72 border-l border-gray-200 dark:border-slate-800 overflow-y-auto">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{format(selectedDate, 'EEEE, MMM d')}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''}</p>
+          </div>
+          <div className="p-3 space-y-2">
             {selectedTasks.map(task => (
-              <div key={task.id} onClick={() => openTaskDetail(task.id)} className="p-2 bg-gray-50 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{task.title}</p>
-                {task.assignee && <p className="text-xs text-gray-500 mt-1">{task.assignee.full_name}</p>}
+              <div key={task.id} onClick={() => openTaskDetail(task.id)} className="group p-2.5 bg-gray-50 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                <div className="flex items-start gap-2">
+                  <button
+                    onClick={(e) => handleToggleComplete(e, task)}
+                    className={cn(
+                      'w-[16px] h-[16px] rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5',
+                      task.status === 'done' ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-600 hover:border-[#4B7C6F]'
+                    )}
+                  >
+                    {task.status === 'done' && <Check className="w-2 h-2 text-white" />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className={cn('text-sm font-medium', task.status === 'done' ? 'line-through text-gray-400' : 'text-gray-900 dark:text-white')}>{task.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {task.priority && task.priority !== 'none' && (
+                        <span className={cn('text-[10px] capitalize', getPriorityColor(task.priority))}>{task.priority}</span>
+                      )}
+                      {task.assignee && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[7px] font-medium" style={{ backgroundColor: getAvatarColor(task.assignee.id) }}>
+                            {getInitials(task.assignee.full_name)}
+                          </div>
+                          <span className="text-[10px] text-gray-400">{task.assignee.full_name}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
-            <button onClick={() => handleCreateOnDate(selectedDate)} className="flex items-center gap-1 mt-2 text-xs text-[#4B7C6F] hover:underline">
-              <Plus className="w-3 h-3" /> Add task
+            <button onClick={() => handleCreateOnDate(selectedDate)} className="flex items-center gap-1 w-full px-2 py-2 text-xs text-[#4B7C6F] hover:bg-[#4B7C6F]/5 rounded-lg transition-colors">
+              <Plus className="w-3 h-3" /> Add task for {format(selectedDate, 'MMM d')}
             </button>
             {selectedTasks.length === 0 && !addingTaskDate && (
-              <div className="text-center py-4">
+              <div className="text-center py-6">
                 <p className="text-xs text-gray-400">No tasks on this day</p>
+                <p className="text-[10px] text-gray-400 mt-1">Double-click a day to quick-add</p>
               </div>
             )}
           </div>

@@ -4,15 +4,18 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { CSS } from '@dnd-kit/utilities';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { TaskForm } from '@/components/tasks/TaskForm';
+import { BulkActionBar } from '@/components/tasks/BulkActionBar';
 import { useTasks, useUpdateTask } from '@/hooks/useTasks';
 import { useSections, useCreateSection } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, Plus, Check } from 'lucide-react';
+import { type TaskFilters, applyFilters, DEFAULT_FILTERS } from '@/components/projects/FilterBar';
 import type { Task, Section } from '@/types';
 
 interface ListViewProps {
   projectId: string;
   workspaceId: string;
+  filters?: TaskFilters;
 }
 
 function SortableTaskRow({ task, projectId }: { task: Task; projectId: string }) {
@@ -20,7 +23,7 @@ function SortableTaskRow({ task, projectId }: { task: Task; projectId: string })
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
     <div ref={setNodeRef} style={style}>
-      <TaskRow task={task} projectId={projectId} listeners={listeners} attributes={attributes} isDragging={isDragging} />
+      <TaskRow task={task} projectId={projectId} listeners={listeners} attributes={attributes} isDragging={isDragging} selectable />
     </div>
   );
 }
@@ -68,8 +71,9 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
   );
 }
 
-export default function ListView({ projectId, workspaceId }: ListViewProps) {
-  const { data: tasks = [], isLoading } = useTasks(projectId);
+export default function ListView({ projectId, workspaceId, filters = DEFAULT_FILTERS }: ListViewProps) {
+  const { data: rawTasks = [], isLoading } = useTasks(projectId);
+  const tasks = useMemo(() => applyFilters(rawTasks, filters), [rawTasks, filters]);
   const { data: sections = [] } = useSections(projectId);
   const updateTask = useUpdateTask(projectId);
   const createSection = useCreateSection(projectId);
@@ -167,6 +171,7 @@ export default function ListView({ projectId, workspaceId }: ListViewProps) {
             <Plus className="w-4 h-4" /> Add section
           </button>
         )}
+        <BulkActionBar projectId={projectId} />
       </div>
     </DndContext>
   );

@@ -15,7 +15,7 @@ export interface Workspace {
   created_at: string;
 }
 
-export type WorkspaceRole = 'owner' | 'admin' | 'employee' | 'client';
+export type WorkspaceRole = 'owner' | 'admin' | 'employee' | 'client' | 'guest';
 
 export interface WorkspaceMember {
   id: string;
@@ -62,11 +62,17 @@ export interface Project {
   owner?: Profile;
 }
 
+export type ProjectRole = 'owner' | 'editor' | 'commenter' | 'viewer';
+
 export interface ProjectMember {
   id: string;
   project_id: string;
   user_id: string;
-  role: 'owner' | 'editor' | 'commenter' | 'viewer';
+  role: ProjectRole;
+  status: 'active' | 'pending';
+  invited_by: string | null;
+  invited_email: string | null;
+  notify_on_task_add: boolean;
   profiles?: Profile;
 }
 
@@ -78,6 +84,15 @@ export interface Section {
   color: string | null;
   created_at: string;
 }
+
+export type RecurrencePattern = {
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  interval: number;
+  days_of_week?: number[]; // 0=Sun, 1=Mon, ...
+  day_of_month?: number;
+  end_date?: string;
+  end_after_count?: number;
+};
 
 export interface Task {
   id: string;
@@ -98,6 +113,7 @@ export interface Task {
   is_milestone: boolean;
   is_favorite: boolean;
   estimated_hours: number | null;
+  recurrence: RecurrencePattern | null;
   tags: string[];
   created_at: string;
   updated_at: string;

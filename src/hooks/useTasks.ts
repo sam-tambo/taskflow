@@ -82,6 +82,9 @@ export function useUpdateTask(projectId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Task> & { id: string }) => {
+      // Get current task state for activity logging
+      const { data: oldTask } = await supabase.from('tasks').select('status, assignee_id, project_id, workspace_id').eq('id', id).single();
+
       const { data, error } = await supabase
         .from('tasks')
         .update(updates)
@@ -89,6 +92,44 @@ export function useUpdateTask(projectId?: string) {
         .select('*, assignee:profiles!assignee_id(*), section:sections(*)')
         .single();
       if (error) throw error;
+
+      // Log activity for tracked field changes (non-blocking)
+      if (oldTask && data) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id;
+        const logs: Array<{ task_id: string; project_id: string; workspace_id: string; user_id: string; action: string; field_changed: string; old_value: string | null; new_value: string | null }> = [];
+
+        if (updates.status !== undefined && updates.status !== oldTask.status) {
+          logs.push({
+            task_id: id, project_id: oldTask.project_id, workspace_id: oldTask.workspace_id, user_id: userId || '',
+            action: updates.status === 'done' ? 'completed' : 'updated',
+            field_changed: 'status', old_value: oldTask.status, new_value: updates.status,
+          });
+        }
+        if (updates.assignee_id !== undefined && updates.assignee_id !== oldTask.assignee_id) {
+          const assigneeName = data.assignee?.full_name || updates.assignee_id || 'Unassigned';
+          logs.push({
+            task_id: id, project_id: oldTask.project_id, workspace_id: oldTask.workspace_id, user_id: userId || '',
+            action: 'assigned', field_changed: 'assignee',
+            old_value: oldTask.assignee_id, new_value: String(assigneeName),
+          });
+        }
+        if (updates.priority !== undefined && logs.length === 0) {
+          logs.push({
+            task_id: id, project_id: oldTask.project_id, workspace_id: oldTask.workspace_id, user_id: userId || '',
+            action: 'updated', field_changed: 'priority',
+            old_value: null, new_value: updates.priority,
+          });
+        }
+
+        if (logs.length > 0) {
+          supabase.from('activity_log').insert(logs).then(() => {
+            queryClient.invalidateQueries({ queryKey: ['activities'] });
+            queryClient.invalidateQueries({ queryKey: ['project-activity'] });
+          });
+        }
+      }
+
       return data as Task;
     },
     onMutate: async (update) => {
