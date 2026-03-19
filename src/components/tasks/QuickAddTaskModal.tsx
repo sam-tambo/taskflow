@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { X, Calendar } from 'lucide-react';
+import { X, Calendar, User, ChevronDown } from 'lucide-react';
 import { useCreateTask } from '@/hooks/useTasks';
 import { useSections } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
-import { cn, getPriorityColor } from '@/lib/utils';
+import { cn, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { Task } from '@/types';
 
@@ -28,6 +28,7 @@ export function QuickAddTaskModal({ open, onClose, projectId }: QuickAddTaskModa
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<Task['priority']>('none');
   const [sectionId, setSectionId] = useState<string>('');
+  const [assigneeId, setAssigneeId] = useState<string>('');
   const { data: sections = [] } = useSections(projectId);
   const { members, currentWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
@@ -54,6 +55,7 @@ export function QuickAddTaskModal({ open, onClose, projectId }: QuickAddTaskModa
         section_id: targetSectionId || null,
         workspace_id: currentWorkspace?.id,
         created_by: user?.id,
+        assignee_id: assigneeId || null,
         position: 0,
       },
       {
@@ -65,6 +67,7 @@ export function QuickAddTaskModal({ open, onClose, projectId }: QuickAddTaskModa
           setDueDate('');
           setPriority('none');
           setSectionId('');
+          setAssigneeId('');
         },
       }
     );
@@ -128,6 +131,20 @@ export function QuickAddTaskModal({ open, onClose, projectId }: QuickAddTaskModa
               <option value="">Default section</option>
               {sections.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-gray-500 dark:text-slate-400 block mb-1">Assignee</label>
+            <select
+              value={assigneeId}
+              onChange={(e) => setAssigneeId(e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none text-gray-900 dark:text-white cursor-pointer"
+            >
+              <option value="">Unassigned</option>
+              {members.map((m) => (
+                <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name || m.profiles?.email || 'User'}</option>
               ))}
             </select>
           </div>

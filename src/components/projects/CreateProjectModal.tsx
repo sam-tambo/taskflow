@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Briefcase, Code, Megaphone, Palette, Lightbulb, GraduationCap } from 'lucide-react';
 import { useCreateProject } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,12 +19,32 @@ const PRESET_COLORS = [
 
 const PRESET_ICONS = ['folder', 'rocket', 'star', 'zap', 'target', 'briefcase', 'code', 'globe'];
 
+interface ProjectTemplate {
+  name: string;
+  icon: typeof Briefcase;
+  description: string;
+  color: string;
+  sections: string[];
+  defaultView: 'list' | 'board' | 'timeline' | 'calendar';
+}
+
+const TEMPLATES: ProjectTemplate[] = [
+  { name: 'Blank Project', icon: Lightbulb, description: 'Start from scratch', color: '#4B7C6F', sections: ['To Do', 'In Progress', 'Done'], defaultView: 'list' },
+  { name: 'Marketing Campaign', icon: Megaphone, description: 'Plan and execute campaigns', color: '#EC4899', sections: ['Planning', 'In Progress', 'Review', 'Published'], defaultView: 'board' },
+  { name: 'Product Launch', icon: Briefcase, description: 'Coordinate product releases', color: '#8B5CF6', sections: ['Research', 'Development', 'Testing', 'Launch'], defaultView: 'timeline' },
+  { name: 'Software Development', icon: Code, description: 'Agile sprints and features', color: '#3B82F6', sections: ['Backlog', 'Sprint', 'In Review', 'Done'], defaultView: 'board' },
+  { name: 'Design Project', icon: Palette, description: 'Creative design workflow', color: '#F59E0B', sections: ['Brief', 'Concepts', 'Revisions', 'Final'], defaultView: 'board' },
+  { name: 'Onboarding', icon: GraduationCap, description: 'New hire onboarding tasks', color: '#10B981', sections: ['Before Start', 'Week 1', 'Week 2', 'Ongoing'], defaultView: 'list' },
+];
+
 export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [icon, setIcon] = useState('folder');
   const [privacy, setPrivacy] = useState<'workspace' | 'private'>('workspace');
+  const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
+  const [step, setStep] = useState<'template' | 'details'>('template');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { currentWorkspace, setCurrentWorkspace } = useWorkspaceStore();
@@ -33,6 +53,16 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const navigate = useNavigate();
 
   if (!open) return null;
+
+  const handleSelectTemplate = (template: ProjectTemplate) => {
+    setSelectedTemplate(template);
+    if (template.name !== 'Blank Project') {
+      setName(template.name);
+      setDescription(template.description);
+    }
+    setColor(template.color);
+    setStep('details');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,15 +118,27 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
         workspace_id: workspaceId,
         owner_id: user.id,
         status: 'active',
-        default_view: 'list',
+        default_view: selectedTemplate?.defaultView || 'list',
       },
       {
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
+          // Create template-specific sections if not blank
+          if (selectedTemplate && selectedTemplate.name !== 'Blank Project') {
+            for (let i = 0; i < selectedTemplate.sections.length; i++) {
+              await supabase.from('sections').insert({
+                project_id: data.id,
+                name: selectedTemplate.sections[i],
+                position: i,
+              });
+            }
+          }
           setName('');
           setDescription('');
           setColor(PRESET_COLORS[0]);
           setIcon('folder');
           setPrivacy('workspace');
+          setSelectedTemplate(null);
+          setStep('template');
           setError(null);
           setLoading(false);
           onClose();
@@ -115,12 +157,38 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div role="dialog" aria-modal="true" aria-label="Create Project" className="relative w-full max-w-md mx-4 sm:mx-0 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create Project</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {step === 'template' ? 'Choose a template' : 'Create Project'}
+          </h2>
+          <button onClick={() => { if (step === 'details') { setStep('template'); } else { onClose(); } }} aria-label="Close" className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Template picker */}
+        {step === 'template' && (
+          <div className="grid grid-cols-2 gap-2">
+            {TEMPLATES.map((template) => {
+              const TIcon = template.icon;
+              return (
+                <button
+                  key={template.name}
+                  onClick={() => handleSelectTemplate(template)}
+                  className="flex flex-col items-start p-3 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-[#4B7C6F] hover:bg-[#4B7C6F]/5 transition-colors text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{ backgroundColor: template.color + '20' }}>
+                    <TIcon className="w-4 h-4" style={{ color: template.color }} />
+                  </div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{template.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{template.description}</p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Detail form */}
+        {step === 'details' && (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-700 dark:text-red-400">
@@ -220,6 +288,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

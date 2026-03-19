@@ -1,17 +1,27 @@
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
+import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
-import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download } from 'lucide-react';
+import { ShareProjectModal } from '@/components/projects/ShareProjectModal';
+import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal, LayoutDashboard, Archive, Trash2 } from 'lucide-react';
+import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
+import { useAuth } from '@/hooks/useAuth';
+import { useCreateProject, useSections } from '@/hooks/useProjects';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Project } from '@/types';
 
 interface ProjectHeaderProps {
   project: Project;
   currentView: string;
-  onViewChange: (view: 'list' | 'board' | 'timeline' | 'calendar') => void;
+  onViewChange: (view: 'overview' | 'list' | 'board' | 'timeline' | 'calendar') => void;
 }
 
 const views = [
+  { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
   { id: 'list' as const, label: 'List', icon: List },
   { id: 'board' as const, label: 'Board', icon: Columns3 },
   { id: 'timeline' as const, label: 'Timeline', icon: GanttChart },
@@ -20,8 +30,73 @@ const views = [
 
 export function ProjectHeader({ project, currentView, onViewChange }: ProjectHeaderProps) {
   const { data: tasks = [] } = useTasks(project.id);
+  const { data: projectMembers = [] } = useProjectMembers(project.id);
   const [showExport, setShowExport] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const { currentWorkspace } = useWorkspaceStore();
+  const { user } = useAuth();
+  const { data: sections = [] } = useSections(project.id);
+  const createProject = useCreateProject(currentWorkspace?.id);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleDuplicate = async () => {
+    if (!currentWorkspace?.id || !user?.id) return;
+    try {
+      const { data: newProject, error: projErr } = await supabase
+        .from('projects')
+        .insert({
+          name: `${project.name} (copy)`,
+          description: project.description,
+          color: project.color,
+          icon: project.icon,
+          privacy: project.privacy,
+          workspace_id: currentWorkspace.id,
+          owner_id: user.id,
+          status: 'active' as const,
+          default_view: project.default_view,
+        })
+        .select()
+        .single();
+      if (projErr || !newProject) throw projErr;
+
+      // Duplicate sections and map old->new IDs
+      const sectionMap = new Map<string, string>();
+      for (const s of sections) {
+        const { data: newSection } = await supabase
+          .from('sections')
+          .insert({ project_id: newProject.id, name: s.name, position: s.position, color: s.color })
+          .select()
+          .single();
+        if (newSection) sectionMap.set(s.id, newSection.id);
+      }
+
+      // Duplicate tasks (top-level only)
+      for (const t of tasks) {
+        await supabase.from('tasks').insert({
+          workspace_id: currentWorkspace.id,
+          project_id: newProject.id,
+          section_id: t.section_id ? sectionMap.get(t.section_id) || null : null,
+          title: t.title,
+          description: t.description,
+          status: t.status,
+          priority: t.priority,
+          position: t.position,
+          tags: t.tags,
+          estimated_hours: t.estimated_hours,
+          created_by: user.id,
+        });
+      }
+
+      toast.success('Project duplicated with tasks');
+      navigate(`/projects/${newProject.id}`);
+      setShowMore(false);
+    } catch {
+      toast.error('Failed to duplicate project');
+    }
+  };
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'done').length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -36,11 +111,25 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
           <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{project.name}</h1>
           {project.description && <p className="text-xs text-gray-500 dark:text-slate-400">{project.description}</p>}
         </div>
-        {project.owner && (
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium" style={{ backgroundColor: getAvatarColor(project.owner.id) }} title={project.owner.full_name || ''}>
-            {getInitials(project.owner.full_name)}
-          </div>
-        )}
+        {/* Member avatars */}
+        <div className="flex items-center -space-x-1.5">
+          {projectMembers.filter(m => m.status === 'active').slice(0, 4).map((pm) => (
+            <div key={pm.id} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium ring-2 ring-white dark:ring-slate-900" style={{ backgroundColor: getAvatarColor(pm.user_id) }} title={pm.profiles?.full_name || ''}>
+              {getInitials(pm.profiles?.full_name || null)}
+            </div>
+          ))}
+          {projectMembers.filter(m => m.status === 'active').length > 4 && (
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-medium bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 ring-2 ring-white dark:ring-slate-900">
+              +{projectMembers.filter(m => m.status === 'active').length - 4}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => setShowShare(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
+        >
+          <Share2 className="w-4 h-4" /> Share
+        </button>
       </div>
 
       {/* Progress bar */}
@@ -103,10 +192,57 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
                 </button>
               </div>
             )}
+          <div className="relative">
+            <button
+              onClick={() => setShowMore(!showMore)}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+            {showMore && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-1 z-20">
+                <button
+                  onClick={handleDuplicate}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  <Copy className="w-4 h-4" /> Duplicate project
+                </button>
+                <button
+                  onClick={async () => {
+                    const newStatus = project.status === 'archived' ? 'active' : 'archived';
+                    await supabase.from('projects').update({ status: newStatus }).eq('id', project.id);
+                    queryClient.invalidateQueries({ queryKey: ['projects'] });
+                    queryClient.invalidateQueries({ queryKey: ['project', project.id] });
+                    toast.success(newStatus === 'archived' ? 'Project archived' : 'Project restored');
+                    if (newStatus === 'archived') navigate('/');
+                    setShowMore(false);
+                  }}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  <Archive className="w-4 h-4" /> {project.status === 'archived' ? 'Restore project' : 'Archive project'}
+                </button>
+                <hr className="my-1 border-gray-100 dark:border-slate-700" />
+                <button
+                  onClick={async () => {
+                    if (!confirm('Permanently delete this project and all its tasks? This cannot be undone.')) return;
+                    await supabase.from('projects').delete().eq('id', project.id);
+                    queryClient.invalidateQueries({ queryKey: ['projects'] });
+                    toast.success('Project deleted');
+                    navigate('/');
+                    setShowMore(false);
+                  }}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete project
+                </button>
+              </div>
+            )}
+          </div>
           </div>
         </div>
       </div>
       <QuickAddTaskModal open={showQuickAdd} onClose={() => setShowQuickAdd(false)} projectId={project.id} />
+      <ShareProjectModal open={showShare} onClose={() => setShowShare(false)} project={project} />
     </div>
   );
 }

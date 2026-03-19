@@ -97,6 +97,21 @@ export function useCreateProject(workspaceId?: string) {
   });
 }
 
+export function useUpdateProject(workspaceId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Project> & { id: string }) => {
+      const { data, error } = await supabase.from('projects').update(updates).eq('id', id).select().single();
+      if (error) throw error;
+      return data as Project;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['projects', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['project', data.id] });
+    },
+  });
+}
+
 export function useCreateSection(projectId?: string) {
   const queryClient = useQueryClient();
   return useMutation({

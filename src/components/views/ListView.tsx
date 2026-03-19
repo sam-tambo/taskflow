@@ -4,15 +4,20 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { CSS } from '@dnd-kit/utilities';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { TaskForm } from '@/components/tasks/TaskForm';
+import { BulkActionBar } from '@/components/tasks/BulkActionBar';
 import { useTasks, useUpdateTask } from '@/hooks/useTasks';
-import { useSections, useCreateSection } from '@/hooks/useProjects';
+import { useSections, useCreateSection, useUpdateSection } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, Plus, Check } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
+import { ChevronDown, ChevronRight, Plus, Check, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { type TaskFilters, applyFilters, DEFAULT_FILTERS } from '@/components/projects/FilterBar';
 import type { Task, Section } from '@/types';
 
 interface ListViewProps {
   projectId: string;
   workspaceId: string;
+  filters?: TaskFilters;
 }
 
 function SortableTaskRow({ task, projectId }: { task: Task; projectId: string }) {
@@ -20,7 +25,7 @@ function SortableTaskRow({ task, projectId }: { task: Task; projectId: string })
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
     <div ref={setNodeRef} style={style}>
-      <TaskRow task={task} projectId={projectId} listeners={listeners} attributes={attributes} isDragging={isDragging} />
+      <TaskRow task={task} projectId={projectId} listeners={listeners} attributes={attributes} isDragging={isDragging} selectable />
     </div>
   );
 }
@@ -28,17 +33,69 @@ function SortableTaskRow({ task, projectId }: { task: Task; projectId: string })
 function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [sectionName, setSectionName] = useState(section.name);
+  const [showMenu, setShowMenu] = useState(false);
+  const updateSection = useUpdateSection(projectId);
+  const queryClient = useQueryClient();
   const activeTasks = tasks.filter(t => t.status !== 'done');
   const completedTasks = tasks.filter(t => t.status === 'done');
 
+  const handleRename = () => {
+    if (sectionName.trim() && sectionName !== section.name) {
+      updateSection.mutate({ id: section.id, name: sectionName.trim() });
+    }
+    setIsRenaming(false);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete section "${section.name}"? Tasks will be moved to "No Section".`)) return;
+    // Move tasks to no section
+    for (const t of tasks) {
+      await supabase.from('tasks').update({ section_id: null }).eq('id', t.id);
+    }
+    await supabase.from('sections').delete().eq('id', section.id);
+    queryClient.invalidateQueries({ queryKey: ['sections', projectId] });
+    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+  };
+
   return (
     <div className="mb-4">
-      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-slate-800/50 rounded-t-lg border border-gray-100 dark:border-slate-800">
+      <div className="group flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-slate-800/50 rounded-t-lg border border-gray-100 dark:border-slate-800">
         <button onClick={() => setCollapsed(!collapsed)} className="text-gray-500 hover:text-gray-700 dark:hover:text-white">
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
-        <span className="text-sm font-semibold text-gray-700 dark:text-white">{section.name}</span>
+        {section.color && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: section.color }} />}
+        {isRenaming ? (
+          <input
+            value={sectionName}
+            onChange={e => setSectionName(e.target.value)}
+            onBlur={handleRename}
+            onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') { setSectionName(section.name); setIsRenaming(false); }}}
+            className="text-sm font-semibold bg-transparent outline-none text-gray-700 dark:text-white flex-1"
+            autoFocus
+          />
+        ) : (
+          <span className="text-sm font-semibold text-gray-700 dark:text-white" onDoubleClick={() => { if (section.id !== 'no-section') setIsRenaming(true); }}>{section.name}</span>
+        )}
         <span className="text-xs text-gray-400 ml-1">{activeTasks.length}</span>
+        {section.id !== 'no-section' && (
+          <div className="relative ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={() => setShowMenu(!showMenu)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded">
+              <MoreHorizontal className="w-3.5 h-3.5" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-1 z-20">
+                <button onClick={() => { setIsRenaming(true); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
+                  <Pencil className="w-3.5 h-3.5" /> Rename
+                </button>
+                <button onClick={() => { handleDelete(); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                  <Trash2 className="w-3.5 h-3.5" /> Delete section
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {!collapsed && (
@@ -68,8 +125,9 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
   );
 }
 
-export default function ListView({ projectId, workspaceId }: ListViewProps) {
-  const { data: tasks = [], isLoading } = useTasks(projectId);
+export default function ListView({ projectId, workspaceId, filters = DEFAULT_FILTERS }: ListViewProps) {
+  const { data: rawTasks = [], isLoading } = useTasks(projectId);
+  const tasks = useMemo(() => applyFilters(rawTasks, filters), [rawTasks, filters]);
   const { data: sections = [] } = useSections(projectId);
   const updateTask = useUpdateTask(projectId);
   const createSection = useCreateSection(projectId);
@@ -167,6 +225,7 @@ export default function ListView({ projectId, workspaceId }: ListViewProps) {
             <Plus className="w-4 h-4" /> Add section
           </button>
         )}
+        <BulkActionBar projectId={projectId} />
       </div>
     </DndContext>
   );

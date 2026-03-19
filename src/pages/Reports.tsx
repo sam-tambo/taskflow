@@ -8,7 +8,7 @@ import { cn, getAvatarColor, getInitials } from '@/lib/utils';
 import { BarChart3, CheckCircle2, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell,
+  LineChart, Line, PieChart, Pie, Cell, Legend, AreaChart, Area,
 } from 'recharts';
 import { format, subDays, parseISO, startOfDay, eachDayOfInterval } from 'date-fns';
 import type { Task, Profile } from '@/types';
@@ -92,6 +92,57 @@ export default function Reports() {
     });
     return Array.from(map.values()).sort((a, b) => (b.open + b.done) - (a.open + a.done)).slice(0, 8);
   }, [allTasks]);
+
+  // Status distribution (pie chart)
+  const statusDistribution = useMemo(() => {
+    const counts = { todo: 0, in_progress: 0, done: 0, cancelled: 0 };
+    allTasks.forEach(t => { counts[t.status]++; });
+    return [
+      { name: 'To Do', value: counts.todo, color: '#94A3B8' },
+      { name: 'In Progress', value: counts.in_progress, color: '#4B7C6F' },
+      { name: 'Done', value: counts.done, color: '#10B981' },
+      { name: 'Cancelled', value: counts.cancelled, color: '#EF4444' },
+    ].filter(s => s.value > 0);
+  }, [allTasks]);
+
+  // Priority breakdown (pie chart)
+  const priorityBreakdown = useMemo(() => {
+    const counts: Record<string, number> = { urgent: 0, high: 0, medium: 0, low: 0, none: 0 };
+    allTasks.filter(t => t.status !== 'done').forEach(t => { counts[t.priority]++; });
+    return [
+      { name: 'Urgent', value: counts.urgent, color: '#EF4444' },
+      { name: 'High', value: counts.high, color: '#F97316' },
+      { name: 'Medium', value: counts.medium, color: '#F59E0B' },
+      { name: 'Low', value: counts.low, color: '#3B82F6' },
+      { name: 'None', value: counts.none, color: '#CBD5E1' },
+    ].filter(s => s.value > 0);
+  }, [allTasks]);
+
+  // Burndown: cumulative tasks created vs completed over time
+  const burndownData = useMemo(() => {
+    const start = subDays(new Date(), dateRange);
+    const end = new Date();
+    const daysList = eachDayOfInterval({ start: startOfDay(start), end: startOfDay(end) });
+
+    const createdBefore = allTasks.filter(t => parseISO(t.created_at) < start).length;
+    const completedBefore = allTasks.filter(t => t.completed_at && parseISO(t.completed_at) < start).length;
+
+    let cumulativeCreated = createdBefore;
+    let cumulativeCompleted = completedBefore;
+
+    return daysList.map(day => {
+      const key = format(day, 'yyyy-MM-dd');
+      const createdToday = allTasks.filter(t => format(parseISO(t.created_at), 'yyyy-MM-dd') === key).length;
+      const completedToday = allTasks.filter(t => t.completed_at && format(parseISO(t.completed_at), 'yyyy-MM-dd') === key).length;
+      cumulativeCreated += createdToday;
+      cumulativeCompleted += completedToday;
+      return {
+        date: format(day, 'MMM d'),
+        remaining: cumulativeCreated - cumulativeCompleted,
+        completed: cumulativeCompleted,
+      };
+    });
+  }, [allTasks, dateRange]);
 
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   const axisColor = isDark ? '#94A3B8' : '#6B7280';
@@ -201,6 +252,57 @@ export default function Reports() {
         ) : (
           <p className="text-sm text-gray-400 text-center py-8">No assigned tasks</p>
         )}
+      </div>
+
+      {/* Status & Priority pie charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Status Distribution</h3>
+          {statusDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" label={({ name, percent }: { name?: string; percent?: number }) => `${name || ''} ${((percent || 0) * 100).toFixed(0)}%`}>
+                  {statusDistribution.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">No tasks</p>
+          )}
+        </div>
+
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Priority Breakdown (Open Tasks)</h3>
+          {priorityBreakdown.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={priorityBreakdown} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" label={({ name, percent }: { name?: string; percent?: number }) => `${name || ''} ${((percent || 0) * 100).toFixed(0)}%`}>
+                  {priorityBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">No open tasks</p>
+          )}
+        </div>
+      </div>
+
+      {/* Burndown chart */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Burndown Chart</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart data={burndownData} margin={{ left: 0, right: 16 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: axisColor }} interval={Math.max(Math.floor(burndownData.length / 6), 1)} />
+            <YAxis tick={{ fontSize: 11, fill: axisColor }} allowDecimals={false} />
+            <Tooltip contentStyle={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E5E7EB', color: isDark ? '#F1F5F9' : '#111827' }} />
+            <Legend />
+            <Area type="monotone" dataKey="remaining" name="Remaining" stroke="#EF4444" fill="#EF4444" fillOpacity={0.1} strokeWidth={2} />
+            <Area type="monotone" dataKey="completed" name="Completed" stroke="#10B981" fill="#10B981" fillOpacity={0.1} strokeWidth={2} />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

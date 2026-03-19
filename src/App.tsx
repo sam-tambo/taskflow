@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/useUIStore';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
 import { ShortcutsModal } from '@/components/ShortcutsModal';
+import { GlobalQuickAdd } from '@/components/tasks/GlobalQuickAdd';
 import AppShell from '@/components/layout/AppShell';
 import { RoleGuard } from '@/components/ui/RoleGuard';
 import Login from '@/pages/auth/Login';
@@ -34,6 +35,9 @@ const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const GanttChart = lazy(() => import('@/pages/GanttChart'));
 const ClientReport = lazy(() => import('@/pages/ClientReport'));
+const Favorites = lazy(() => import('@/pages/Favorites'));
+const Teams = lazy(() => import('@/pages/Teams'));
+const MyTasks = lazy(() => import('@/pages/MyTasks'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function ThemeInitializer() {
@@ -105,6 +109,7 @@ export default function App() {
           <ThemeInitializer />
           <CommandPalette />
           <ShortcutsModal />
+          <GlobalQuickAdd />
           <Toaster position="bottom-right" richColors closeButton />
           <Suspense fallback={<PageSkeleton />}>
             <Routes>
@@ -116,11 +121,14 @@ export default function App() {
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/" element={<Home />} />
                 <Route path="/inbox" element={<Inbox />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/my-tasks" element={<MyTasks />} />
                 <Route path="/projects/:projectId" element={<Project />} />
                 <Route path="/projects/:projectId/forms/:formId" element={<FormBuilder />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/portfolios" element={<Portfolios />} />
                 <Route path="/members" element={<RoleGuard minRole="admin"><Members /></RoleGuard>} />
+                <Route path="/teams" element={<RoleGuard minRole="admin"><Teams /></RoleGuard>} />
                 <Route path="/members/:userId" element={<RoleGuard minRole="admin"><MemberProfile /></RoleGuard>} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/reports" element={<RoleGuard minRole="employee"><Reports /></RoleGuard>} />

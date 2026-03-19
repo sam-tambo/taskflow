@@ -22,6 +22,12 @@ export function useKeyboardShortcuts() {
       // Always-active shortcuts
       if (mod && e.key === 'k') { e.preventDefault(); setCommandPaletteOpen(true); return; }
       if (mod && e.key === '\\') { e.preventDefault(); toggleSidebar(); return; }
+      if (mod && e.shiftKey && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        const store = useUIStore.getState();
+        store.setTheme(store.theme === 'dark' ? 'light' : 'dark');
+        return;
+      }
 
       // Only when NOT typing
       if (isTyping) return;
@@ -30,16 +36,20 @@ export function useKeyboardShortcuts() {
       if (gPressed) {
         clearTimeout(gTimer);
         gPressed = false;
-        switch (e.key) {
-          case 'h': navigate('/'); return;
-          case 'i': navigate('/inbox'); return;
-          case 'p': navigate('/portfolios'); return;
-          case 'r': navigate('/reports'); return;
-          case 'g': navigate('/goals'); return;
-          case 'w': navigate('/workload'); return;
-          case 'm': navigate('/members'); return;
-          case 's': navigate('/settings'); return;
-        }
+        const routes: Record<string, string> = {
+          h: '/',
+          t: '/my-tasks',
+          i: '/inbox',
+          f: '/favorites',
+          p: '/portfolios',
+          r: '/reports',
+          g: '/goals',
+          w: '/workload',
+          m: '/members',
+          s: '/settings',
+        };
+        const route = routes[e.key];
+        if (route) navigate(route);
         return;
       }
 
