@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useCustomFields, useCustomFieldValues, useCreateCustomField, useDeleteCustomField, useSetCustomFieldValue } from '@/hooks/useCustomFields';
+import { useRBAC } from '@/hooks/useRBAC';
 import { cn } from '@/lib/utils';
-import { Plus, Trash2, Hash, Calendar, Type, CheckSquare, List, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Hash, Calendar, Type, CheckSquare, List, GripVertical } from 'lucide-react';
 import type { CustomField } from '@/types';
 
 interface CustomFieldsSectionProps {
@@ -16,6 +17,15 @@ const FIELD_TYPES: { type: CustomField['field_type']; label: string; icon: typeo
   { type: 'checkbox', label: 'Checkbox', icon: CheckSquare },
   { type: 'select', label: 'Dropdown', icon: List },
 ];
+
+const FIELD_TYPE_ICONS: Record<string, typeof Type> = {
+  text: Type,
+  number: Hash,
+  date: Calendar,
+  checkbox: CheckSquare,
+  select: List,
+  multi_select: List,
+};
 
 export function CustomFieldsSection({ taskId, projectId }: CustomFieldsSectionProps) {
   const { data: fields = [] } = useCustomFields(projectId);
@@ -65,6 +75,7 @@ export function CustomFieldsSection({ taskId, projectId }: CustomFieldsSectionPr
             placeholder="Field name"
             className="w-full px-2 py-1.5 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md outline-none text-gray-900 dark:text-white"
             autoFocus
+            onKeyDown={e => { if (e.key === 'Enter') handleAddField(); }}
           />
           <div className="flex gap-1 flex-wrap">
             {FIELD_TYPES.map(ft => {
@@ -105,15 +116,19 @@ export function CustomFieldsSection({ taskId, projectId }: CustomFieldsSectionPr
       {/* Field values */}
       {fields.length > 0 && (
         <div className="grid grid-cols-[120px_1fr] gap-y-2 gap-x-3 text-sm">
-          {fields.map(field => (
-            <FieldRow
-              key={field.id}
-              field={field}
-              value={getFieldValue(field.id)}
-              onChange={(val) => setValue.mutate({ fieldId: field.id, value: val })}
-              onDelete={() => { if (confirm(`Delete field "${field.name}"?`)) deleteField.mutate(field.id); }}
-            />
-          ))}
+          {fields.map(field => {
+            const Icon = FIELD_TYPE_ICONS[field.field_type] || Type;
+            return (
+              <FieldRow
+                key={field.id}
+                field={field}
+                icon={Icon}
+                value={getFieldValue(field.id)}
+                onChange={(val) => setValue.mutate({ fieldId: field.id, value: val })}
+                onDelete={() => { if (confirm(`Delete field "${field.name}"?`)) deleteField.mutate(field.id); }}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -124,8 +139,9 @@ export function CustomFieldsSection({ taskId, projectId }: CustomFieldsSectionPr
   );
 }
 
-function FieldRow({ field, value, onChange, onDelete }: {
+function FieldRow({ field, icon: Icon, value, onChange, onDelete }: {
   field: CustomField;
+  icon: typeof Type;
   value: string | null;
   onChange: (val: string | null) => void;
   onDelete: () => void;
@@ -194,8 +210,9 @@ function FieldRow({ field, value, onChange, onDelete }: {
   return (
     <>
       <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5 group">
-        {field.name}
-        <button onClick={onDelete} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500">
+        <Icon className="w-3 h-3 text-gray-400 flex-shrink-0" />
+        <span className="truncate">{field.name}</span>
+        <button onClick={onDelete} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 flex-shrink-0">
           <Trash2 className="w-2.5 h-2.5" />
         </button>
       </span>
