@@ -7,10 +7,9 @@ import { useUIStore } from '@/stores/useUIStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { format, formatDistanceToNow } from 'date-fns';
-import { Bell, CheckCheck, UserPlus, MessageSquare, CheckCircle, Clock, AtSign, Trash2, Archive, Filter } from 'lucide-react';
+import { format, formatDistanceToNow, isToday, isYesterday, startOfDay } from 'date-fns';
+import { Bell, CheckCheck, UserPlus, MessageSquare, CheckCircle, Clock, AtSign, Trash2, ExternalLink } from 'lucide-react';
 import type { Notification } from '@/types';
-import { toast } from 'sonner';
 
 const notificationIcons: Record<string, typeof Bell> = {
   task_assigned: UserPlus,
@@ -22,13 +21,28 @@ const notificationIcons: Record<string, typeof Bell> = {
 
 const typeLabels: Record<string, string> = {
   task_assigned: 'Assigned',
-  task_commented: 'Comments',
+  task_commented: 'Comment',
   task_completed: 'Completed',
-  mentioned: 'Mentions',
+  mentioned: 'Mention',
   due_soon: 'Due Soon',
 };
 
+const typeBg: Record<string, string> = {
+  task_assigned: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+  task_commented: 'bg-gray-100 dark:bg-slate-800 text-gray-500',
+  task_completed: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+  mentioned: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
+  due_soon: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+};
+
 type TabFilter = 'all' | 'unread' | 'task_assigned' | 'task_commented' | 'mentioned' | 'due_soon';
+
+function getDayLabel(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (isToday(date)) return 'Today';
+  if (isYesterday(date)) return 'Yesterday';
+  return format(date, 'EEEE, MMMM d');
+}
 
 export default function Inbox() {
   usePageTitle('Inbox');
@@ -58,6 +72,21 @@ export default function Inbox() {
     if (activeTab === 'unread') return notifications.filter(n => !n.is_read);
     return notifications.filter(n => n.type === activeTab);
   }, [notifications, activeTab]);
+
+  // Group by day
+  const groupedByDay = useMemo(() => {
+    const groups: { label: string; items: Notification[] }[] = [];
+    let currentLabel = '';
+    filteredNotifications.forEach(n => {
+      const label = getDayLabel(n.created_at);
+      if (label !== currentLabel) {
+        currentLabel = label;
+        groups.push({ label, items: [] });
+      }
+      groups[groups.length - 1].items.push(n);
+    });
+    return groups;
+  }, [filteredNotifications]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -130,60 +159,73 @@ export default function Inbox() {
             {activeTab === 'unread' ? 'All caught up!' : 'No notifications'}
           </h3>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {activeTab === 'unread' ? 'You have no unread notifications.' : 'Notifications will appear here.'}
+            {activeTab === 'unread' ? 'You have no unread notifications.' : 'Notifications will appear here when you get assigned to tasks, receive comments, or have approaching due dates.'}
           </p>
         </div>
       )}
 
-      <div className="space-y-1">
-        {filteredNotifications.map((n) => {
-          const Icon = notificationIcons[n.type] || Bell;
-          return (
-            <div
-              key={n.id}
-              className={cn(
-                'group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors',
-                n.is_read ? 'hover:bg-gray-50 dark:hover:bg-slate-800/50' : 'bg-[#4B7C6F]/5 hover:bg-[#4B7C6F]/10'
-              )}
-            >
-              <div onClick={() => handleClick(n)} className="flex items-start gap-3 flex-1 min-w-0">
-                {n.actor ? (
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0" style={{ backgroundColor: getAvatarColor(n.actor.id) }}>
-                    {getInitials(n.actor.full_name)}
+      {/* Day-grouped notifications */}
+      {groupedByDay.map(group => (
+        <div key={group.label} className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500 mb-2 px-1">{group.label}</h3>
+          <div className="space-y-1">
+            {group.items.map((n) => {
+              const Icon = notificationIcons[n.type] || Bell;
+              return (
+                <div
+                  key={n.id}
+                  className={cn(
+                    'group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors',
+                    n.is_read ? 'hover:bg-gray-50 dark:hover:bg-slate-800/50' : 'bg-[#4B7C6F]/5 hover:bg-[#4B7C6F]/10'
+                  )}
+                >
+                  <div onClick={() => handleClick(n)} className="flex items-start gap-3 flex-1 min-w-0">
+                    {n.actor ? (
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0" style={{ backgroundColor: getAvatarColor(n.actor.id) }}>
+                        {getInitials(n.actor.full_name)}
+                      </div>
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-gray-500" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          <span className="font-medium">{n.title}</span>
+                        </p>
+                        <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full font-medium', typeBg[n.type] || 'bg-gray-100 dark:bg-slate-800 text-gray-500')}>
+                          {typeLabels[n.type] || n.type}
+                        </span>
+                      </div>
+                      {n.body && <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{n.body}</p>}
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-gray-400">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+                        {n.resource_type === 'task' && n.resource_id && (
+                          <span className="text-[10px] text-[#4B7C6F] flex items-center gap-0.5">
+                            <ExternalLink className="w-2.5 h-2.5" /> Open task
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4 text-gray-500" />
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 flex-shrink-0">
+                    {!n.is_read && (
+                      <button onClick={(e) => { e.stopPropagation(); markAsRead.mutate(n.id); }} className="p-1.5 text-gray-400 hover:text-[#4B7C6F] rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Mark as read">
+                        <CheckCheck className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button onClick={(e) => { e.stopPropagation(); deleteNotification.mutate(n.id); }} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Delete">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      <span className="font-medium">{n.title}</span>
-                    </p>
-                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full', n.type === 'mentioned' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' : n.type === 'due_soon' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700' : 'bg-gray-100 dark:bg-slate-800 text-gray-500')}>
-                      {typeLabels[n.type] || n.type}
-                    </span>
-                  </div>
-                  {n.body && <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{n.body}</p>}
-                  <p className="text-xs text-gray-400 mt-1">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+                  {!n.is_read && <div className="w-2 h-2 rounded-full bg-[#16A34A] flex-shrink-0 mt-3" />}
                 </div>
-              </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 flex-shrink-0">
-                {!n.is_read && (
-                  <button onClick={(e) => { e.stopPropagation(); markAsRead.mutate(n.id); }} className="p-1.5 text-gray-400 hover:text-[#4B7C6F] rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Mark as read">
-                    <CheckCheck className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                <button onClick={(e) => { e.stopPropagation(); deleteNotification.mutate(n.id); }} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Delete">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              {!n.is_read && <div className="w-2 h-2 rounded-full bg-[#16A34A] flex-shrink-0 mt-3" />}
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

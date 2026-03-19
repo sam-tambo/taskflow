@@ -19,6 +19,10 @@ const PRESET_COLORS = [
 
 const PRESET_ICONS = ['folder', 'rocket', 'star', 'zap', 'target', 'briefcase', 'code', 'globe'];
 
+interface TemplateTasks {
+  [sectionName: string]: string[];
+}
+
 interface ProjectTemplate {
   name: string;
   icon: typeof Briefcase;
@@ -26,15 +30,58 @@ interface ProjectTemplate {
   color: string;
   sections: string[];
   defaultView: 'list' | 'board' | 'timeline' | 'calendar';
+  tasks?: TemplateTasks;
 }
 
 const TEMPLATES: ProjectTemplate[] = [
   { name: 'Blank Project', icon: Lightbulb, description: 'Start from scratch', color: '#4B7C6F', sections: ['To Do', 'In Progress', 'Done'], defaultView: 'list' },
-  { name: 'Marketing Campaign', icon: Megaphone, description: 'Plan and execute campaigns', color: '#EC4899', sections: ['Planning', 'In Progress', 'Review', 'Published'], defaultView: 'board' },
-  { name: 'Product Launch', icon: Briefcase, description: 'Coordinate product releases', color: '#8B5CF6', sections: ['Research', 'Development', 'Testing', 'Launch'], defaultView: 'timeline' },
-  { name: 'Software Development', icon: Code, description: 'Agile sprints and features', color: '#3B82F6', sections: ['Backlog', 'Sprint', 'In Review', 'Done'], defaultView: 'board' },
-  { name: 'Design Project', icon: Palette, description: 'Creative design workflow', color: '#F59E0B', sections: ['Brief', 'Concepts', 'Revisions', 'Final'], defaultView: 'board' },
-  { name: 'Onboarding', icon: GraduationCap, description: 'New hire onboarding tasks', color: '#10B981', sections: ['Before Start', 'Week 1', 'Week 2', 'Ongoing'], defaultView: 'list' },
+  {
+    name: 'Marketing Campaign', icon: Megaphone, description: 'Plan and execute campaigns', color: '#EC4899',
+    sections: ['Planning', 'In Progress', 'Review', 'Published'], defaultView: 'board',
+    tasks: {
+      'Planning': ['Define campaign goals', 'Identify target audience', 'Create content calendar', 'Set budget'],
+      'In Progress': ['Design social media assets', 'Write blog post', 'Create email templates'],
+      'Review': ['Review campaign copy', 'Approve final designs'],
+    },
+  },
+  {
+    name: 'Product Launch', icon: Briefcase, description: 'Coordinate product releases', color: '#8B5CF6',
+    sections: ['Research', 'Development', 'Testing', 'Launch'], defaultView: 'timeline',
+    tasks: {
+      'Research': ['Market analysis', 'Competitor research', 'Define product requirements', 'User interviews'],
+      'Development': ['Build MVP', 'Create landing page', 'Set up analytics'],
+      'Testing': ['QA testing', 'Beta user testing', 'Fix critical bugs'],
+      'Launch': ['Prepare press release', 'Social media announcement', 'Email existing users'],
+    },
+  },
+  {
+    name: 'Software Development', icon: Code, description: 'Agile sprints and features', color: '#3B82F6',
+    sections: ['Backlog', 'Sprint', 'In Review', 'Done'], defaultView: 'board',
+    tasks: {
+      'Backlog': ['Set up project repository', 'Define coding standards', 'Create CI/CD pipeline', 'Write technical spec'],
+      'Sprint': ['Implement authentication', 'Build API endpoints', 'Create database schema'],
+      'In Review': ['Code review: auth module', 'Update documentation'],
+    },
+  },
+  {
+    name: 'Design Project', icon: Palette, description: 'Creative design workflow', color: '#F59E0B',
+    sections: ['Brief', 'Concepts', 'Revisions', 'Final'], defaultView: 'board',
+    tasks: {
+      'Brief': ['Gather requirements', 'Create mood board', 'Define design system', 'Stakeholder alignment'],
+      'Concepts': ['Wireframes', 'Low-fidelity mockups', 'Typography selection'],
+      'Revisions': ['Incorporate feedback', 'High-fidelity designs'],
+    },
+  },
+  {
+    name: 'Onboarding', icon: GraduationCap, description: 'New hire onboarding tasks', color: '#10B981',
+    sections: ['Before Start', 'Week 1', 'Week 2', 'Ongoing'], defaultView: 'list',
+    tasks: {
+      'Before Start': ['Send welcome email', 'Set up accounts', 'Prepare workstation', 'Schedule intro meetings'],
+      'Week 1': ['Company overview presentation', 'Meet the team', 'Set up dev environment', 'First task assignment'],
+      'Week 2': ['Shadow team members', '1:1 with manager', 'Complete training modules'],
+      'Ongoing': ['Weekly check-ins', 'Quarterly goals review'],
+    },
+  },
 ];
 
 export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
@@ -122,14 +169,36 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
       },
       {
         onSuccess: async (data) => {
-          // Create template-specific sections if not blank
+          // Create template-specific sections and tasks if not blank
           if (selectedTemplate && selectedTemplate.name !== 'Blank Project') {
+            const sectionIds: Record<string, string> = {};
             for (let i = 0; i < selectedTemplate.sections.length; i++) {
-              await supabase.from('sections').insert({
+              const { data: sec } = await supabase.from('sections').insert({
                 project_id: data.id,
                 name: selectedTemplate.sections[i],
                 position: i,
-              });
+              }).select('id').single();
+              if (sec) sectionIds[selectedTemplate.sections[i]] = sec.id;
+            }
+            // Create template tasks
+            if (selectedTemplate.tasks) {
+              for (const [sectionName, taskTitles] of Object.entries(selectedTemplate.tasks)) {
+                const sectionId = sectionIds[sectionName];
+                if (!sectionId) continue;
+                for (let j = 0; j < taskTitles.length; j++) {
+                  await supabase.from('tasks').insert({
+                    workspace_id: workspaceId,
+                    project_id: data.id,
+                    section_id: sectionId,
+                    title: taskTitles[j],
+                    status: 'todo',
+                    priority: 'none',
+                    position: j,
+                    created_by: user.id,
+                    tags: [],
+                  });
+                }
+              }
             }
           }
           setName('');

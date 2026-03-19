@@ -1,7 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { Task } from '@/types';
+import type { Task, RecurrencePattern } from '@/types';
 import { toast } from 'sonner';
+import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
+
+function getNextDueDate(currentDue: string | null, pattern: RecurrencePattern): string {
+  const base = currentDue ? new Date(currentDue) : new Date();
+  const interval = pattern.interval || 1;
+  let next: Date;
+  switch (pattern.frequency) {
+    case 'daily': next = addDays(base, interval); break;
+    case 'weekly': next = addWeeks(base, interval); break;
+    case 'monthly': next = addMonths(base, interval); break;
+    case 'yearly': next = addYears(base, interval); break;
+    default: next = addDays(base, 1);
+  }
+  return next.toISOString().split('T')[0];
+}
 
 export function useTasks(projectId: string | undefined) {
   return useQuery({
@@ -126,6 +141,35 @@ export function useUpdateTask(projectId?: string) {
           supabase.from('activity_log').insert(logs).then(() => {
             queryClient.invalidateQueries({ queryKey: ['activities'] });
             queryClient.invalidateQueries({ queryKey: ['project-activity'] });
+          });
+        }
+      }
+
+      // Auto-create next occurrence for recurring tasks
+      if (updates.status === 'done' && oldTask && data) {
+        const fullTask = data as Task;
+        if (fullTask.recurrence) {
+          const nextDue = getNextDueDate(fullTask.due_date, fullTask.recurrence);
+          supabase.from('tasks').insert({
+            workspace_id: fullTask.workspace_id,
+            project_id: fullTask.project_id,
+            section_id: fullTask.section_id,
+            title: fullTask.title,
+            description: fullTask.description,
+            priority: fullTask.priority,
+            assignee_id: fullTask.assignee_id,
+            due_date: nextDue,
+            recurrence: fullTask.recurrence,
+            tags: fullTask.tags,
+            estimated_hours: fullTask.estimated_hours,
+            position: fullTask.position,
+            created_by: fullTask.created_by,
+            status: 'todo',
+          }).then(({ error: insertErr }) => {
+            if (!insertErr) {
+              queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+              toast.info('Next recurring task created');
+            }
           });
         }
       }

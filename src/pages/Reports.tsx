@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useProjects } from '@/hooks/useProjects';
 import { cn, getAvatarColor, getInitials } from '@/lib/utils';
-import { BarChart3, CheckCircle2, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock, AlertTriangle, TrendingUp, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend, AreaChart, Area,
@@ -144,6 +145,78 @@ export default function Reports() {
     });
   }, [allTasks, dateRange]);
 
+  const exportCsv = () => {
+    const headers = ['Title', 'Status', 'Priority', 'Assignee', 'Project', 'Due Date', 'Created', 'Completed'];
+    const rows = allTasks.map(t => [
+      t.title,
+      t.status,
+      t.priority ?? '',
+      t.assignee?.full_name ?? 'Unassigned',
+      t.project?.name ?? '',
+      t.due_date ? format(parseISO(t.due_date), 'yyyy-MM-dd') : '',
+      format(parseISO(t.created_at), 'yyyy-MM-dd'),
+      t.completed_at ? format(parseISO(t.completed_at), 'yyyy-MM-dd') : '',
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `workspace_report_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('CSV exported');
+  };
+
+  const exportPdf = async () => {
+    toast.info('Generating PDF...');
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      doc.setFontSize(18);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Workspace Report', 14, 18);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Generated ${format(new Date(), 'MMMM d, yyyy')} — Last ${dateRange} days`, 14, 26);
+
+      // Stats
+      doc.setFontSize(11);
+      doc.setTextColor(15, 23, 42);
+      doc.text(`Total: ${stats.total}  |  Completed: ${stats.completed}  |  In Progress: ${stats.inProgress}  |  Overdue: ${stats.overdue}  |  Rate: ${stats.completionRate}%`, 14, 34);
+
+      // Task table
+      const headers = [['Title', 'Status', 'Priority', 'Assignee', 'Project', 'Due Date']];
+      const body = allTasks.slice(0, 200).map(t => [
+        t.title.slice(0, 50),
+        t.status.replace('_', ' '),
+        t.priority ?? '—',
+        t.assignee?.full_name ?? 'Unassigned',
+        t.project?.name ?? '—',
+        t.due_date ? format(parseISO(t.due_date), 'MMM d, yyyy') : '—',
+      ]);
+
+      autoTable(doc, {
+        head: headers,
+        body,
+        startY: 40,
+        headStyles: { fillColor: [75, 124, 111], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 8, textColor: [15, 23, 42] },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        margin: { left: 14, right: 14 },
+      });
+
+      doc.save(`workspace_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success('PDF exported');
+    } catch (err) {
+      toast.error('Failed to generate PDF');
+    }
+  };
+
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   const axisColor = isDark ? '#94A3B8' : '#6B7280';
   const gridColor = isDark ? '#334155' : '#E5E7EB';
@@ -155,16 +228,30 @@ export default function Reports() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reports</h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Overview of your workspace activity</p>
         </div>
-        <select
-          value={dateRange}
-          onChange={e => setDateRange(Number(e.target.value))}
-          className="px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white cursor-pointer"
-        >
-          <option value={7}>Last 7 days</option>
-          <option value={14}>Last 14 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            value={dateRange}
+            onChange={e => setDateRange(Number(e.target.value))}
+            className="px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white cursor-pointer"
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={14}>Last 14 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+          </select>
+          <button
+            onClick={exportCsv}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700"
+          >
+            <FileSpreadsheet className="w-4 h-4" /> CSV
+          </button>
+          <button
+            onClick={exportPdf}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-[#4B7C6F] rounded-lg hover:bg-[#3d6b5e]"
+          >
+            <FileText className="w-4 h-4" /> PDF
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}

@@ -16,6 +16,7 @@ import { RecurrencePicker } from './RecurrencePicker';
 import { SaveAsTemplateButton } from './TaskTemplates';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { TagEditor } from './TagEditor';
+import { FollowersSection } from './FollowersSection';
 import { format } from 'date-fns';
 import {
   X, Check, Star, MoreHorizontal, Calendar, Flag, User, Tag, Clock,
@@ -390,6 +391,11 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
         {/* Subtasks */}
         <SubtaskList parentTask={task} />
+
+        <hr className="border-gray-100 dark:border-slate-800" />
+
+        {/* Followers */}
+        <FollowersSection taskId={task.id} />
 
         <hr className="border-gray-100 dark:border-slate-800" />
 
