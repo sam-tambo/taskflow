@@ -34,6 +34,7 @@ const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const GanttChart = lazy(() => import('@/pages/GanttChart'));
 const ClientReport = lazy(() => import('@/pages/ClientReport'));
+const Favorites = lazy(() => import('@/pages/Favorites'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function ThemeInitializer() {
@@ -116,6 +117,7 @@ export default function App() {
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/" element={<Home />} />
                 <Route path="/inbox" element={<Inbox />} />
+                <Route path="/favorites" element={<Favorites />} />
                 <Route path="/projects/:projectId" element={<Project />} />
                 <Route path="/projects/:projectId/forms/:formId" element={<FormBuilder />} />
                 <Route path="/search" element={<Search />} />
