@@ -4,7 +4,13 @@ import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
 import { ShareProjectModal } from '@/components/projects/ShareProjectModal';
-import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download } from 'lucide-react';
+import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal } from 'lucide-react';
+import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
+import { useAuth } from '@/hooks/useAuth';
+import { useCreateProject, useSections } from '@/hooks/useProjects';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import type { Project } from '@/types';
 
 interface ProjectHeaderProps {
@@ -26,6 +32,45 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
   const [showExport, setShowExport] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const { currentWorkspace } = useWorkspaceStore();
+  const { user } = useAuth();
+  const { data: sections = [] } = useSections(project.id);
+  const createProject = useCreateProject(currentWorkspace?.id);
+  const navigate = useNavigate();
+
+  const handleDuplicate = () => {
+    if (!currentWorkspace?.id || !user?.id) return;
+    createProject.mutate(
+      {
+        name: `${project.name} (copy)`,
+        description: project.description,
+        color: project.color,
+        icon: project.icon,
+        privacy: project.privacy,
+        workspace_id: currentWorkspace.id,
+        owner_id: user.id,
+        status: 'active',
+        default_view: project.default_view,
+      },
+      {
+        onSuccess: async (data) => {
+          // Duplicate sections
+          for (let i = 0; i < sections.length; i++) {
+            await supabase.from('sections').insert({
+              project_id: data.id,
+              name: sections[i].name,
+              position: sections[i].position,
+              color: sections[i].color,
+            });
+          }
+          toast.success('Project duplicated');
+          navigate(`/projects/${data.id}`);
+          setShowMore(false);
+        },
+      }
+    );
+  };
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'done').length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -118,6 +163,26 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
                 >
                   Export as PDF
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+          <div className="relative">
+            <button
+              onClick={() => setShowMore(!showMore)}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+            {showMore && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-1 z-20">
+                <button
+                  onClick={handleDuplicate}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  <Copy className="w-4 h-4" /> Duplicate project
                 </button>
               </div>
             )}
