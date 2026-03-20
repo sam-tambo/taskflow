@@ -8,14 +8,44 @@ export function useProjects(workspaceId: string | undefined) {
     queryKey: ['projects', workspaceId],
     queryFn: async () => {
       if (!workspaceId) return [];
-      const { data, error } = await supabase
+
+      // Fetch workspace projects (visible to all workspace members)
+      const { data: workspaceProjects, error } = await supabase
         .from('projects')
         .select('*, owner:profiles!owner_id(*)')
         .eq('workspace_id', workspaceId)
         .eq('status', 'active')
         .order('name');
       if (error) throw error;
-      return data as Project[];
+
+      // Also fetch private projects where user is a member (handles invitations)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return workspaceProjects as Project[];
+
+      const { data: memberRows } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', user.id);
+
+      if (!memberRows || memberRows.length === 0) return workspaceProjects as Project[];
+
+      const workspaceProjectIds = new Set((workspaceProjects || []).map(p => p.id));
+      const missingProjectIds = memberRows
+        .map(m => m.project_id)
+        .filter(id => !workspaceProjectIds.has(id));
+
+      if (missingProjectIds.length === 0) return workspaceProjects as Project[];
+
+      // Fetch private projects that weren't returned by the workspace query
+      const { data: memberProjects } = await supabase
+        .from('projects')
+        .select('*, owner:profiles!owner_id(*)')
+        .in('id', missingProjectIds)
+        .eq('status', 'active');
+
+      const allProjects = [...(workspaceProjects || []), ...(memberProjects || [])];
+      allProjects.sort((a, b) => a.name.localeCompare(b.name));
+      return allProjects as Project[];
     },
     enabled: !!workspaceId,
   });

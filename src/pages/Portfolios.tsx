@@ -44,20 +44,36 @@ export default function Portfolios() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  // Fetch task counts per project
+  // Fetch task counts per project (includes tasks from member projects)
   const { data: projectTaskCounts = {} } = useQuery({
-    queryKey: ['portfolio-task-counts', currentWorkspace?.id],
+    queryKey: ['portfolio-task-counts', currentWorkspace?.id, projects.map(p => p.id).join(',')],
     queryFn: async () => {
       if (!currentWorkspace?.id) return {};
-      const { data, error } = await supabase
+
+      // Fetch tasks from workspace
+      const { data: workspaceTasks, error } = await supabase
         .from('tasks')
         .select('project_id, status, due_date')
         .eq('workspace_id', currentWorkspace.id)
         .is('parent_task_id', null);
       if (error) throw error;
 
+      const allTasks = [...(workspaceTasks || [])];
+
+      // Also fetch tasks for any member projects not in this workspace
+      const workspaceTaskProjectIds = new Set((workspaceTasks || []).map(t => t.project_id).filter(Boolean));
+      const missingProjectIds = projects.map(p => p.id).filter(id => !workspaceTaskProjectIds.has(id));
+      if (missingProjectIds.length > 0) {
+        const { data: memberTasks } = await supabase
+          .from('tasks')
+          .select('project_id, status, due_date')
+          .in('project_id', missingProjectIds)
+          .is('parent_task_id', null);
+        if (memberTasks) allTasks.push(...memberTasks);
+      }
+
       const counts: Record<string, ProjectStats> = {};
-      (data || []).forEach(t => {
+      allTasks.forEach(t => {
         if (!t.project_id) return;
         if (!counts[t.project_id]) counts[t.project_id] = { total: 0, done: 0, overdue: 0, progress: 0, health: 'on_track' };
         const c = counts[t.project_id];
