@@ -205,6 +205,19 @@ export interface ActivityLog {
   user?: Profile;
 }
 
+export type PortfolioRole = 'admin' | 'editor' | 'commenter' | 'viewer';
+
+export interface PortfolioMember {
+  id: string;
+  portfolio_id: string;
+  user_id: string;
+  role: PortfolioRole;
+  invited_by: string | null;
+  invited_email: string | null;
+  created_at: string;
+  profiles?: Profile;
+}
+
 export interface Portfolio {
   id: string;
   workspace_id: string;
