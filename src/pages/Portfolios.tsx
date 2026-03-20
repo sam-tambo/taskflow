@@ -5,11 +5,10 @@ import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useProjects, useCreateProject, useUpdateProject } from '@/hooks/useProjects';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, X, Check, UserPlus } from 'lucide-react';
+import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, X, Check } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import type { Project } from '@/types';
 import { Link } from 'react-router-dom';
-import { ShareProjectModal } from '@/components/projects/ShareProjectModal';
 
 type HealthStatus = 'on_track' | 'at_risk' | 'off_track' | 'complete';
 
@@ -44,7 +43,6 @@ export default function Portfolios() {
   const [newColor, setNewColor] = useState('#4B7C6F');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const [sharingProject, setSharingProject] = useState<Project | null>(null);
 
   // Fetch task counts per project (includes tasks from member projects)
   const { data: projectTaskCounts = {} } = useQuery({
@@ -276,26 +274,13 @@ export default function Portfolios() {
                   </div>
                 </Link>
                 {!isRenaming && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSharingProject(project);
-                      }}
-                      className="p-1.5 rounded-md bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-400 hover:text-[#4B7C6F] shadow-sm"
-                      title="Share"
-                    >
-                      <UserPlus className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => handleRenameStart(project, e)}
-                      className="p-1.5 rounded-md bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-400 hover:text-gray-600 shadow-sm"
-                      title="Rename"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={(e) => handleRenameStart(project, e)}
+                    className="absolute top-3 right-3 p-1.5 rounded-md bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                    title="Rename"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
                 )}
               </div>
             );
@@ -379,22 +364,13 @@ export default function Portfolios() {
                     <td className="px-4 py-3 text-sm text-gray-500">{project.due_date ? format(parseISO(project.due_date), 'MMM d, yyyy') : '—'}</td>
                     <td className="px-4 py-3">
                       {!isRenaming && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setSharingProject(project)}
-                            className="p-1 text-gray-400 hover:text-[#4B7C6F] rounded"
-                            title="Share"
-                          >
-                            <UserPlus className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => handleRenameStart(project, e)}
-                            className="p-1 text-gray-400 hover:text-gray-600 rounded"
-                            title="Rename"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={(e) => handleRenameStart(project, e)}
+                          className="p-1 text-gray-400 hover:text-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Rename"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -403,15 +379,6 @@ export default function Portfolios() {
             </tbody>
           </table>
         </div>
-      )}
-
-      {/* Share project modal */}
-      {sharingProject && (
-        <ShareProjectModal
-          open={!!sharingProject}
-          onClose={() => setSharingProject(null)}
-          project={sharingProject}
-        />
       )}
 
       {/* New Portfolio dialog */}

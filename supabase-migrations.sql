@@ -180,7 +180,7 @@ create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
   actor_id uuid references public.profiles(id) on delete set null,
-  type text not null check (type in ('task_assigned', 'task_commented', 'task_completed', 'mentioned', 'due_soon', 'project_invited')),
+  type text not null check (type in ('task_assigned', 'task_commented', 'task_completed', 'mentioned', 'due_soon')),
   title text not null,
   body text,
   resource_type text check (resource_type in ('task', 'project', 'comment')),
@@ -297,13 +297,7 @@ create policy "workspaces_delete" on public.workspaces
 -- subquerying workspace_members itself, which would cause infinite recursion.
 drop policy if exists "workspace_members_select" on public.workspace_members;
 create policy "workspace_members_select" on public.workspace_members
-  for select using (
-    exists (
-      select 1 from public.workspace_members wm
-      where wm.workspace_id = workspace_members.workspace_id
-        and wm.user_id = auth.uid()
-    )
-  );
+  for select using (user_id = auth.uid());
 
 drop policy if exists "workspace_members_insert" on public.workspace_members;
 create policy "workspace_members_insert" on public.workspace_members
@@ -312,12 +306,6 @@ create policy "workspace_members_insert" on public.workspace_members
     or exists (
       select 1 from public.workspaces w
       where w.id = workspace_members.workspace_id and w.owner_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.workspace_members wm
-      where wm.workspace_id = workspace_members.workspace_id
-        and wm.user_id = auth.uid()
-        and wm.role in ('owner', 'admin')
     )
   );
 
@@ -1111,113 +1099,5 @@ create policy "project_milestones_delete" on public.project_milestones
     exists (
       select 1 from public.project_members pm
       where pm.project_id = project_milestones.project_id and pm.user_id = auth.uid() and pm.role in ('owner', 'editor')
-    )
-  );
-
-
--- ============================================================
--- PORTFOLIO MEMBERS – collaborative portfolio sharing
--- ============================================================
-
--- portfolio_members table
-create table if not exists public.portfolio_members (
-  id uuid primary key default gen_random_uuid(),
-  portfolio_id uuid references public.portfolios(id) on delete cascade,
-  user_id uuid references public.profiles(id) on delete cascade,
-  role text not null default 'editor' check (role in ('admin', 'editor', 'commenter', 'viewer')),
-  invited_by uuid references public.profiles(id) on delete set null,
-  invited_email text,
-  created_at timestamptz default now(),
-  unique(portfolio_id, user_id)
-);
-
-alter table public.portfolio_members enable row level security;
-
--- ---- portfolio_members RLS ----
-drop policy if exists "portfolio_members_select" on public.portfolio_members;
-create policy "portfolio_members_select" on public.portfolio_members
-  for select using (
-    exists (
-      select 1 from public.portfolios port
-      join public.workspace_members wm on wm.workspace_id = port.workspace_id
-      where port.id = portfolio_members.portfolio_id and wm.user_id = auth.uid()
-    )
-  );
-
-drop policy if exists "portfolio_members_insert" on public.portfolio_members;
-create policy "portfolio_members_insert" on public.portfolio_members
-  for insert with check (
-    exists (
-      select 1 from public.portfolios port
-      where port.id = portfolio_members.portfolio_id and port.owner_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.portfolio_members pm
-      where pm.portfolio_id = portfolio_members.portfolio_id and pm.user_id = auth.uid() and pm.role = 'admin'
-    )
-  );
-
-drop policy if exists "portfolio_members_update" on public.portfolio_members;
-create policy "portfolio_members_update" on public.portfolio_members
-  for update using (
-    exists (
-      select 1 from public.portfolios port
-      where port.id = portfolio_members.portfolio_id and port.owner_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.portfolio_members pm
-      where pm.portfolio_id = portfolio_members.portfolio_id and pm.user_id = auth.uid() and pm.role = 'admin'
-    )
-  );
-
-drop policy if exists "portfolio_members_delete" on public.portfolio_members;
-create policy "portfolio_members_delete" on public.portfolio_members
-  for delete using (
-    exists (
-      select 1 from public.portfolios port
-      where port.id = portfolio_members.portfolio_id and port.owner_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.portfolio_members pm
-      where pm.portfolio_id = portfolio_members.portfolio_id and pm.user_id = auth.uid() and pm.role = 'admin'
-    )
-  );
-
--- Update portfolios_update: allow portfolio members with admin/editor role to update
-drop policy if exists "portfolios_update" on public.portfolios;
-create policy "portfolios_update" on public.portfolios
-  for update using (
-    owner_id = auth.uid()
-    or exists (
-      select 1 from public.portfolio_members pm
-      where pm.portfolio_id = portfolios.id and pm.user_id = auth.uid() and pm.role in ('admin', 'editor')
-    )
-  );
-
--- Update portfolio_projects_insert: allow portfolio members with admin/editor role
-drop policy if exists "portfolio_projects_insert" on public.portfolio_projects;
-create policy "portfolio_projects_insert" on public.portfolio_projects
-  for insert with check (
-    exists (
-      select 1 from public.portfolios port
-      where port.id = portfolio_projects.portfolio_id and port.owner_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.portfolio_members pm
-      where pm.portfolio_id = portfolio_projects.portfolio_id and pm.user_id = auth.uid() and pm.role in ('admin', 'editor')
-    )
-  );
-
--- Update portfolio_projects_delete: allow portfolio members with admin/editor role
-drop policy if exists "portfolio_projects_delete" on public.portfolio_projects;
-create policy "portfolio_projects_delete" on public.portfolio_projects
-  for delete using (
-    exists (
-      select 1 from public.portfolios port
-      where port.id = portfolio_projects.portfolio_id and port.owner_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.portfolio_members pm
-      where pm.portfolio_id = portfolio_projects.portfolio_id and pm.user_id = auth.uid() and pm.role in ('admin', 'editor')
     )
   );
