@@ -180,7 +180,7 @@ create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
   actor_id uuid references public.profiles(id) on delete set null,
-  type text not null check (type in ('task_assigned', 'task_commented', 'task_completed', 'mentioned', 'due_soon')),
+  type text not null check (type in ('task_assigned', 'task_commented', 'task_completed', 'mentioned', 'due_soon', 'project_invited')),
   title text not null,
   body text,
   resource_type text check (resource_type in ('task', 'project', 'comment')),
@@ -297,7 +297,13 @@ create policy "workspaces_delete" on public.workspaces
 -- subquerying workspace_members itself, which would cause infinite recursion.
 drop policy if exists "workspace_members_select" on public.workspace_members;
 create policy "workspace_members_select" on public.workspace_members
-  for select using (user_id = auth.uid());
+  for select using (
+    exists (
+      select 1 from public.workspace_members wm
+      where wm.workspace_id = workspace_members.workspace_id
+        and wm.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "workspace_members_insert" on public.workspace_members;
 create policy "workspace_members_insert" on public.workspace_members
@@ -306,6 +312,12 @@ create policy "workspace_members_insert" on public.workspace_members
     or exists (
       select 1 from public.workspaces w
       where w.id = workspace_members.workspace_id and w.owner_id = auth.uid()
+    )
+    or exists (
+      select 1 from public.workspace_members wm
+      where wm.workspace_id = workspace_members.workspace_id
+        and wm.user_id = auth.uid()
+        and wm.role in ('owner', 'admin')
     )
   );
 

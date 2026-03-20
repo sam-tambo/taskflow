@@ -181,7 +181,7 @@ export interface Notification {
   id: string;
   user_id: string;
   actor_id: string | null;
-  type: 'task_assigned' | 'task_commented' | 'task_completed' | 'mentioned' | 'due_soon';
+  type: 'task_assigned' | 'task_commented' | 'task_completed' | 'mentioned' | 'due_soon' | 'project_invited';
   title: string;
   body: string | null;
   resource_type: 'task' | 'project' | 'comment' | null;

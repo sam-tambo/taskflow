@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { format, formatDistanceToNow, isToday, isYesterday, startOfDay } from 'date-fns';
 import { Bell, CheckCheck, UserPlus, MessageSquare, CheckCircle, Clock, AtSign, Trash2, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { Notification } from '@/types';
 
 const notificationIcons: Record<string, typeof Bell> = {
@@ -17,6 +18,7 @@ const notificationIcons: Record<string, typeof Bell> = {
   task_completed: CheckCircle,
   mentioned: AtSign,
   due_soon: Clock,
+  project_invited: UserPlus,
 };
 
 const typeLabels: Record<string, string> = {
@@ -25,6 +27,7 @@ const typeLabels: Record<string, string> = {
   task_completed: 'Completed',
   mentioned: 'Mention',
   due_soon: 'Due Soon',
+  project_invited: 'Invited',
 };
 
 const typeBg: Record<string, string> = {
@@ -33,6 +36,7 @@ const typeBg: Record<string, string> = {
   task_completed: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
   mentioned: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
   due_soon: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  project_invited: 'bg-[#4B7C6F]/10 text-[#4B7C6F]',
 };
 
 type TabFilter = 'all' | 'unread' | 'task_assigned' | 'task_commented' | 'mentioned' | 'due_soon';
@@ -51,6 +55,7 @@ export default function Inbox() {
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead(user?.id);
   const { openTaskDetail } = useUIStore();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
 
@@ -96,6 +101,8 @@ export default function Inbox() {
     }
     if (notification.resource_type === 'task' && notification.resource_id) {
       openTaskDetail(notification.resource_id);
+    } else if (notification.resource_type === 'project' && notification.resource_id) {
+      navigate(`/projects/${notification.resource_id}`);
     }
   };
 

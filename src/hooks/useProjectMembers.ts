@@ -38,6 +38,24 @@ export function useAddProjectMember(projectId?: string) {
         .select('*, profiles:profiles!user_id(*)')
         .single();
       if (error) throw error;
+
+      // Create notification for the invited user
+      const { data: project } = await supabase
+        .from('projects')
+        .select('name')
+        .eq('id', member.project_id)
+        .single();
+
+      await supabase.from('notifications').insert({
+        user_id: member.user_id,
+        actor_id: member.invited_by,
+        type: 'project_invited',
+        title: `You've been added to ${project?.name || 'a project'}`,
+        body: `You were invited as ${member.role}`,
+        resource_type: 'project',
+        resource_id: member.project_id,
+      });
+
       return data as ProjectMember;
     },
     onSuccess: () => {

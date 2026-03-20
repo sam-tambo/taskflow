@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Link2, ChevronDown, Search, UserPlus, Globe, Lock, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Link2, ChevronDown, Search, UserPlus, Globe, Lock, Trash2, Mail } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, useAddProjectMember, useUpdateProjectMember, useRemoveProjectMember } from '@/hooks/useProjectMembers';
@@ -37,6 +37,8 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
   const [notifyOnAdd, setNotifyOnAdd] = useState(true);
   const [showAccessDropdown, setShowAccessDropdown] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [profileResults, setProfileResults] = useState<Profile[]>([]);
+  const [searchingProfiles, setSearchingProfiles] = useState(false);
 
   const updatePrivacy = useMutation({
     mutationFn: async (privacy: 'workspace' | 'private') => {
@@ -53,12 +55,34 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
     },
   });
 
+  // Search profiles directly from DB when workspace members don't match
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) {
+      setProfileResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setSearchingProfiles(true);
+      const q = searchQuery.toLowerCase();
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`email.ilike.%${q}%,full_name.ilike.%${q}%`)
+        .limit(10);
+      setProfileResults(data || []);
+      setSearchingProfiles(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   if (!open) return null;
 
   const existingUserIds = new Set(projectMembers.map(m => m.user_id));
 
   // Filter workspace members for invite suggestions
-  const filteredMembers = workspaceMembers.filter(wm => {
+  const filteredWorkspaceMembers = workspaceMembers.filter(wm => {
     if (existingUserIds.has(wm.user_id)) return false;
     if (!searchQuery) return false;
     const name = wm.profiles?.full_name || '';
@@ -67,8 +91,35 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
     return name.toLowerCase().includes(q) || email.toLowerCase().includes(q);
   });
 
-  const handleInvite = (memberProfile: Profile) => {
-    if (!user) return;
+  // Combine workspace members with profile search results (deduped)
+  const workspaceMemberUserIds = new Set(filteredWorkspaceMembers.map(wm => wm.user_id));
+  const additionalProfiles = profileResults.filter(p =>
+    !existingUserIds.has(p.id) &&
+    !workspaceMemberUserIds.has(p.id) &&
+    p.id !== user?.id
+  );
+
+  const hasResults = filteredWorkspaceMembers.length > 0 || additionalProfiles.length > 0;
+  const isEmailQuery = searchQuery.includes('@') && searchQuery.includes('.');
+
+  const handleInvite = async (memberProfile: Profile) => {
+    if (!user || !currentWorkspace) return;
+
+    // Ensure the user is also a workspace member
+    const isWorkspaceMember = workspaceMembers.some(wm => wm.user_id === memberProfile.id);
+    if (!isWorkspaceMember) {
+      // Add them as a workspace member first
+      const { error: wmError } = await supabase
+        .from('workspace_members')
+        .upsert(
+          { workspace_id: currentWorkspace.id, user_id: memberProfile.id, role: 'employee' },
+          { onConflict: 'workspace_id,user_id' }
+        );
+      if (wmError) {
+        console.warn('Failed to add workspace member:', wmError.message);
+      }
+    }
+
     addMember.mutate({
       project_id: project.id,
       user_id: memberProfile.id,
@@ -78,6 +129,27 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
       invited_email: memberProfile.email,
       notify_on_task_add: notifyOnAdd,
     });
+    setSearchQuery('');
+  };
+
+  const handleInviteByEmail = async () => {
+    if (!user || !currentWorkspace || !isEmailQuery) return;
+    const email = searchQuery.trim().toLowerCase();
+
+    // Check if profile exists for this email
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingProfile) {
+      handleInvite(existingProfile);
+      return;
+    }
+
+    // User doesn't have an account yet - show a message
+    toast.error('This user needs to sign up first before they can be invited. Share the workspace invite link instead.');
     setSearchQuery('');
   };
 
@@ -108,13 +180,19 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && isEmailQuery && !hasResults) {
+                      handleInviteByEmail();
+                    }
+                  }}
                   placeholder="Invite with name or email..."
                   className="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 text-gray-900 dark:text-white placeholder:text-gray-400"
                 />
                 {/* Suggestions dropdown */}
-                {filteredMembers.length > 0 && (
+                {searchQuery.length >= 2 && (hasResults || isEmailQuery) && (
                   <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl z-10 max-h-48 overflow-y-auto">
-                    {filteredMembers.map((wm) => (
+                    {/* Workspace members */}
+                    {filteredWorkspaceMembers.map((wm) => (
                       <button
                         key={wm.user_id}
                         onClick={() => wm.profiles && handleInvite(wm.profiles)}
@@ -129,6 +207,39 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
                         </div>
                       </button>
                     ))}
+
+                    {/* Additional profiles (not workspace members) */}
+                    {additionalProfiles.map((profile) => (
+                      <button
+                        key={profile.id}
+                        onClick={() => handleInvite(profile)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 text-left"
+                      >
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium flex-shrink-0" style={{ backgroundColor: getAvatarColor(profile.id) }}>
+                          {getInitials(profile.full_name)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{profile.full_name || profile.email}</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{profile.email}</p>
+                        </div>
+                      </button>
+                    ))}
+
+                    {/* Invite by email option when no results */}
+                    {!hasResults && isEmailQuery && (
+                      <button
+                        onClick={handleInviteByEmail}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 text-left"
+                      >
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center bg-[#4B7C6F]/10 flex-shrink-0">
+                          <Mail className="w-3.5 h-3.5 text-[#4B7C6F]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Invite {searchQuery.trim()}</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Send invite by email</p>
+                        </div>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
