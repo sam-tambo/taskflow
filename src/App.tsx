@@ -12,33 +12,51 @@ import AppShell from '@/components/layout/AppShell';
 import { RoleGuard } from '@/components/ui/RoleGuard';
 import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
-import { lazy, Suspense, useEffect, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ReactNode, type ComponentType } from 'react';
 import { PageSkeleton } from '@/components/ui/Skeleton';
 
+// Retry wrapper for lazy imports — handles stale chunks after Vercel redeployments
+function lazyWithRetry(importFn: () => Promise<{ default: ComponentType<any> }>) {
+  return lazy(() =>
+    importFn().catch((error) => {
+      // Only reload once to avoid infinite loops
+      const key = 'chunk_reload';
+      const hasReloaded = sessionStorage.getItem(key);
+      if (!hasReloaded) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        return new Promise(() => {}); // Never resolves — page is reloading
+      }
+      sessionStorage.removeItem(key);
+      throw error;
+    })
+  );
+}
+
 // Lazy-loaded pages
-const Home = lazy(() => import('@/pages/Home'));
-const Inbox = lazy(() => import('@/pages/Inbox'));
-const Project = lazy(() => import('@/pages/Project'));
-const Search = lazy(() => import('@/pages/Search'));
-const Portfolios = lazy(() => import('@/pages/Portfolios'));
-const Members = lazy(() => import('@/pages/Members'));
-const MemberProfile = lazy(() => import('@/pages/MemberProfile'));
-const Settings = lazy(() => import('@/pages/Settings'));
-const Reports = lazy(() => import('@/pages/Reports'));
-const Workload = lazy(() => import('@/pages/Workload'));
-const Automations = lazy(() => import('@/pages/Automations'));
-const Goals = lazy(() => import('@/pages/Goals'));
-const GoalDetail = lazy(() => import('@/pages/GoalDetail'));
-const FormBuilder = lazy(() => import('@/pages/FormBuilder'));
-const PublicForm = lazy(() => import('@/pages/PublicForm'));
-const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
-const Onboarding = lazy(() => import('@/pages/Onboarding'));
-const GanttChart = lazy(() => import('@/pages/GanttChart'));
-const ClientReport = lazy(() => import('@/pages/ClientReport'));
-const Favorites = lazy(() => import('@/pages/Favorites'));
-const Teams = lazy(() => import('@/pages/Teams'));
-const MyTasks = lazy(() => import('@/pages/MyTasks'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
+const Home = lazyWithRetry(() => import('@/pages/Home'));
+const Inbox = lazyWithRetry(() => import('@/pages/Inbox'));
+const Project = lazyWithRetry(() => import('@/pages/Project'));
+const Search = lazyWithRetry(() => import('@/pages/Search'));
+const Portfolios = lazyWithRetry(() => import('@/pages/Portfolios'));
+const Members = lazyWithRetry(() => import('@/pages/Members'));
+const MemberProfile = lazyWithRetry(() => import('@/pages/MemberProfile'));
+const Settings = lazyWithRetry(() => import('@/pages/Settings'));
+const Reports = lazyWithRetry(() => import('@/pages/Reports'));
+const Workload = lazyWithRetry(() => import('@/pages/Workload'));
+const Automations = lazyWithRetry(() => import('@/pages/Automations'));
+const Goals = lazyWithRetry(() => import('@/pages/Goals'));
+const GoalDetail = lazyWithRetry(() => import('@/pages/GoalDetail'));
+const FormBuilder = lazyWithRetry(() => import('@/pages/FormBuilder'));
+const PublicForm = lazyWithRetry(() => import('@/pages/PublicForm'));
+const AcceptInvite = lazyWithRetry(() => import('@/pages/AcceptInvite'));
+const Onboarding = lazyWithRetry(() => import('@/pages/Onboarding'));
+const GanttChart = lazyWithRetry(() => import('@/pages/GanttChart'));
+const ClientReport = lazyWithRetry(() => import('@/pages/ClientReport'));
+const Favorites = lazyWithRetry(() => import('@/pages/Favorites'));
+const Teams = lazyWithRetry(() => import('@/pages/Teams'));
+const MyTasks = lazyWithRetry(() => import('@/pages/MyTasks'));
+const NotFound = lazyWithRetry(() => import('@/pages/NotFound'));
 
 function ThemeInitializer() {
   const { theme } = useUIStore();
