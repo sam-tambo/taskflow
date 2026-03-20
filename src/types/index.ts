@@ -181,7 +181,7 @@ export interface Notification {
   id: string;
   user_id: string;
   actor_id: string | null;
-  type: 'task_assigned' | 'task_commented' | 'task_completed' | 'mentioned' | 'due_soon' | 'project_invited';
+  type: 'task_assigned' | 'task_commented' | 'task_completed' | 'mentioned' | 'due_soon';
   title: string;
   body: string | null;
   resource_type: 'task' | 'project' | 'comment' | null;
@@ -203,19 +203,6 @@ export interface ActivityLog {
   new_value: string | null;
   created_at: string;
   user?: Profile;
-}
-
-export type PortfolioRole = 'admin' | 'editor' | 'commenter' | 'viewer';
-
-export interface PortfolioMember {
-  id: string;
-  portfolio_id: string;
-  user_id: string;
-  role: PortfolioRole;
-  invited_by: string | null;
-  invited_email: string | null;
-  created_at: string;
-  profiles?: Profile;
 }
 
 export interface Portfolio {
