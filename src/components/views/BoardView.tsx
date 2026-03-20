@@ -95,13 +95,48 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
     return map;
   }, [tasks, sections]);
 
+  const sectionStatusMap = useMemo(() => {
+    const map: Record<string, Task['status']> = {};
+    const nameToStatus: Record<string, Task['status']> = {
+      'to do': 'todo',
+      'todo': 'todo',
+      'backlog': 'todo',
+      'planning': 'todo',
+      'in progress': 'in_progress',
+      'in review': 'in_progress',
+      'sprint': 'in_progress',
+      'review': 'in_progress',
+      'done': 'done',
+      'complete': 'done',
+      'completed': 'done',
+      'published': 'done',
+      'cancelled': 'cancelled',
+      'canceled': 'cancelled',
+    };
+    sections.forEach(s => {
+      const normalized = s.name.toLowerCase().trim();
+      if (nameToStatus[normalized]) {
+        map[s.id] = nameToStatus[normalized];
+      }
+    });
+    return map;
+  }, [sections]);
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const activeTask = tasks.find(t => t.id === active.id);
     const overTask = tasks.find(t => t.id === over.id);
     if (activeTask && overTask) {
-      updateTask.mutate({ id: activeTask.id, section_id: overTask.section_id, position: overTask.position });
+      const updates: Partial<Task> & { id: string } = { id: activeTask.id, section_id: overTask.section_id, position: overTask.position };
+      if (overTask.section_id && overTask.section_id !== activeTask.section_id) {
+        const newStatus = sectionStatusMap[overTask.section_id];
+        if (newStatus && newStatus !== activeTask.status) {
+          updates.status = newStatus;
+          updates.completed_at = newStatus === 'done' ? new Date().toISOString() : null;
+        }
+      }
+      updateTask.mutate(updates);
     }
   };
 
