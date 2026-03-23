@@ -180,9 +180,11 @@ async function executeAction(
         throw new Error('Notification requires user_id and message');
       await supabase.from('notifications').insert({
         user_id: config.user_id,
-        message: config.message.replace('{{task_title}}', task.title),
-        type: 'automation',
-        task_id: task.id,
+        type: 'task_assigned',
+        title: config.message.replace('{{task_title}}', task.title),
+        resource_type: 'task',
+        resource_id: task.id,
+        is_read: false,
       });
       break;
 
