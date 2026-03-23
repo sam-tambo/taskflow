@@ -6,6 +6,7 @@ import { useSections } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { toast } from 'sonner';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import type { Task } from '@/types';
 
 interface BulkActionBarProps {
@@ -23,6 +24,7 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
   const [showStatus, setShowStatus] = useState(false);
   const [showSection, setShowSection] = useState(false);
   const [showDueDate, setShowDueDate] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const closeAll = () => { setShowAssignee(false); setShowPriority(false); setShowStatus(false); setShowSection(false); setShowDueDate(false); };
 
@@ -38,12 +40,17 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
   };
 
   const bulkDelete = () => {
-    if (!confirm(`Delete ${count} task${count > 1 ? 's' : ''}?`)) return;
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmBulkDelete = () => {
     ids.forEach(id => deleteTask.mutate(id));
     deselectAll();
+    setShowDeleteConfirm(false);
   };
 
   return (
+    <>
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-gray-900 dark:bg-slate-700 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-in slide-in-from-bottom duration-200">
       <span className="text-sm font-medium">{count} selected</span>
       <div className="w-px h-5 bg-gray-700 dark:bg-slate-600" />
@@ -147,5 +154,15 @@ export function BulkActionBar({ projectId }: BulkActionBarProps) {
         <X className="w-4 h-4" />
       </button>
     </div>
+
+    {showDeleteConfirm && (
+      <ConfirmModal
+        message={`Delete ${count} task${count > 1 ? 's' : ''}? This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+    )}
+    </>
   );
 }
