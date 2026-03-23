@@ -75,7 +75,7 @@ export function SubtaskList({ parentTask }: SubtaskListProps) {
           <input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setNewTitle(''); setIsAdding(false); } }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { e.stopPropagation(); setNewTitle(''); setIsAdding(false); } }}
             onBlur={handleAdd}
             placeholder="Subtask name"
             className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white"
