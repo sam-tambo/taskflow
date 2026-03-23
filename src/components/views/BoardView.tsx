@@ -40,8 +40,6 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
-  const sectionIdForForm = section.id === 'no-section' ? undefined : section.id;
-
   return (
     <div className={cn('flex-shrink-0 w-72 flex flex-col bg-gray-50 dark:bg-slate-800/30 rounded-xl max-h-full transition-all', isOver && 'ring-2 ring-[#4B7C6F]/40 bg-[#4B7C6F]/5')}>
       {section.color && <div className="h-1 rounded-t-xl" style={{ backgroundColor: section.color }} />}
@@ -64,7 +62,7 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
         </SortableContext>
         {section.id !== 'no-section' && (
           <div ref={formRef}>
-            <TaskForm projectId={projectId} sectionId={sectionIdForForm} workspaceId={workspaceId} position={tasks.length} autoOpen={addTaskTrigger} />
+            <TaskForm projectId={projectId} sectionId={section.id} workspaceId={workspaceId} position={tasks.length} autoOpen={addTaskTrigger} />
           </div>
         )}
         {doneTasks.length > 0 && (
@@ -140,7 +138,8 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
     const overSection = sections.find(s => s.id === over.id) || (over.id === 'no-section' ? { id: 'no-section' } : null);
 
     if (overTask) {
-      const updates = { id: activeTask.id, section_id: overTask.section_id, position: overTask.position };
+      // Dropping onto another task
+      const updates: Partial<Task> & { id: string } = { id: activeTask.id, section_id: overTask.section_id, position: overTask.position };
       if (overTask.section_id && overTask.section_id !== activeTask.section_id) {
         const newStatus = sectionStatusMap[overTask.section_id];
         if (newStatus && newStatus !== activeTask.status) {
@@ -150,9 +149,10 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
       }
       updateTask.mutate(updates);
     } else if (overSection) {
+      // Dropping onto an empty column
       const targetSectionId = overSection.id === 'no-section' ? null : overSection.id;
       if (targetSectionId === activeTask.section_id) return;
-      const updates = { id: activeTask.id, section_id: targetSectionId, position: 0 };
+      const updates: Partial<Task> & { id: string } = { id: activeTask.id, section_id: targetSectionId, position: 0 };
       if (targetSectionId) {
         const newStatus = sectionStatusMap[targetSectionId];
         if (newStatus && newStatus !== activeTask.status) {
@@ -179,7 +179,7 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
   }
 
   const noSectionTasks = tasksBySection.get('no-section') || [];
-  const noSection = { id: 'no-section', project_id: projectId, name: 'No Section', position: -1, color: null, created_at: '' };
+  const noSection: Section = { id: 'no-section', project_id: projectId, name: 'No Section', position: -1, color: null, created_at: '' };
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
