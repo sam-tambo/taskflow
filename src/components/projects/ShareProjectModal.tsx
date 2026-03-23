@@ -93,27 +93,42 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
     const email = searchQuery.trim();
     setIsSendingInvite(true);
     try {
-      // Generate a workspace invite link for this email
+      // Step 1: Generate a workspace invite link (always works)
       const invite = await generateInviteLink(
         project.workspace_id,
         user.id,
         'employee',
         email
       );
-      // Send the invite email via the send-invite edge function
-      const { error } = await supabase.functions.invoke('send-invite', {
-        body: {
-          email,
-          inviteLink: invite.link,
-          workspaceName: currentWorkspace.name,
-          inviterName: (user as any).user_metadata?.full_name || user.email || 'A teammate',
-        },
-      });
-      if (error) throw new Error(error.message);
-      toast.success(`Invite sent to ${email}`);
+
+      // Step 2: Try to send the email — if it fails, fall back to copy-link
+      try {
+        const { error } = await supabase.functions.invoke('send-invite', {
+          body: {
+            email,
+            inviteLink: invite.link,
+            workspaceName: currentWorkspace.name,
+            inviterName: (user as any).user_metadata?.full_name || user.email || 'A teammate',
+          },
+        });
+        if (error) throw new Error(error.message);
+        toast.success(`Invite sent to ${email}`);
+      } catch (emailErr) {
+        // Email delivery failed — invite record exists, copy link as fallback
+        console.error('[ShareProjectModal] Email delivery failed, falling back to copy link:', emailErr);
+        try {
+          await navigator.clipboard.writeText(invite.link);
+          toast.success(`Couldn't send email — invite link copied! Share it with ${email}`);
+        } catch {
+          toast.info(`Invite created! Link: ${invite.link}`);
+        }
+      }
+
       setSearchQuery('');
-    } catch {
-      toast.error('Failed to send invite. Please try again.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to create invite';
+      toast.error(msg);
+      console.error('[ShareProjectModal] handleEmailInvite error:', err);
     } finally {
       setIsSendingInvite(false);
     }
@@ -134,6 +149,7 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
         await navigator.clipboard.writeText(invite.link);
         toast.success('Invite link copied to clipboard');
       } catch {
+        // Fallback to project URL
         await navigator.clipboard.writeText(`${window.location.origin}/projects/${project.id}`);
         toast.success('Link copied to clipboard');
       } finally {
