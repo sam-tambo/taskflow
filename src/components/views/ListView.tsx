@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TaskRow } from '@/components/tasks/TaskRow';
@@ -31,6 +31,7 @@ function SortableTaskRow({ task, projectId }: { task: Task; projectId: string })
 }
 
 function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string }) {
+  const { setNodeRef: setDroppableRef } = useDroppable({ id: section.id });
   const [collapsed, setCollapsed] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -50,7 +51,6 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
 
   const handleDelete = async () => {
     if (!confirm(`Delete section "${section.name}"? Tasks will be moved to "No Section".`)) return;
-    // Move tasks to no section
     for (const t of tasks) {
       await supabase.from('tasks').update({ section_id: null }).eq('id', t.id);
     }
@@ -99,7 +99,7 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
       </div>
 
       {!collapsed && (
-        <div className="border-x border-gray-100 dark:border-slate-800">
+        <div ref={setDroppableRef} className="border-x border-gray-100 dark:border-slate-800 min-h-[4px]">
           <SortableContext items={activeTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
             {activeTasks.map((task) => (
               <SortableTaskRow key={task.id} task={task} projectId={projectId} />
@@ -182,12 +182,27 @@ export default function ListView({ projectId, workspaceId, filters = DEFAULT_FIL
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const activeTask = tasks.find(t => t.id === active.id);
+    if (!activeTask) return;
+
     const overTask = tasks.find(t => t.id === over.id);
-    if (activeTask && overTask) {
-      const updates: Partial<Task> & { id: string } = { id: activeTask.id, position: overTask.position, section_id: overTask.section_id };
-      // Update status when moving to a section with a known status mapping
+    const overSection = sections.find(s => s.id === over.id) || (over.id === 'no-section' ? { id: 'no-section' } : null);
+
+    if (overTask) {
+      const updates = { id: activeTask.id, position: overTask.position, section_id: overTask.section_id };
       if (overTask.section_id && overTask.section_id !== activeTask.section_id) {
         const newStatus = sectionStatusMap[overTask.section_id];
+        if (newStatus && newStatus !== activeTask.status) {
+          updates.status = newStatus;
+          updates.completed_at = newStatus === 'done' ? new Date().toISOString() : null;
+        }
+      }
+      updateTask.mutate(updates);
+    } else if (overSection) {
+      const targetSectionId = overSection.id === 'no-section' ? null : overSection.id;
+      if (targetSectionId === activeTask.section_id) return;
+      const updates = { id: activeTask.id, section_id: targetSectionId, position: 0 };
+      if (targetSectionId) {
+        const newStatus = sectionStatusMap[targetSectionId];
         if (newStatus && newStatus !== activeTask.status) {
           updates.status = newStatus;
           updates.completed_at = newStatus === 'done' ? new Date().toISOString() : null;
@@ -232,7 +247,6 @@ export default function ListView({ projectId, workspaceId, filters = DEFAULT_FIL
           />
         ))}
 
-        {/* Unsectioned tasks */}
         {(sections.length === 0 || (tasksBySection.get('no-section') || []).length > 0) && (
           <SectionGroup
             section={{ id: 'no-section', project_id: projectId, name: 'No Section', position: -1, color: null, created_at: '' }}
@@ -242,7 +256,6 @@ export default function ListView({ projectId, workspaceId, filters = DEFAULT_FIL
           />
         )}
 
-        {/* Add section */}
         {isAddingSection ? (
           <div className="flex items-center gap-2 px-3 py-2">
             <input
