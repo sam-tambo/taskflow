@@ -31,7 +31,7 @@ export default function AppShell() {
         </div>
       )}
 
-      <div className={`flex-1 flex flex-col transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'}`}>
         <ConnectionBanner />
         <TopBar />
         <main className="flex-1 overflow-auto pb-14 md:pb-0">
