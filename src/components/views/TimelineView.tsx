@@ -114,7 +114,7 @@ export default function TimelineView({ projectId }: TimelineViewProps) {
                       className="absolute top-2 cursor-pointer z-10"
                       style={{ left: left + width / 2 - 8 }}
                     >
-                      <Diamond className="w-4 h-4 text-[#4B7C6F] fill-coral" />
+                      <Diamond className="w-4 h-4 text-[#4B7C6F] fill-[#4B7C6F]" />
                     </div>
                   ) : (
                     <div
