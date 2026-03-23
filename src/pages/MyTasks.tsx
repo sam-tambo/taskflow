@@ -6,7 +6,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUpdateTask } from '@/hooks/useTasks';
 import { cn, formatDueDate, getDueDateColor, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
-import { Check, Calendar, ChevronDown, ChevronRight, Inbox, ListTodo } from 'lucide-react';
+import { Check, Calendar, ChevronDown, ChevronRight, Inbox, ListTodo, Plus } from 'lucide-react';
 import { isToday, isTomorrow, isThisWeek, isPast, parseISO, isAfter, addDays } from 'date-fns';
 import type { Task } from '@/types';
 
@@ -15,7 +15,7 @@ type GroupBy = 'due_date' | 'project' | 'priority';
 export default function MyTasks() {
   usePageTitle('My Tasks');
   const { user } = useAuth();
-  const { openTaskDetail } = useUIStore();
+  const { openTaskDetail, setQuickAddOpen } = useUIStore();
   const updateTask = useUpdateTask();
   const [groupBy, setGroupBy] = useState<GroupBy>('due_date');
   const [showCompleted, setShowCompleted] = useState(false);
@@ -118,6 +118,13 @@ export default function MyTasks() {
             <option value="project">Group by Project</option>
             <option value="priority">Group by Priority</option>
           </select>
+          <button
+            onClick={() => setQuickAddOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-[#16A34A] hover:bg-[#15803d] rounded-lg shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New task
+          </button>
         </div>
       </div>
 
