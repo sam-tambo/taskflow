@@ -5,6 +5,7 @@ interface UIState {
   taskDetailId: string | null;
   commandPaletteOpen: boolean;
   shortcutsModalOpen: boolean;
+  quickAddOpen: boolean;
   theme: 'light' | 'dark' | 'system';
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
@@ -12,6 +13,7 @@ interface UIState {
   closeTaskDetail: () => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setShortcutsModalOpen: (open: boolean) => void;
+  setQuickAddOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
@@ -30,6 +32,7 @@ export const useUIStore = create<UIState>((set) => ({
   taskDetailId: null,
   commandPaletteOpen: false,
   shortcutsModalOpen: false,
+  quickAddOpen: false,
   theme: getInitialTheme(),
   toggleSidebar: () => set((state) => {
     const collapsed = !state.sidebarCollapsed;
@@ -44,6 +47,7 @@ export const useUIStore = create<UIState>((set) => ({
   closeTaskDetail: () => set({ taskDetailId: null }),
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
   setShortcutsModalOpen: (open) => set({ shortcutsModalOpen: open }),
+  setQuickAddOpen: (open) => set({ quickAddOpen: open }),
   setTheme: (theme) => {
     localStorage.setItem('rp-theme', theme);
     const root = document.documentElement;
