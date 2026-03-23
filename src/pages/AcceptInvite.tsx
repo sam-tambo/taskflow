@@ -74,14 +74,37 @@ export default function AcceptInvite() {
           role: invite.role,
         });
 
-      if (memberError && !memberError.message.includes('duplicate')) {
+      // code 23505 = unique_violation (user is already a member — that's fine)
+      if (memberError && memberError.code !== '23505') {
         throw memberError;
       }
 
-      await supabase
+      // Mark the invite as accepted. This may be a no-op if the user doesn't have
+      // permission to update the invite record (non-admin), but that's non-fatal —
+      // the workspace_members row was already created above.
+      const { error: updateError } = await supabase
         .from('workspace_invites')
         .update({ accepted_at: new Date().toISOString(), used_by: user.id })
         .eq('id', invite.id);
+
+      if (updateError) {
+        // Non-fatal: log but don't block the user from joining
+        console.warn('[AcceptInvite] Could not mark invite as accepted:', updateError.message);
+      }
+
+      // If the redirect is to a specific project, auto-add the user to that project
+      // so they land on it with access (handles the "copy project link" invite flow).
+      const projectMatch = redirectPath.match(/^\/projects\/([0-9a-f-]{36})/i);
+      if (projectMatch) {
+        const projectId = projectMatch[1];
+        const { error: pmError } = await supabase
+          .from('project_members')
+          .insert({ project_id: projectId, user_id: user.id, role: 'editor' });
+        if (pmError && pmError.code !== '23505') {
+          // 23505 = already a member (fine). Other errors are non-fatal — log only.
+          console.warn('[AcceptInvite] Could not add to project:', pmError.message);
+        }
+      }
 
       setState('success');
       // Use window.location.href instead of navigate() so the app fully reloads
