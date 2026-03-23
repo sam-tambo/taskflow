@@ -105,7 +105,7 @@ export function useCreateProject(workspaceId?: string) {
         const { error: memberError } = await supabase.from('project_members').insert({
           project_id: data.id,
           user_id: data.owner_id,
-          role: 'owner',
+          role: 'admin',
         });
         if (memberError) console.warn('Failed to add project member:', memberError.message);
       }
@@ -160,6 +160,9 @@ export function useCreateSection(projectId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', projectId] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message?.includes('row-level security') ? "You don't have permission to add sections to this project." : 'Failed to create section');
     },
   });
 }
