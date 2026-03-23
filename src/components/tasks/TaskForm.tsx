@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useCreateTask } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
+import type { Task } from '@/types';
 
 interface TaskFormProps {
   projectId: string;
@@ -9,9 +10,10 @@ interface TaskFormProps {
   workspaceId: string;
   position: number;
   autoOpen?: number;
+  defaultStatus?: Task['status'];
 }
 
-export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen }: TaskFormProps) {
+export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen, defaultStatus }: TaskFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +44,7 @@ export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen
       workspace_id: workspaceId,
       position,
       created_by: user?.id,
+      ...(defaultStatus ? { status: defaultStatus } : {}),
     });
     setTitle('');
   };
