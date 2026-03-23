@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { format, formatDistanceToNow, isToday, isYesterday, startOfDay } from 'date-fns';
-import { Bell, CheckCheck, UserPlus, MessageSquare, CheckCircle, Clock, AtSign, Trash2, ExternalLink } from 'lucide-react';
+import { Bell, CheckCheck, UserPlus, MessageSquare, CheckCircle, Clock, AtSign, Trash2, ExternalLink, Plus } from 'lucide-react';
 import type { Notification } from '@/types';
 
 const notificationIcons: Record<string, typeof Bell> = {
@@ -50,7 +50,7 @@ export default function Inbox() {
   const { data: notifications = [], isLoading } = useNotifications(user?.id);
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead(user?.id);
-  const { openTaskDetail } = useUIStore();
+  const { openTaskDetail, setQuickAddOpen } = useUIStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
 
@@ -124,11 +124,20 @@ export default function Inbox() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inbox</h1>
           {unreadCount > 0 && <p className="text-sm text-gray-500 mt-0.5">{unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</p>}
         </div>
-        {unreadCount > 0 && (
-          <button onClick={() => markAllAsRead.mutate()} className="flex items-center gap-1.5 text-sm text-[#4B7C6F] hover:underline">
-            <CheckCheck className="w-4 h-4" /> Mark all read
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button onClick={() => markAllAsRead.mutate()} className="flex items-center gap-1.5 text-sm text-[#4B7C6F] hover:underline">
+              <CheckCheck className="w-4 h-4" /> Mark all read
+            </button>
+          )}
+          <button
+            onClick={() => setQuickAddOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-[#16A34A] hover:bg-[#15803d] rounded-lg shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New task
           </button>
-        )}
+        </div>
       </div>
 
       {/* Tabs */}
