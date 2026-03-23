@@ -98,7 +98,7 @@ export function useUpdateTask(projectId?: string) {
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Task> & { id: string }) => {
       // Get current task state for activity logging
-      const { data: oldTask } = await supabase.from('tasks').select('status, assignee_id, project_id, workspace_id').eq('id', id).single();
+      const { data: oldTask } = await supabase.from('tasks').select('status, assignee_id, project_id, workspace_id, title').eq('id', id).single();
 
       const { data, error } = await supabase
         .from('tasks')
@@ -141,6 +141,23 @@ export function useUpdateTask(projectId?: string) {
           supabase.from('activity_log').insert(logs).then(() => {
             queryClient.invalidateQueries({ queryKey: ['activities'] });
             queryClient.invalidateQueries({ queryKey: ['project-activity'] });
+          });
+        }
+
+        // Generate task_assigned notification when assignee changes
+        if (updates.assignee_id !== undefined && updates.assignee_id !== oldTask.assignee_id && updates.assignee_id) {
+          const taskTitle = (data as Task).title || oldTask.title || 'a task';
+          supabase.from('notifications').insert({
+            user_id: updates.assignee_id,
+            actor_id: userId || null,
+            type: 'task_assigned',
+            title: `You've been assigned to "${taskTitle}"`,
+            resource_type: 'task',
+            resource_id: id,
+            is_read: false,
+          }).then(() => {
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            queryClient.invalidateQueries({ queryKey: ['notifications-unread'] });
           });
         }
       }
