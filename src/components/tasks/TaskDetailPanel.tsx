@@ -15,6 +15,7 @@ import { CustomFieldsSection } from './CustomFieldsSection';
 import { RecurrencePicker } from './RecurrencePicker';
 import { SaveAsTemplateButton } from './TaskTemplates';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { TagEditor } from './TagEditor';
 import { FollowersSection } from './FollowersSection';
 import { format } from 'date-fns';
@@ -37,6 +38,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   const { currentWorkspace } = useWorkspaceStore();
   const { data: allProjects = [] } = useProjects(currentWorkspace?.id);
   const [showActions, setShowActions] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveProject, setShowMoveProject] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState('');
@@ -108,10 +110,8 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   };
 
   const handleDelete = () => {
-    if (confirm('Delete this task?')) {
-      deleteTask.mutate(task.id);
-      closeTaskDetail();
-    }
+    setShowDeleteConfirm(true);
+    setShowActions(false);
   };
 
   const handleTitleSave = () => {
@@ -126,6 +126,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   const statusLabels: Record<string, string> = { todo: 'To Do', in_progress: 'In Progress', done: 'Done', cancelled: 'Cancelled' };
 
   return (
+    <>
     <div className="h-full w-full md:w-[480px] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 dark:border-slate-800">
@@ -446,5 +447,15 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
         </div>
       </div>
     </div>
+
+    {showDeleteConfirm && (
+      <ConfirmModal
+        message="Delete this task? This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => { deleteTask.mutate(task.id); closeTaskDetail(); setShowDeleteConfirm(false); }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+    )}
+    </>
   );
 }
