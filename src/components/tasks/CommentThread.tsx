@@ -52,7 +52,42 @@ export function CommentThread({ taskId }: CommentThreadProps) {
       const { error } = await supabase.from('comments').insert({ task_id: taskId, user_id: user!.id, body, visibility });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['comments', taskId] }),
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', taskId] });
+      // Notify task assignee and followers when a comment is added (skip self-notifications)
+      const { data: task } = await supabase
+        .from('tasks')
+        .select('title, assignee_id, workspace_id')
+        .eq('id', taskId)
+        .single();
+      if (task) {
+        const notifyUsers = new Set<string>();
+        if (task.assignee_id && task.assignee_id !== user!.id) notifyUsers.add(task.assignee_id);
+        // Also notify task followers
+        const { data: followers } = await supabase
+          .from('task_followers')
+          .select('user_id')
+          .eq('task_id', taskId);
+        (followers || []).forEach((f: { user_id: string }) => {
+          if (f.user_id !== user!.id) notifyUsers.add(f.user_id);
+        });
+        if (notifyUsers.size > 0) {
+          await supabase.from('notifications').insert(
+            Array.from(notifyUsers).map(uid => ({
+              user_id: uid,
+              actor_id: user!.id,
+              type: 'task_commented',
+              title: `New comment on "${task.title}"`,
+              resource_type: 'task',
+              resource_id: taskId,
+              is_read: false,
+            }))
+          );
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['notifications-unread'] });
+        }
+      }
+    },
   });
 
   const updateComment = useMutation({
