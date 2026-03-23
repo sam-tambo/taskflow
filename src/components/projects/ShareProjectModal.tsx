@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import type { Project, ProjectRole, Profile } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { generateInviteLink } from '@/lib/invites';
 
 interface ShareProjectModalProps {
   open: boolean;
@@ -37,6 +38,8 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
   const [notifyOnAdd, setNotifyOnAdd] = useState(true);
   const [showAccessDropdown, setShowAccessDropdown] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [isCopyingLink, setIsCopyingLink] = useState(false);
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
 
   const updatePrivacy = useMutation({
     mutationFn: async (privacy: 'workspace' | 'private') => {
@@ -67,6 +70,10 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
     return name.toLowerCase().includes(q) || email.toLowerCase().includes(q);
   });
 
+  // Detect if the search looks like an external email not in workspace
+  const isEmailLike = searchQuery.includes('@') && searchQuery.includes('.') && searchQuery.trim().length > 3;
+  const showEmailOption = isEmailLike && filteredMembers.length === 0;
+
   const handleInvite = (memberProfile: Profile) => {
     if (!user) return;
     addMember.mutate({
@@ -81,10 +88,63 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
     setSearchQuery('');
   };
 
-  const handleCopyLink = () => {
-    const url = `${window.location.origin}/projects/${project.id}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Link copied to clipboard');
+  const handleEmailInvite = async () => {
+    if (!user || !currentWorkspace || isSendingInvite) return;
+    const email = searchQuery.trim();
+    setIsSendingInvite(true);
+    try {
+      // Generate a workspace invite link for this email
+      const invite = await generateInviteLink(
+        project.workspace_id,
+        user.id,
+        'employee',
+        email
+      );
+      // Send the invite email via the send-invite edge function
+      const { error } = await supabase.functions.invoke('send-invite', {
+        body: {
+          email,
+          inviteLink: invite.link,
+          workspaceName: currentWorkspace.name,
+          inviterName: (user as any).user_metadata?.full_name || user.email || 'A teammate',
+        },
+      });
+      if (error) throw new Error(error.message);
+      toast.success(`Invite sent to ${email}`);
+      setSearchQuery('');
+    } catch {
+      toast.error('Failed to send invite. Please try again.');
+    } finally {
+      setIsSendingInvite(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (isCopyingLink) return;
+    // For private projects, generate a proper invite link so the recipient can actually access
+    if (project.privacy === 'private') {
+      setIsCopyingLink(true);
+      try {
+        const invite = await generateInviteLink(
+          project.workspace_id,
+          user!.id,
+          'employee',
+          null
+        );
+        await navigator.clipboard.writeText(invite.link);
+        toast.success('Invite link copied to clipboard');
+      } catch {
+        await navigator.clipboard.writeText(`${window.location.origin}/projects/${project.id}`);
+        toast.success('Link copied to clipboard');
+      } finally {
+        setIsCopyingLink(false);
+      }
+    } else {
+      // Workspace projects: plain project URL is accessible to all workspace members
+      const url = `${window.location.origin}/projects/${project.id}`;
+      navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard');
+    }
   };
 
   return (
@@ -112,7 +172,7 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
                   className="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-[#4B7C6F]/30 text-gray-900 dark:text-white placeholder:text-gray-400"
                 />
                 {/* Suggestions dropdown */}
-                {filteredMembers.length > 0 && (
+                {(filteredMembers.length > 0 || showEmailOption) && (
                   <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl z-10 max-h-48 overflow-y-auto">
                     {filteredMembers.map((wm) => (
                       <button
@@ -129,6 +189,23 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
                         </div>
                       </button>
                     ))}
+                    {showEmailOption && (
+                      <button
+                        onClick={handleEmailInvite}
+                        disabled={isSendingInvite}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 text-left disabled:opacity-60"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-[#4B7C6F]/10 flex items-center justify-center flex-shrink-0">
+                          <UserPlus className="w-3.5 h-3.5 text-[#4B7C6F]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {isSendingInvite ? 'Sending...' : `Invite ${searchQuery.trim()} by email`}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Send a workspace invite</p>
+                        </div>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -290,10 +367,11 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
         <div className="px-5 py-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between bg-gray-50 dark:bg-slate-800/50">
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
+            disabled={isCopyingLink}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg disabled:opacity-50"
           >
             <Link2 className="w-4 h-4" />
-            Copy link
+            {isCopyingLink ? 'Copying...' : 'Copy link'}
           </button>
           <button
             onClick={onClose}
