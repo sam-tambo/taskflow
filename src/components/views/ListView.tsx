@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, Plus, Check, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { type TaskFilters, applyFilters, DEFAULT_FILTERS } from '@/components/projects/FilterBar';
 import type { Task, Section } from '@/types';
 
@@ -30,16 +31,16 @@ function SortableTaskRow({ task, projectId }: { task: Task; projectId: string })
   );
 }
 
-function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string }) {
+function SectionGroup({ section, tasks, projectId, workspaceId, defaultStatus }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string; defaultStatus?: Task['status'] }) {
   const { setNodeRef: setDroppableRef } = useDroppable({ id: section.id });
   const [collapsed, setCollapsed] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [sectionName, setSectionName] = useState(section.name);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const updateSection = useUpdateSection(projectId);
   const queryClient = useQueryClient();
-
   const activeTasks = tasks.filter(t => t.status !== 'done');
   const completedTasks = tasks.filter(t => t.status === 'done');
 
@@ -50,14 +51,19 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
     setIsRenaming(false);
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete section "${section.name}"? Tasks will be moved to "No Section".`)) return;
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+    setShowMenu(false);
+  };
+
+  const confirmDelete = async () => {
     for (const t of tasks) {
       await supabase.from('tasks').update({ section_id: null }).eq('id', t.id);
     }
     await supabase.from('sections').delete().eq('id', section.id);
     queryClient.invalidateQueries({ queryKey: ['sections', projectId] });
     queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -72,18 +78,12 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
             value={sectionName}
             onChange={e => setSectionName(e.target.value)}
             onBlur={handleRename}
-            onKeyDown={e => {
-              if (e.key === 'Enter') handleRename();
-              if (e.key === 'Escape') { setSectionName(section.name); setIsRenaming(false); }
-            }}
+            onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') { setSectionName(section.name); setIsRenaming(false); }}}
             className="text-sm font-semibold bg-transparent outline-none text-gray-700 dark:text-white flex-1"
             autoFocus
           />
         ) : (
-          <span
-            className="text-sm font-semibold text-gray-700 dark:text-white"
-            onDoubleClick={() => { if (section.id !== 'no-section') setIsRenaming(true); }}
-          >{section.name}</span>
+          <span className="text-sm font-semibold text-gray-700 dark:text-white" onDoubleClick={() => { if (section.id !== 'no-section') setIsRenaming(true); }}>{section.name}</span>
         )}
         <span className="text-xs text-gray-400 ml-1">{activeTasks.length}</span>
         {section.id !== 'no-section' && (
@@ -104,6 +104,7 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
           </div>
         )}
       </div>
+
       {!collapsed && (
         <div ref={setDroppableRef} className="border-x border-gray-100 dark:border-slate-800 min-h-[4px]">
           <SortableContext items={activeTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
@@ -111,7 +112,9 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
               <SortableTaskRow key={task.id} task={task} projectId={projectId} />
             ))}
           </SortableContext>
-          <TaskForm projectId={projectId} sectionId={section.id} workspaceId={workspaceId} position={tasks.length} />
+
+          <TaskForm projectId={projectId} sectionId={section.id} workspaceId={workspaceId} position={tasks.length} defaultStatus={defaultStatus} />
+
           {completedTasks.length > 0 && (
             <div className="border-t border-gray-100 dark:border-slate-800">
               <button onClick={() => setShowCompleted(!showCompleted)} className="flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 w-full">
@@ -124,6 +127,15 @@ function SectionGroup({ section, tasks, projectId, workspaceId }: { section: Sec
             </div>
           )}
         </div>
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          message={`Delete section "${section.name}"? Tasks will be moved to "No Section".`}
+          confirmLabel="Delete"
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
     </div>
   );
@@ -217,10 +229,7 @@ export default function ListView({ projectId, workspaceId, filters = DEFAULT_FIL
   };
 
   const handleAddSection = () => {
-    if (!newSectionName.trim()) {
-      setIsAddingSection(false);
-      return;
-    }
+    if (!newSectionName.trim()) { setIsAddingSection(false); return; }
     createSection.mutate({ project_id: projectId, name: newSectionName.trim(), position: sections.length });
     setNewSectionName('');
     setIsAddingSection(false);
@@ -251,8 +260,10 @@ export default function ListView({ projectId, workspaceId, filters = DEFAULT_FIL
             tasks={tasksBySection.get(section.id) || []}
             projectId={projectId}
             workspaceId={workspaceId}
+            defaultStatus={sectionStatusMap[section.id]}
           />
         ))}
+
         {(sections.length === 0 || (tasksBySection.get('no-section') || []).length > 0) && (
           <SectionGroup
             section={{ id: 'no-section', project_id: projectId, name: 'No Section', position: -1, color: null, created_at: '' }}
@@ -261,15 +272,13 @@ export default function ListView({ projectId, workspaceId, filters = DEFAULT_FIL
             workspaceId={workspaceId}
           />
         )}
+
         {isAddingSection ? (
           <div className="flex items-center gap-2 px-3 py-2">
             <input
               value={newSectionName}
               onChange={(e) => setNewSectionName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddSection();
-                if (e.key === 'Escape') setIsAddingSection(false);
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddSection(); if (e.key === 'Escape') setIsAddingSection(false); }}
               onBlur={handleAddSection}
               placeholder="Section name"
               className="text-sm font-semibold bg-transparent outline-none text-gray-900 dark:text-white"
