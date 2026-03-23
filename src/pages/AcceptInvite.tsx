@@ -84,7 +84,10 @@ export default function AcceptInvite() {
         .eq('id', invite.id);
 
       setState('success');
-      setTimeout(() => navigate(redirectPath), 2000);
+      // Use window.location.href instead of navigate() so the app fully reloads
+      // and useWorkspaceLoader re-runs to pick up the newly joined workspace.
+      // This is important for already-logged-in users who join a second workspace.
+      setTimeout(() => { window.location.href = redirectPath; }, 2000);
     } catch (err: any) {
       setState('error');
       setErrorMessage(err.message ?? 'Failed to accept invitation');

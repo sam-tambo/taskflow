@@ -92,10 +92,16 @@ export function useWorkspaceLoader() {
 
     loadWorkspaces();
 
-    // Re-run when auth state changes to SIGNED_IN
+    // Re-run when auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         loadWorkspaces();
+      }
+      if (event === 'SIGNED_OUT') {
+        setWorkspaces([]);
+        setCurrentWorkspace(null);
+        setMembers([]);
+        setTeams([]);
       }
     });
 
