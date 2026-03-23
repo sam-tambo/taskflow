@@ -7,7 +7,7 @@ const shortcuts = [
     { keys: 'G then T', desc: 'Go to My Tasks' },
     { keys: 'G then I', desc: 'Go to Inbox' },
     { keys: 'G then F', desc: 'Go to Favorites' },
-    { keys: 'G then P', desc: 'Go to Portfolios' },
+    { keys: 'G then P', desc: 'Go to Projects' },
     { keys: 'G then R', desc: 'Go to Reports' },
     { keys: 'G then G', desc: 'Go to Goals' },
     { keys: 'G then S', desc: 'Go to Settings' },

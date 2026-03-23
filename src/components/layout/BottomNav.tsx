@@ -16,7 +16,7 @@ export function BottomNav() {
   const isActive = (path: string) => location.pathname === path;
 
   const moreItems = [
-    { path: '/portfolios', label: 'Portfolios', icon: BarChart3 },
+    { path: '/portfolios', label: 'Projects', icon: BarChart3 },
     { path: '/goals', label: 'Goals', icon: Target },
     { path: '/reports', label: 'Reports', icon: LineChart },
     { path: '/workload', label: 'Workload', icon: LayoutGrid },

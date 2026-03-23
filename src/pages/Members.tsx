@@ -42,7 +42,7 @@ export default function Members() {
         .from('workspace_invites')
         .select('*')
         .eq('workspace_id', currentWorkspace.id)
-        .is('used_at', null)
+        .is('accepted_at', null)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
       if (error) throw error;

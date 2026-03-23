@@ -136,30 +136,26 @@ export function ShareProjectModal({ open, onClose, project }: ShareProjectModalP
 
   const handleCopyLink = async () => {
     if (isCopyingLink) return;
-    // For private projects, generate a proper invite link so the recipient can actually access
-    if (project.privacy === 'private') {
-      setIsCopyingLink(true);
-      try {
-        const invite = await generateInviteLink(
-          project.workspace_id,
-          user!.id,
-          'employee',
-          null
-        );
-        await navigator.clipboard.writeText(invite.link);
-        toast.success('Invite link copied to clipboard');
-      } catch {
-        // Fallback to project URL
-        await navigator.clipboard.writeText(`${window.location.origin}/projects/${project.id}`);
-        toast.success('Link copied to clipboard');
-      } finally {
-        setIsCopyingLink(false);
-      }
-    } else {
-      // Workspace projects: plain project URL is accessible to all workspace members
-      const url = `${window.location.origin}/projects/${project.id}`;
-      navigator.clipboard.writeText(url);
+    setIsCopyingLink(true);
+    try {
+      // Always generate a workspace invite so external recipients can join and land on this project
+      const invite = await generateInviteLink(
+        project.workspace_id,
+        user!.id,
+        'employee',
+        null
+      );
+      // Append a redirect so AcceptInvite navigates directly to this project after joining
+      const redirect = encodeURIComponent(`/projects/${project.id}`);
+      const linkWithRedirect = `${invite.link}?redirect=${redirect}`;
+      await navigator.clipboard.writeText(linkWithRedirect);
+      toast.success('Invite link copied — share it to give access to this project');
+    } catch {
+      // Fallback to plain project URL
+      await navigator.clipboard.writeText(`${window.location.origin}/projects/${project.id}`);
       toast.success('Link copied to clipboard');
+    } finally {
+      setIsCopyingLink(false);
     }
   };
 

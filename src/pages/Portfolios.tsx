@@ -30,7 +30,7 @@ interface ProjectStats {
 }
 
 export default function Portfolios() {
-  usePageTitle('Portfolios');
+  usePageTitle('Projects');
   const { currentWorkspace } = useWorkspaceStore();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -154,7 +154,7 @@ export default function Portfolios() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Portfolios</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Projects</h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{projects.length} project{projects.length !== 1 ? 's' : ''} across your workspace</p>
         </div>
         <div className="flex items-center gap-2">
@@ -163,7 +163,7 @@ export default function Portfolios() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[#4B7C6F] text-white rounded-lg hover:bg-[#3d6559] transition-colors"
           >
             <Plus className="w-4 h-4" />
-            New Portfolio
+            New Project
           </button>
           <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5">
             <button onClick={() => setViewMode('grid')} className={cn('p-1.5 rounded', viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-gray-500')}>
@@ -195,10 +195,10 @@ export default function Portfolios() {
         <div className="text-center py-16">
           <FolderKanban className="w-16 h-16 mx-auto mb-4 text-gray-200 dark:text-slate-700" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No projects yet</h3>
-          <p className="text-sm text-gray-500 dark:text-slate-400">Create projects to track them in your portfolio.</p>
+          <p className="text-sm text-gray-500 dark:text-slate-400">Create projects to track your work.</p>
           <button onClick={() => setShowNewDialog(true)} className="inline-flex items-center gap-1.5 px-4 py-2 mt-4 text-sm font-medium bg-[#4B7C6F] text-white rounded-lg hover:bg-[#3d6559] transition-colors">
             <Plus className="w-4 h-4" />
-            New Portfolio
+            New Project
           </button>
         </div>
       )}
@@ -381,12 +381,12 @@ export default function Portfolios() {
         </div>
       )}
 
-      {/* New Portfolio dialog */}
+      {/* New Project dialog */}
       {showNewDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNewDialog(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Portfolio</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Project</h2>
               <button onClick={() => setShowNewDialog(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
             </div>
             <div className="mb-4">
@@ -397,7 +397,7 @@ export default function Portfolios() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setShowNewDialog(false); }}
-                placeholder="Portfolio name..."
+                placeholder="Project name..."
                 className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F]"
               />
             </div>
@@ -421,7 +421,7 @@ export default function Portfolios() {
                 disabled={!newName.trim() || createProject.isPending}
                 className="px-4 py-2 text-sm font-medium bg-[#4B7C6F] text-white rounded-lg hover:bg-[#3d6559] disabled:opacity-50"
               >
-                {createProject.isPending ? 'Creating...' : 'Create Portfolio'}
+                {createProject.isPending ? 'Creating...' : 'Create Project'}
               </button>
             </div>
           </div>

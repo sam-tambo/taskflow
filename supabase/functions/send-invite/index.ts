@@ -87,7 +87,7 @@ serve(async (req: Request) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Revenue Precision <onboarding@resend.dev>',
+        from: 'Revenue Precision <noreply@revenueprecision.com>',
         to: [email],
         subject: `${inviterName} invited you to join ${workspaceName}`,
         html: emailHtml,

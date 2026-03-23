@@ -98,6 +98,8 @@ export default function Sidebar() {
     { path: '/my-tasks', icon: ListTodo, label: 'My Tasks', badge: null },
     { path: '/inbox', icon: Inbox, label: 'Inbox', badge: unreadCount > 0 ? unreadCount : null },
     { path: '/favorites', icon: Star, label: 'Favorites', badge: null },
+    { path: '/portfolios', icon: BarChart3, label: 'Projects', badge: null },
+    { path: '/goals', icon: Target, label: 'Goals', badge: null },
   ];
 
   if (sidebarCollapsed) {
@@ -209,7 +211,7 @@ export default function Sidebar() {
       {/* Teams & Projects */}
       <div className="flex-1 overflow-y-auto px-3 space-y-1">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Projects</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">My Projects</span>
           <button onClick={() => setShowCreateProject(true)} className="p-1 text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-white rounded">
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -254,50 +256,44 @@ export default function Sidebar() {
         ))}
       </div>
 
-      {/* Bottom nav */}
-      <div className="px-3 py-2 border-t border-gray-200 dark:border-slate-800 space-y-0.5">
-        {rbac.isEmployee && !rbac.isClient && (
-          <>
-            <Link onClick={handleNavClick} to="/goals" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/goals') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-              <Target className="w-4 h-4" /> Goals
-            </Link>
-            <Link onClick={handleNavClick} to="/portfolios" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/portfolios') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-              <BarChart3 className="w-4 h-4" /> Portfolios
-            </Link>
-            <Link onClick={handleNavClick} to="/reports" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/reports') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-              <LineChart className="w-4 h-4" /> Reports
-            </Link>
-            <Link onClick={handleNavClick} to="/workload" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/workload') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-              <LayoutGrid className="w-4 h-4" /> Workload
-            </Link>
-            <Link onClick={handleNavClick} to="/gantt" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/gantt') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-              <GanttChart className="w-4 h-4" /> Gantt Chart
-            </Link>
-          </>
-        )}
-        <Link onClick={handleNavClick} to="/client-report" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/client-report') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-          <FileText className="w-4 h-4" /> Client Report
-        </Link>
-        {rbac.isAdmin && (
-          <Link onClick={handleNavClick} to="/automations" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/automations') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-            <Zap className="w-4 h-4" /> Automations
+      {/* Bottom nav — compact secondary links */}
+      <div className="px-3 py-1.5 border-t border-gray-200 dark:border-slate-800">
+        <div className="flex flex-wrap gap-0.5">
+          {rbac.isEmployee && !rbac.isClient && (
+            <>
+              <Link onClick={handleNavClick} to="/reports" title="Reports" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/reports') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+                <LineChart className="w-3.5 h-3.5" /> Reports
+              </Link>
+              <Link onClick={handleNavClick} to="/workload" title="Workload" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/workload') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+                <LayoutGrid className="w-3.5 h-3.5" /> Workload
+              </Link>
+              <Link onClick={handleNavClick} to="/gantt" title="Gantt Chart" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/gantt') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+                <GanttChart className="w-3.5 h-3.5" /> Gantt
+              </Link>
+            </>
+          )}
+          <Link onClick={handleNavClick} to="/client-report" title="Client Report" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/client-report') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+            <FileText className="w-3.5 h-3.5" /> Client
           </Link>
-        )}
-        {rbac.isAdmin && (
-          <>
-            <Link onClick={handleNavClick} to="/members" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/members') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-              <Users className="w-4 h-4" /> Members
+          {rbac.isAdmin && (
+            <>
+              <Link onClick={handleNavClick} to="/automations" title="Automations" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/automations') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+                <Zap className="w-3.5 h-3.5" /> Auto
+              </Link>
+              <Link onClick={handleNavClick} to="/members" title="Members" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/members') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+                <Users className="w-3.5 h-3.5" /> Members
+              </Link>
+              <Link onClick={handleNavClick} to="/teams" title="Teams" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/teams') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+                <Users className="w-3.5 h-3.5" /> Teams
+              </Link>
+            </>
+          )}
+          {!rbac.isClient && (
+            <Link onClick={handleNavClick} to="/settings" title="Settings" className={cn('flex items-center gap-1.5 px-2 py-1 rounded-md text-xs', isActive('/settings') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
+              <Settings className="w-3.5 h-3.5" /> Settings
             </Link>
-            <Link onClick={handleNavClick} to="/teams" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/teams') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-              <Users className="w-4 h-4" /> Teams
-            </Link>
-          </>
-        )}
-        {!rbac.isClient && (
-          <Link onClick={handleNavClick} to="/settings" className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-sm', isActive('/settings') ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}>
-            <Settings className="w-4 h-4" /> Settings
-          </Link>
-        )}
+          )}
+        </div>
       </div>
 
       {/* User */}

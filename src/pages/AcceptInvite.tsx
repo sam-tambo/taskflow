@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -19,6 +19,8 @@ export default function AcceptInvite() {
   const { token } = useParams<{ token: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || '/';
 
   const [state, setState] = useState<PageState>('loading');
   const [invite, setInvite] = useState<InviteData | null>(null);
@@ -56,7 +58,9 @@ export default function AcceptInvite() {
 
     if (!user) {
       sessionStorage.setItem('pending_invite_token', token ?? '');
-      navigate(`/login?redirect=/invite/${token}`);
+      // Preserve the ?redirect= param so AcceptInvite can follow it after login
+      const invitePath = redirectPath !== '/' ? `/invite/${token}?redirect=${encodeURIComponent(redirectPath)}` : `/invite/${token}`;
+      navigate(`/login?redirect=${encodeURIComponent(invitePath)}`);
       return;
     }
 
@@ -80,7 +84,7 @@ export default function AcceptInvite() {
         .eq('id', invite.id);
 
       setState('success');
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate(redirectPath), 2000);
     } catch (err: any) {
       setState('error');
       setErrorMessage(err.message ?? 'Failed to accept invitation');

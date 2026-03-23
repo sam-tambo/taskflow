@@ -17,7 +17,7 @@ export default function TopBar() {
     const parts = location.pathname.split('/').filter(Boolean);
     const crumbs: { label: string; path: string }[] = [];
     if (parts[0] === 'projects' && parts[1]) {
-      crumbs.push({ label: 'Portfolios', path: '/portfolios' });
+      crumbs.push({ label: 'Projects', path: '/portfolios' });
     }
     return crumbs;
   };
@@ -30,7 +30,7 @@ export default function TopBar() {
     if (path === '/inbox') return 'Inbox';
     if (path === '/members') return 'Members';
     if (path === '/settings') return 'Settings';
-    if (path === '/portfolios') return 'Portfolios';
+    if (path === '/portfolios') return 'Projects';
     if (path.startsWith('/projects/')) return '';
     return '';
   };

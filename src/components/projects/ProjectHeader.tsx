@@ -51,7 +51,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
       if (!error) {
         queryClient.invalidateQueries({ queryKey: ['projects'] });
         queryClient.invalidateQueries({ queryKey: ['project', project.id] });
-        toast.success('Portfolio name updated');
+        toast.success('Project name updated');
       } else {
         toast.error('Failed to update name');
         setEditName(project.name);
@@ -141,7 +141,7 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
             <h1
               onClick={() => { setEditName(project.name); setIsEditingName(true); }}
               className="text-lg font-semibold text-gray-900 dark:text-white cursor-text hover:text-[#4B7C6F] transition-colors"
-              title="Click to edit portfolio name"
+              title="Click to edit project name"
             >
               {project.name}
             </h1>
