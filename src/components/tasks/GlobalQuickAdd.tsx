@@ -1,21 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, Calendar, Flag } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { X, Calendar } from 'lucide-react';
 import { useCreateTask } from '@/hooks/useTasks';
 import { useProjects, useSections } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
+import { useUIStore } from '@/stores/useUIStore';
 import { useAuth } from '@/hooks/useAuth';
 import { cn, getPriorityColor } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useState } from 'react';
 import type { Task } from '@/types';
 
 export function GlobalQuickAdd() {
-  const [open, setOpen] = useState(false);
+  const { quickAddOpen, setQuickAddOpen } = useUIStore();
+  const open = quickAddOpen;
+  const setOpen = setQuickAddOpen;
+
   const [title, setTitle] = useState('');
   const [projectId, setProjectId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<Task['priority']>('none');
   const inputRef = useRef<HTMLInputElement>(null);
-  const { currentWorkspace, members } = useWorkspaceStore();
+  const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const { data: sections = [] } = useSections(projectId || undefined);
@@ -35,7 +40,7 @@ export function GlobalQuickAdd() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [setOpen]);
 
   useEffect(() => {
     if (open) {
