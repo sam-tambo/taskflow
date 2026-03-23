@@ -12,14 +12,16 @@ import { supabase } from '@/lib/supabase';
 import { isToday, isBefore, isThisWeek, parseISO, format } from 'date-fns';
 import {
   ClipboardList, Sun, CalendarClock, Calendar, CircleDashed,
-  AlertTriangle, TrendingUp, Activity, FolderOpen, CheckCircle2
+  AlertTriangle, TrendingUp, Activity, FolderOpen, CheckCircle2, Plus
 } from 'lucide-react';
+import { useUIStore } from '@/stores/useUIStore';
 import type { Task, ActivityLog } from '@/types';
 
 export default function Home() {
   usePageTitle('My Tasks');
   const { user, profile } = useAuth();
   const { currentWorkspace } = useWorkspaceStore();
+  const { setQuickAddOpen } = useUIStore();
   const { data: tasks = [], isLoading } = useMyTasks(user?.id);
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
 
@@ -98,14 +100,23 @@ export default function Home() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {/* Greeting */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Good {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'there'}
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''} assigned to you
-          {sections.overdue.length > 0 && <span className="text-red-500 font-medium"> · {sections.overdue.length} overdue</span>}
-        </p>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Good {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'there'}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+            {tasks.length} task{tasks.length !== 1 ? 's' : ''} assigned to you
+            {sections.overdue.length > 0 && <span className="text-red-500 font-medium"> · {sections.overdue.length} overdue</span>}
+          </p>
+        </div>
+        <button
+          onClick={() => setQuickAddOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-[#16A34A] hover:bg-[#15803d] rounded-lg shadow-sm transition-colors flex-shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          New task
+        </button>
       </div>
 
       {/* Stats cards */}
