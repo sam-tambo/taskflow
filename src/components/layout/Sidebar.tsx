@@ -65,7 +65,7 @@ function ProjectAvatars({ projectId }: { projectId: string }) {
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed, setCommandPaletteOpen } = useUIStore();
+  const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed, setCommandPaletteOpen, setQuickAddOpen } = useUIStore();
 
   // Auto-close sidebar on mobile when navigating
   const handleNavClick = () => {
@@ -103,8 +103,16 @@ export default function Sidebar() {
   if (sidebarCollapsed) {
     return (
       <div className="fixed left-0 top-0 h-screen w-16 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col items-center py-4 z-30">
-        <button onClick={toggleSidebar} className="mb-6 p-2 text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
+        <button onClick={toggleSidebar} className="mb-4 p-2 text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
           <PanelLeft className="w-5 h-5" />
+        </button>
+        {/* Collapsed Create task button */}
+        <button
+          onClick={() => setQuickAddOpen(true)}
+          title="Create task"
+          className="mb-4 w-9 h-9 bg-[#16A34A] hover:bg-[#15803d] text-white rounded-lg flex items-center justify-center shadow-sm transition-colors"
+        >
+          <Plus className="w-5 h-5" />
         </button>
         {navItems.map(({ path, icon: Icon, badge }) => (
           <Link key={path} to={path} className={cn('relative p-3 rounded-xl mb-1 transition-colors', isActive(path) ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800')}>
@@ -150,8 +158,20 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Search */}
+      {/* Create task button */}
       <div className="px-3 pt-3">
+        <button
+          onClick={() => setQuickAddOpen(true)}
+          className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#16A34A] hover:bg-[#15803d] rounded-lg shadow-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create task</span>
+          <span className="ml-auto text-[10px] opacity-60 font-normal">Q</span>
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="px-3 pt-2">
         <button
           onClick={() => setCommandPaletteOpen(true)}
           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-400 dark:text-slate-400 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700"
