@@ -41,7 +41,7 @@ function getDayLabel(dateStr: string): string {
   const date = new Date(dateStr);
   if (isToday(date)) return 'Today';
   if (isYesterday(date)) return 'Yesterday';
-  return format(date, 'EEEE, MMMM d');
+  return format(date, 'EEEE, MMMM d, yyyy');
 }
 
 export default function Inbox() {
