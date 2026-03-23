@@ -27,7 +27,7 @@ function SortableCard({ task, projectId }: { task: Task; projectId: string }) {
   );
 }
 
-function Column({ section, tasks, projectId, workspaceId }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string }) {
+function Column({ section, tasks, projectId, workspaceId, defaultStatus }: { section: Section; tasks: Task[]; projectId: string; workspaceId: string; defaultStatus?: Task['status'] }) {
   const [addTaskTrigger, setAddTaskTrigger] = useState(0);
   const [showDone, setShowDone] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
@@ -39,6 +39,8 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
     setAddTaskTrigger(n => n + 1);
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
+
+  const sectionIdForForm = section.id === 'no-section' ? undefined : section.id;
 
   return (
     <div className={cn('flex-shrink-0 w-72 flex flex-col bg-gray-50 dark:bg-slate-800/30 rounded-xl max-h-full transition-all', isOver && 'ring-2 ring-[#4B7C6F]/40 bg-[#4B7C6F]/5')}>
@@ -62,7 +64,7 @@ function Column({ section, tasks, projectId, workspaceId }: { section: Section; 
         </SortableContext>
         {section.id !== 'no-section' && (
           <div ref={formRef}>
-            <TaskForm projectId={projectId} sectionId={section.id} workspaceId={workspaceId} position={tasks.length} autoOpen={addTaskTrigger} />
+            <TaskForm projectId={projectId} sectionId={sectionIdForForm} workspaceId={workspaceId} position={tasks.length} autoOpen={addTaskTrigger} defaultStatus={defaultStatus} />
           </div>
         )}
         {doneTasks.length > 0 && (
@@ -138,7 +140,6 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
     const overSection = sections.find(s => s.id === over.id) || (over.id === 'no-section' ? { id: 'no-section' } : null);
 
     if (overTask) {
-      // Dropping onto another task
       const updates: Partial<Task> & { id: string } = { id: activeTask.id, section_id: overTask.section_id, position: overTask.position };
       if (overTask.section_id && overTask.section_id !== activeTask.section_id) {
         const newStatus = sectionStatusMap[overTask.section_id];
@@ -149,7 +150,6 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
       }
       updateTask.mutate(updates);
     } else if (overSection) {
-      // Dropping onto an empty column
       const targetSectionId = overSection.id === 'no-section' ? null : overSection.id;
       if (targetSectionId === activeTask.section_id) return;
       const updates: Partial<Task> & { id: string } = { id: activeTask.id, section_id: targetSectionId, position: 0 };
@@ -191,6 +191,7 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
             tasks={tasksBySection.get(section.id) || []}
             projectId={projectId}
             workspaceId={workspaceId}
+            defaultStatus={sectionStatusMap[section.id]}
           />
         ))}
         {noSectionTasks.length > 0 && (
