@@ -14,6 +14,10 @@ import CalendarView from '@/components/views/CalendarView';
 import ProjectOverview from '@/components/projects/ProjectOverview';
 import { MilestonePanel } from '@/components/projects/MilestonePanel';
 import { StatusUpdatePanel } from '@/components/projects/StatusUpdatePanel';
+import { useProjectMembers, useAddProjectMember } from '@/hooks/useProjectMembers';
+import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+import { UserPlus } from 'lucide-react';
 
 export default function Project() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -21,8 +25,14 @@ export default function Project() {
   usePageTitle(project?.name ?? 'Project');
   const { setCurrentProject } = useProjectStore();
   const { currentWorkspace } = useWorkspaceStore();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [view, setView] = useState<'overview' | 'list' | 'board' | 'timeline' | 'calendar'>('list');
   const [filters, setFilters] = useState<TaskFilters>(DEFAULT_FILTERS);
+  const [isJoining, setIsJoining] = useState(false);
+
+  const { data: projectMembers = [] } = useProjectMembers(project?.id);
+  const addMember = useAddProjectMember(project?.id);
 
   useRealtimeTasks(projectId);
 
@@ -33,6 +43,31 @@ export default function Project() {
     }
     return () => setCurrentProject(null);
   }, [project, setCurrentProject]);
+
+  // Check if current user is already a project member
+  const isMember = user ? projectMembers.some(m => m.user_id === user.id) : false;
+
+  const handleJoinProject = () => {
+    if (!user || !project || isJoining) return;
+    setIsJoining(true);
+    addMember.mutate(
+      {
+        project_id: project.id,
+        user_id: user.id,
+        role: 'editor',
+        invited_by: user.id,
+        status: 'active',
+      },
+      {
+        onSuccess: () => {
+          // Invalidate all project list queries so this project appears in sidebar
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+          setIsJoining(false);
+        },
+        onError: () => setIsJoining(false),
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -72,6 +107,22 @@ export default function Project() {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Join Project banner — shown when user is viewing but not yet a member */}
+      {user && !isMember && projectMembers.length > 0 && (
+        <div className="flex items-center justify-between px-6 py-2.5 bg-[#4B7C6F]/5 border-b border-[#4B7C6F]/20 dark:bg-[#4B7C6F]/10 dark:border-[#4B7C6F]/30 flex-shrink-0">
+          <p className="text-sm text-[#3d6b5e] dark:text-[#6fa898]">
+            You're viewing this project. Join to track it in your sidebar and receive updates.
+          </p>
+          <button
+            onClick={handleJoinProject}
+            disabled={isJoining}
+            className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-[#4B7C6F] rounded-lg hover:bg-[#3d6b5e] transition-colors disabled:opacity-60 flex-shrink-0 ml-4"
+          >
+            <UserPlus className="w-4 h-4" />
+            {isJoining ? 'Joining...' : 'Join project'}
+          </button>
+        </div>
+      )}
       <ProjectHeader project={project} currentView={view} onViewChange={setView} />
       {view === 'overview' ? (
         <div className="flex-1 overflow-y-auto">
