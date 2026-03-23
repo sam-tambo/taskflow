@@ -69,8 +69,8 @@ export default function Project() {
       ) : (
         <>
           <FilterBar filters={filters} onChange={setFilters} />
-          <div className="flex-1 overflow-hidden flex">
-            <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-w-0 overflow-hidden flex">
+            <div className="flex-1 min-w-0 overflow-hidden">
               {view === 'list' && <ListView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
               {view === 'board' && <BoardView projectId={project.id} workspaceId={workspaceId} filters={filters} />}
               {view === 'timeline' && <TimelineView projectId={project.id} workspaceId={workspaceId} />}
