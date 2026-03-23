@@ -6,7 +6,7 @@ import type { Task } from '@/types';
 
 interface TaskFormProps {
   projectId: string;
-  sectionId: string;
+  sectionId?: string;
   workspaceId: string;
   position: number;
   autoOpen?: number;
@@ -40,7 +40,7 @@ export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen
     createTask.mutate({
       title: title.trim(),
       project_id: projectId,
-      section_id: sectionId === 'no-section' ? null : sectionId,
+      section_id: (!sectionId || sectionId === 'no-section') ? null : sectionId,
       workspace_id: workspaceId,
       position,
       created_by: user?.id,
