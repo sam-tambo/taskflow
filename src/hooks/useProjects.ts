@@ -61,7 +61,11 @@ export function useProject(projectId: string | undefined) {
         .select('*, owner:profiles!owner_id(*)')
         .eq('id', projectId)
         .single();
-      if (error) throw error;
+      if (error) {
+        // PGRST116 = no rows returned — project doesn't exist or RLS blocked access
+        if (error.code === 'PGRST116') return null;
+        throw error;
+      }
       return data as Project;
     },
     enabled: !!projectId,
