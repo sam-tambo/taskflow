@@ -85,6 +85,7 @@ export function useCreateTask(projectId?: string) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId || data.project_id] });
+      queryClient.invalidateQueries({ queryKey: ['subtasks'] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
     },
     onError: () => {
@@ -226,6 +227,7 @@ export function useDeleteTask(projectId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['subtasks'] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       toast.success('Task deleted');
     },
