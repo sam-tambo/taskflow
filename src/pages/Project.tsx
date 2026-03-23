@@ -47,11 +47,22 @@ export default function Project() {
   if (!project) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-          <p className="text-gray-500 dark:text-slate-400">Project not found</p>
+        <div className="text-center max-w-sm px-6">
+          <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Access required</h2>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
+            You don't have permission to view this project. Ask the project owner to invite you, or check that the link is correct.
+          </p>
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#4B7C6F] rounded-lg hover:bg-[#3d6b5e] transition-colors"
+          >
+            Go to my projects
+          </a>
         </div>
       </div>
     );
