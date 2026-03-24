@@ -36,12 +36,15 @@ export function CommandPalette() {
 
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
 
-  const { data: searchResults } = useQuery({
+  const { data: searchResults, isLoading: isSearching } = useQuery({
     queryKey: ['search', query, currentWorkspace?.id],
     queryFn: async () => {
       if (!query.trim() || !currentWorkspace) return { tasks: [], projects: [], members: [] };
+      const projectIds = projects.map(p => p.id);
       const [tasksRes, membersRes] = await Promise.all([
-        supabase.from('tasks').select('id, title, status, project_id').eq('workspace_id', currentWorkspace.id).ilike('title', `%${query}%`).limit(8),
+        projectIds.length > 0
+          ? supabase.from('tasks').select('id, title, status, project_id').in('project_id', projectIds).ilike('title', `%${query}%`).limit(8)
+          : Promise.resolve({ data: [] }),
         supabase.from('profiles').select('*').or(`full_name.ilike.%${query}%,email.ilike.%${query}%`).limit(5),
       ]);
       const filteredProjects = projects.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
@@ -51,7 +54,7 @@ export function CommandPalette() {
         members: (membersRes.data || []) as Profile[],
       };
     },
-    enabled: !!query.trim() && commandPaletteOpen,
+    enabled: !!query.trim() && commandPaletteOpen && projects.length > 0,
   });
 
   // Quick actions available when no query
@@ -184,6 +187,12 @@ export function CommandPalette() {
         </div>
 
         <div ref={listRef} className="max-h-80 overflow-y-auto p-2">
+          {isSearching && query.trim() && (
+            <p className="text-xs text-gray-400 px-3 py-2">Searching...</p>
+          )}
+          {!isSearching && query.trim() && results.length === 0 && (
+            <p className="text-xs text-gray-400 px-3 py-4 text-center">No results for &ldquo;{query}&rdquo;</p>
+          )}
           {Array.from(categories.entries()).map(([category, items]) => (
             <div key={category}>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500 px-3 pt-2 pb-1">{category}</p>

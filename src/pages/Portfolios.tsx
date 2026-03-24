@@ -44,33 +44,21 @@ export default function Portfolios() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  // Fetch task counts per project (includes tasks from member projects)
+  // Fetch task counts per project
   const { data: projectTaskCounts = {} } = useQuery({
-    queryKey: ['portfolio-task-counts', currentWorkspace?.id, projects.map(p => p.id).join(',')],
+    queryKey: ['portfolio-task-counts', projects.map(p => p.id).join(',')],
     queryFn: async () => {
-      if (!currentWorkspace?.id) return {};
+      if (!currentWorkspace?.id || projects.length === 0) return {};
 
-      // Fetch tasks from workspace
+      const projectIds = projects.map(p => p.id);
       const { data: workspaceTasks, error } = await supabase
         .from('tasks')
         .select('project_id, status, due_date')
-        .eq('workspace_id', currentWorkspace.id)
+        .in('project_id', projectIds)
         .is('parent_task_id', null);
       if (error) throw error;
 
       const allTasks = [...(workspaceTasks || [])];
-
-      // Also fetch tasks for any member projects not in this workspace
-      const workspaceTaskProjectIds = new Set((workspaceTasks || []).map(t => t.project_id).filter(Boolean));
-      const missingProjectIds = projects.map(p => p.id).filter(id => !workspaceTaskProjectIds.has(id));
-      if (missingProjectIds.length > 0) {
-        const { data: memberTasks } = await supabase
-          .from('tasks')
-          .select('project_id, status, due_date')
-          .in('project_id', missingProjectIds)
-          .is('parent_task_id', null);
-        if (memberTasks) allTasks.push(...memberTasks);
-      }
 
       const counts: Record<string, ProjectStats> = {};
       allTasks.forEach(t => {

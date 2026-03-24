@@ -22,20 +22,21 @@ export default function Reports() {
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const [dateRange, setDateRange] = useState(30);
 
-  // Fetch all tasks for workspace
+  // Fetch all tasks for workspace (via projects to avoid workspace_id dependency)
   const { data: allTasks = [] } = useQuery({
-    queryKey: ['all-tasks', currentWorkspace?.id],
+    queryKey: ['all-tasks', currentWorkspace?.id, projects.map(p => p.id).join(',')],
     queryFn: async () => {
-      if (!currentWorkspace) return [];
+      if (!currentWorkspace || projects.length === 0) return [];
+      const projectIds = projects.map(p => p.id);
       const { data, error } = await supabase
         .from('tasks')
         .select('*, assignee:profiles!assignee_id(id, full_name, email), project:projects(id, name, color)')
-        .eq('workspace_id', currentWorkspace.id)
+        .in('project_id', projectIds)
         .is('parent_task_id', null);
       if (error) throw error;
       return data as Task[];
     },
-    enabled: !!currentWorkspace?.id,
+    enabled: !!currentWorkspace?.id && projects.length > 0,
   });
 
   // Summary stats

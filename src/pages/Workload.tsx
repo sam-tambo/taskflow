@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
+import { useProjects } from '@/hooks/useProjects';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -370,20 +371,22 @@ export default function Workload() {
   );
 
   const workspaceId = currentWorkspace?.id;
+  const { data: projects = [] } = useProjects(workspaceId);
 
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ['workload-tasks', workspaceId],
+    queryKey: ['workload-tasks', workspaceId, projects.map(p => p.id).join(',')],
     queryFn: async () => {
-      if (!workspaceId) return [];
+      if (!workspaceId || projects.length === 0) return [];
+      const projectIds = projects.map(p => p.id);
       const { data, error } = await supabase
         .from('tasks')
         .select('*, assignee:profiles!assignee_id(*)')
-        .eq('workspace_id', workspaceId)
+        .in('project_id', projectIds)
         .is('parent_task_id', null);
       if (error) throw error;
       return (data ?? []) as Task[];
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceId && projects.length > 0,
   });
 
   // Group tasks by assignee

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
+import { useProjects } from '@/hooks/useProjects';
 import { useUIStore } from '@/stores/useUIStore';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TaskRow } from '@/components/tasks/TaskRow';
@@ -28,6 +29,7 @@ export default function Search() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const { currentWorkspace, members } = useWorkspaceStore();
   const { openTaskDetail } = useUIStore();
+  const { data: workspaceProjects = [] } = useProjects(currentWorkspace?.id);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,13 +41,14 @@ export default function Search() {
 
   // Search tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['search-tasks', currentWorkspace?.id, debouncedQuery, statusFilter, priorityFilter, assigneeFilter, projectFilter, dueDateFilter],
+    queryKey: ['search-tasks', currentWorkspace?.id, debouncedQuery, statusFilter, priorityFilter, assigneeFilter, projectFilter, dueDateFilter, workspaceProjects.map(p => p.id).join(',')],
     queryFn: async () => {
-      if (!currentWorkspace?.id || !debouncedQuery.trim()) return [];
+      if (!currentWorkspace?.id || !debouncedQuery.trim() || workspaceProjects.length === 0) return [];
+      const projectIds = workspaceProjects.map(p => p.id);
       let q = supabase
         .from('tasks')
         .select('*, assignee:profiles!assignee_id(*), project:projects(*), section:sections(*)')
-        .eq('workspace_id', currentWorkspace.id)
+        .in('project_id', projectIds)
         .ilike('title', `%${debouncedQuery}%`)
         .is('parent_task_id', null)
         .order('updated_at', { ascending: false })
@@ -65,7 +68,7 @@ export default function Search() {
       if (error) throw error;
       return data as Task[];
     },
-    enabled: !!currentWorkspace?.id && !!debouncedQuery.trim(),
+    enabled: !!currentWorkspace?.id && !!debouncedQuery.trim() && workspaceProjects.length > 0,
   });
 
   // Search projects
