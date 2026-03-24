@@ -84,7 +84,7 @@ export default function AcceptInvite() {
       // the workspace_members row was already created above.
       const { error: updateError } = await supabase
         .from('workspace_invites')
-        .update({ accepted_at: new Date().toISOString(), used_by: user.id })
+        .update({ accepted_at: new Date().toISOString() })
         .eq('id', invite.id);
 
       if (updateError) {
