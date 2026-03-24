@@ -219,6 +219,7 @@ export function useUpdateTask(projectId?: string) {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['favorite-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['subtasks'] });
     },
   });
 }
