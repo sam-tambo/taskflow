@@ -46,7 +46,7 @@ export function usePortfolioProjects(portfolioId: string | undefined) {
         .from('portfolio_projects')
         .select('*, project:projects(*, owner:profiles!owner_id(*))')
         .eq('portfolio_id', portfolioId)
-        .order('created_at', { ascending: true });
+        .order('id', { ascending: true });
       if (error) throw error;
       return (data || []).map((pp: any) => ({
         ...pp.project,
