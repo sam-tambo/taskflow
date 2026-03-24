@@ -4,10 +4,11 @@ import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
 import { QuickAddTaskModal } from '@/components/tasks/QuickAddTaskModal';
 import { ShareProjectModal } from '@/components/projects/ShareProjectModal';
-import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal, LayoutDashboard, Archive, Trash2 } from 'lucide-react';
+import { List, Columns3, GanttChart, CalendarDays, Filter, ArrowUpDown, Plus, Share2, Download, Copy, MoreHorizontal, LayoutDashboard, Archive, Trash2, FolderOpen, ChevronRight, Check } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateProject, useSections } from '@/hooks/useProjects';
+import { usePortfolios, useAddProjectToPortfolio, usePortfolioProjects } from '@/hooks/usePortfolios';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -35,12 +36,14 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [showPortfolioMenu, setShowPortfolioMenu] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(project.name);
   const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
   const { data: sections = [] } = useSections(project.id);
   const createProject = useCreateProject(currentWorkspace?.id);
+  const { data: portfolios = [] } = usePortfolios(currentWorkspace?.id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -258,6 +261,35 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
                 >
                   <Archive className="w-4 h-4" /> {project.status === 'archived' ? 'Restore project' : 'Archive project'}
                 </button>
+                {/* Add to portfolio */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowPortfolioMenu(!showPortfolioMenu)}
+                    className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                  >
+                    <FolderOpen className="w-4 h-4" />
+                    <span className="flex-1">Add to portfolio</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                  {showPortfolioMenu && (
+                    <div className="absolute right-full top-0 mr-1 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-1 z-30">
+                      {portfolios.length === 0 ? (
+                        <p className="px-3 py-2 text-xs text-gray-400">No portfolios yet</p>
+                      ) : (
+                        portfolios.map(pf => (
+                          <PortfolioMenuItem
+                            key={pf.id}
+                            portfolioId={pf.id}
+                            portfolioName={pf.name}
+                            projectId={project.id}
+                            onDone={() => { setShowPortfolioMenu(false); setShowMore(false); }}
+                          />
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <hr className="my-1 border-gray-100 dark:border-slate-700" />
                 <button
                   onClick={async () => {
@@ -281,5 +313,38 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
       <QuickAddTaskModal open={showQuickAdd} onClose={() => setShowQuickAdd(false)} projectId={project.id} />
       <ShareProjectModal open={showShare} onClose={() => setShowShare(false)} project={project} />
     </div>
+  );
+}
+
+// Sub-component: single portfolio item in the submenu — shows checkmark if already added
+function PortfolioMenuItem({ portfolioId, portfolioName, projectId, onDone }: {
+  portfolioId: string;
+  portfolioName: string;
+  projectId: string;
+  onDone: () => void;
+}) {
+  const { data: portfolioProjects = [] } = usePortfolioProjects(portfolioId);
+  const addToPortfolio = useAddProjectToPortfolio(portfolioId);
+  const queryClient = useQueryClient();
+
+  const isAlreadyAdded = portfolioProjects.some(p => p.id === projectId);
+
+  const handleClick = async () => {
+    if (isAlreadyAdded) return;
+    await addToPortfolio.mutateAsync({ projectId, position: portfolioProjects.length });
+    queryClient.invalidateQueries({ queryKey: ['all-portfolio-projects'] });
+    onDone();
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={isAlreadyAdded || addToPortfolio.isPending}
+      className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-60"
+    >
+      <FolderOpen className="w-4 h-4 text-gray-400 flex-shrink-0" />
+      <span className="flex-1 truncate">{portfolioName}</span>
+      {isAlreadyAdded && <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
+    </button>
   );
 }
