@@ -17,6 +17,7 @@ export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const justSubmittedRef = useRef(false);
   const createTask = useCreateTask(projectId);
   const { user } = useAuth();
 
@@ -47,6 +48,16 @@ export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen
       ...(defaultStatus ? { status: defaultStatus } : {}),
     });
     setTitle('');
+    // keep form open so user can add another task inline
+  };
+
+  const handleBlur = () => {
+    // Guard against double-submit: Enter sets justSubmittedRef before blur fires
+    if (justSubmittedRef.current) {
+      justSubmittedRef.current = false;
+      return;
+    }
+    handleSubmit();
   };
 
   if (!isOpen) {
@@ -68,10 +79,13 @@ export function TaskForm({ projectId, sectionId, workspaceId, position, autoOpen
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') handleSubmit();
+          if (e.key === 'Enter') {
+            justSubmittedRef.current = true;
+            handleSubmit();
+          }
           if (e.key === 'Escape') { setTitle(''); setIsOpen(false); }
         }}
-        onBlur={handleSubmit}
+        onBlur={handleBlur}
         placeholder="Task name"
         className="w-full text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
       />

@@ -57,13 +57,14 @@ function SectionGroup({ section, tasks, projectId, workspaceId, defaultStatus }:
   };
 
   const confirmDelete = async () => {
-    for (const t of tasks) {
-      await supabase.from('tasks').update({ section_id: null }).eq('id', t.id);
+    // The tasks FK on section_id has ON DELETE SET NULL, so deleting the section
+    // automatically nulls out section_id on all tasks — no manual loop needed.
+    const { error } = await supabase.from('sections').delete().eq('id', section.id);
+    if (!error) {
+      queryClient.invalidateQueries({ queryKey: ['sections', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      setShowDeleteConfirm(false);
     }
-    await supabase.from('sections').delete().eq('id', section.id);
-    queryClient.invalidateQueries({ queryKey: ['sections', projectId] });
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    setShowDeleteConfirm(false);
   };
 
   return (
