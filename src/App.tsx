@@ -39,6 +39,7 @@ const Inbox = lazyWithRetry(() => import('@/pages/Inbox'));
 const Project = lazyWithRetry(() => import('@/pages/Project'));
 const Search = lazyWithRetry(() => import('@/pages/Search'));
 const Portfolios = lazyWithRetry(() => import('@/pages/Portfolios'));
+const PortfolioDetail = lazyWithRetry(() => import('@/pages/PortfolioDetail'));
 const Members = lazyWithRetry(() => import('@/pages/Members'));
 const MemberProfile = lazyWithRetry(() => import('@/pages/MemberProfile'));
 const Settings = lazyWithRetry(() => import('@/pages/Settings'));
@@ -145,6 +146,7 @@ export default function App() {
                 <Route path="/projects/:projectId/forms/:formId" element={<FormBuilder />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/portfolios" element={<Portfolios />} />
+                <Route path="/portfolios/:id" element={<PortfolioDetail />} />
                 <Route path="/members" element={<RoleGuard minRole="admin"><Members /></RoleGuard>} />
                 <Route path="/teams" element={<RoleGuard minRole="admin"><Teams /></RoleGuard>} />
                 <Route path="/members/:userId" element={<RoleGuard minRole="admin"><MemberProfile /></RoleGuard>} />
