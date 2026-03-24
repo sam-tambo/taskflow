@@ -5,9 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { Plus, Users, Pencil, Trash2, UserPlus, X, Check } from 'lucide-react';
+import { Plus, Users, Pencil, Trash2, UserPlus, X, Check, FolderKanban, Link2, Unlink } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Team, TeamMember, WorkspaceMember } from '@/types';
+import type { Team, TeamMember, WorkspaceMember, Project } from '@/types';
+import { useProjects } from '@/hooks/useProjects';
 
 const TEAM_COLORS = ['#4B7C6F', '#8B5CF6', '#EC4899', '#3B82F6', '#EF4444', '#F59E0B', '#14B8A6', '#6366F1', '#84CC16', '#F97316'];
 
@@ -19,6 +20,7 @@ export default function Teams() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [addMemberTeamId, setAddMemberTeamId] = useState<string | null>(null);
+  const [addProjectTeamId, setAddProjectTeamId] = useState<string | null>(null);
 
   const { data: teams = [], isLoading } = useQuery({
     queryKey: ['teams', currentWorkspace?.id],
@@ -114,6 +116,37 @@ export default function Teams() {
     onError: () => toast.error('Failed to remove member'),
   });
 
+  // Projects
+  const { data: allProjects = [] } = useProjects(currentWorkspace?.id);
+
+  const linkProject = useMutation({
+    mutationFn: async ({ projectId, teamId }: { projectId: string; teamId: string }) => {
+      const { error } = await supabase.from('projects').update({ team_id: teamId }).eq('id', projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('Project linked to team');
+      setAddProjectTeamId(null);
+    },
+    onError: () => toast.error('Failed to link project'),
+  });
+
+  const unlinkProject = useMutation({
+    mutationFn: async (projectId: string) => {
+      const { error } = await supabase.from('projects').update({ team_id: null }).eq('id', projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('Project removed from team');
+    },
+    onError: () => toast.error('Failed to unlink project'),
+  });
+
+  const getProjectsForTeam = (teamId: string) => allProjects.filter(p => p.team_id === teamId);
+  const getAvailableProjects = (_teamId: string) => allProjects.filter(p => !p.team_id);
+
   const getMembersForTeam = (teamId: string) => allTeamMembers.filter(m => m.team_id === teamId);
 
   const getAvailableMembers = (teamId: string) => {
@@ -177,6 +210,8 @@ export default function Teams() {
         {teams.map(team => {
           const members = getMembersForTeam(team.id);
           const available = getAvailableMembers(team.id);
+          const teamProjects = getProjectsForTeam(team.id);
+          const availableProjects = getAvailableProjects(team.id);
           return (
             <div key={team.id} className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 overflow-hidden">
               {/* Header */}
@@ -253,6 +288,60 @@ export default function Teams() {
                     </div>
                   ))}
                   {members.length === 0 && <p className="text-xs text-gray-400">No members yet</p>}
+                </div>
+
+                {/* Projects section */}
+                <div className="mt-4 pt-4 border-t border-gray-50 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-gray-500 dark:text-slate-400 flex items-center gap-1">
+                      <FolderKanban className="w-3 h-3" />
+                      {teamProjects.length} project{teamProjects.length !== 1 ? 's' : ''}
+                    </span>
+                    <button
+                      onClick={() => setAddProjectTeamId(addProjectTeamId === team.id ? null : team.id)}
+                      className="text-xs text-[#4B7C6F] hover:underline flex items-center gap-1"
+                    >
+                      <Link2 className="w-3 h-3" /> Link project
+                    </button>
+                  </div>
+
+                  {/* Add project dropdown */}
+                  {addProjectTeamId === team.id && (
+                    <div className="mb-3 bg-gray-50 dark:bg-slate-800 rounded-lg p-2 space-y-1 max-h-36 overflow-y-auto">
+                      {availableProjects.length === 0 ? (
+                        <p className="text-xs text-gray-400 px-2 py-1">No unassigned projects available</p>
+                      ) : (
+                        availableProjects.map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => linkProject.mutate({ projectId: p.id, teamId: team.id })}
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-left"
+                          >
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color || '#4B7C6F' }} />
+                            <span className="text-xs text-gray-700 dark:text-slate-300 truncate">{p.name}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Linked projects list */}
+                  <div className="space-y-1">
+                    {teamProjects.map(p => (
+                      <div key={p.id} className="group flex items-center gap-2 py-1">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color || '#4B7C6F' }} />
+                        <span className="text-sm text-gray-700 dark:text-slate-300 flex-1 truncate">{p.name}</span>
+                        <button
+                          onClick={() => unlinkProject.mutate(p.id)}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-red-500"
+                          title="Remove from team"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {teamProjects.length === 0 && <p className="text-xs text-gray-400">No projects linked</p>}
+                  </div>
                 </div>
               </div>
             </div>
