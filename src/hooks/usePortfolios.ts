@@ -46,7 +46,7 @@ export function usePortfolioProjects(portfolioId: string | undefined) {
         .from('portfolio_projects')
         .select('*, project:projects(*, owner:profiles!owner_id(*))')
         .eq('portfolio_id', portfolioId)
-        .order('position');
+        .order('created_at', { ascending: true });
       if (error) throw error;
       return (data || []).map((pp: any) => ({
         ...pp.project,
@@ -82,10 +82,10 @@ export function useCreatePortfolio(workspaceId?: string) {
 export function useAddProjectToPortfolio(portfolioId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ projectId, position }: { projectId: string; position?: number }) => {
+    mutationFn: async ({ projectId }: { projectId: string; position?: number }) => {
       const { data, error } = await supabase
         .from('portfolio_projects')
-        .insert({ portfolio_id: portfolioId, project_id: projectId, position: position || 0 })
+        .insert({ portfolio_id: portfolioId, project_id: projectId })
         .select()
         .single();
       if (error) throw error;
