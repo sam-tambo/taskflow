@@ -360,33 +360,8 @@ export default function Sidebar() {
           );
         })}
 
-        {teams.map((team) => (
-          <div key={team.id}>
-            <button onClick={() => toggleTeam(team.id)} className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-slate-800">
-              {expandedTeams.has(team.id) ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-              <span className="truncate">{team.name}</span>
-            </button>
-            {expandedTeams.has(team.id) && (
-              <div className="ml-4 space-y-0.5">
-                {projects.filter((p) => p.team_id === team.id).map((project) => (
-                  <Link
-                    key={project.id}
-                    to={`/projects/${project.id}`}
-                    className={cn('flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors', isActive(`/projects/${project.id}`) ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}
-                  >
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: project.color }} />
-                    <span className="truncate flex-1">{project.name}</span>
-                    <ProjectStatusDot projectId={project.id} />
-                    <ProjectAvatars projectId={project.id} />
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Projects without team and not in any portfolio */}
-        {projects.filter((p) => !p.team_id && !projectsInAnyPortfolio.has(p.id)).map((project) => (
+        {/* Projects not in any portfolio — show flat */}
+        {projects.filter((p) => !projectsInAnyPortfolio.has(p.id)).map((project) => (
           <Link
             key={project.id}
             to={`/projects/${project.id}`}
