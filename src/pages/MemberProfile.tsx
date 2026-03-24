@@ -46,7 +46,7 @@ export default function MemberProfile() {
     enabled: !!currentWorkspace && !!userId,
   });
 
-  // Fetch assigned tasks (open)
+  // Fetch assigned tasks (open) — use assignee_id filter only; RLS handles workspace scoping
   const { data: assignedTasks = [] } = useQuery({
     queryKey: ['member-tasks', currentWorkspace?.id, userId],
     queryFn: async () => {
@@ -54,7 +54,6 @@ export default function MemberProfile() {
       const { data, error } = await supabase
         .from('tasks')
         .select('*, project:project_id(id, name, color)')
-        .eq('workspace_id', currentWorkspace.id)
         .eq('assignee_id', userId)
         .in('status', ['todo', 'in_progress'])
         .order('due_date', { ascending: true, nullsFirst: false })
@@ -65,7 +64,7 @@ export default function MemberProfile() {
     enabled: !!currentWorkspace && !!userId,
   });
 
-  // Fetch recently completed tasks
+  // Fetch recently completed tasks — use assignee_id filter only; RLS handles workspace scoping
   const { data: completedTasks = [] } = useQuery({
     queryKey: ['member-completed-tasks', currentWorkspace?.id, userId],
     queryFn: async () => {
@@ -73,7 +72,6 @@ export default function MemberProfile() {
       const { data, error } = await supabase
         .from('tasks')
         .select('*, project:project_id(id, name, color)')
-        .eq('workspace_id', currentWorkspace.id)
         .eq('assignee_id', userId)
         .eq('status', 'done')
         .order('completed_at', { ascending: false })

@@ -75,6 +75,7 @@ export default function Teams() {
       toast.success('Team updated');
       setEditingTeam(null);
     },
+    onError: () => toast.error('Failed to update team'),
   });
 
   const deleteTeam = useMutation({
@@ -86,6 +87,7 @@ export default function Teams() {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       toast.success('Team deleted');
     },
+    onError: () => toast.error('Failed to delete team'),
   });
 
   const addTeamMember = useMutation({
@@ -107,7 +109,9 @@ export default function Teams() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      toast.success('Member removed');
     },
+    onError: () => toast.error('Failed to remove member'),
   });
 
   const getMembersForTeam = (teamId: string) => allTeamMembers.filter(m => m.team_id === teamId);
