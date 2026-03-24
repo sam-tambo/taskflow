@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { X, Calendar } from 'lucide-react';
+import { X, Calendar, User } from 'lucide-react';
 import { useCreateTask } from '@/hooks/useTasks';
 import { useProjects, useSections } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { useAuth } from '@/hooks/useAuth';
-import { cn, getPriorityColor } from '@/lib/utils';
+import { cn, getPriorityColor, getInitials, getAvatarColor } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import type { Task } from '@/types';
@@ -19,8 +19,9 @@ export function GlobalQuickAdd() {
   const [projectId, setProjectId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<Task['priority']>('none');
+  const [assigneeId, setAssigneeId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, members: workspaceMembers } = useWorkspaceStore();
   const { user } = useAuth();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const { data: sections = [] } = useSections(projectId || undefined);
@@ -47,10 +48,11 @@ export function GlobalQuickAdd() {
       setTitle('');
       setDueDate('');
       setPriority('none');
+      setAssigneeId(user?.id ?? null); // default to current user so task is always visible
       if (projects.length > 0 && !projectId) setProjectId(projects[0].id);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [open, projects, projectId]);
+  }, [open, projects, projectId, user?.id]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +65,7 @@ export function GlobalQuickAdd() {
         section_id: sections[0]?.id || null,
         workspace_id: currentWorkspace.id,
         created_by: user?.id,
+        assignee_id: assigneeId,
         due_date: dueDate || null,
         priority,
         position: 0,
@@ -108,6 +111,21 @@ export function GlobalQuickAdd() {
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
+
+              {/* Assignee picker */}
+              <select
+                value={assigneeId ?? ''}
+                onChange={e => setAssigneeId(e.target.value || null)}
+                className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg text-gray-700 dark:text-slate-300 outline-none"
+              >
+                <option value="">Unassigned</option>
+                {workspaceMembers.map(m => (
+                  <option key={m.user_id} value={m.user_id}>
+                    {m.user_id === user?.id ? 'Me' : (m.profiles?.full_name || m.profiles?.email || m.user_id)}
+                  </option>
+                ))}
+              </select>
+
               <div className="flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-gray-400" />
                 <input
