@@ -16,8 +16,9 @@ import { NotificationBell } from '@/components/layout/NotificationBell';
 import {
   Home, Inbox, Search, BarChart3, Users, Settings, Plus, ChevronDown, ChevronRight,
   FolderKanban, LogOut, PanelLeftClose, PanelLeft, Hash, Star, ListTodo,
-  Target, Zap, LayoutGrid, LineChart, GanttChart, FileText
+  Target, Zap, LayoutGrid, LineChart, GanttChart, FileText, FolderOpen
 } from 'lucide-react';
+import { usePortfolios, useCreatePortfolio } from '@/hooks/usePortfolios';
 
 const STATUS_COLORS: Record<string, string> = {
   on_track: '#22c55e',
@@ -77,11 +78,41 @@ export default function Sidebar() {
   const { user, profile, signOut } = useAuth();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const { data: unreadCount = 0 } = useUnreadCount(user?.id);
+  const { data: portfolios = [] } = usePortfolios(currentWorkspace?.id);
+  const createPortfolio = useCreatePortfolio(currentWorkspace?.id);
+
+  // Fetch all portfolio_projects for this workspace's portfolios
+  const { data: allPortfolioProjects = [] } = useQuery({
+    queryKey: ['all-portfolio-projects', currentWorkspace?.id],
+    queryFn: async () => {
+      if (!portfolios.length) return [];
+      const { data, error } = await supabase
+        .from('portfolio_projects')
+        .select('portfolio_id, project_id')
+        .in('portfolio_id', portfolios.map(p => p.id));
+      if (error) throw error;
+      return data as { portfolio_id: string; project_id: string }[];
+    },
+    enabled: !!currentWorkspace && portfolios.length > 0,
+  });
+
+  // Map: portfolioId → projectIds
+  const portfolioProjectIds = portfolios.reduce((acc, p) => {
+    acc[p.id] = allPortfolioProjects.filter(pp => pp.portfolio_id === p.id).map(pp => pp.project_id);
+    return acc;
+  }, {} as Record<string, string[]>);
+
+  // Project IDs that belong to at least one portfolio
+  const projectsInAnyPortfolio = new Set(allPortfolioProjects.map(pp => pp.project_id));
   const rbac = useRBAC();
   const [showWorkspaceSwitcher, setShowWorkspaceSwitcher] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  const [expandedPortfolios, setExpandedPortfolios] = useState<Set<string>>(new Set());
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [creatingPortfolio, setCreatingPortfolio] = useState(false);
+  const [newPortfolioName, setNewPortfolioName] = useState('');
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -90,6 +121,28 @@ export default function Sidebar() {
       const next = new Set(prev);
       next.has(teamId) ? next.delete(teamId) : next.add(teamId);
       return next;
+    });
+  };
+
+  const togglePortfolio = (portfolioId: string) => {
+    setExpandedPortfolios((prev) => {
+      const next = new Set(prev);
+      next.has(portfolioId) ? next.delete(portfolioId) : next.add(portfolioId);
+      return next;
+    });
+  };
+
+  const handleCreatePortfolio = () => {
+    if (!newPortfolioName.trim() || !currentWorkspace || !user) return;
+    createPortfolio.mutate({
+      name: newPortfolioName.trim(),
+      workspace_id: currentWorkspace.id,
+      owner_id: user.id,
+    }, {
+      onSuccess: () => {
+        setNewPortfolioName('');
+        setCreatingPortfolio(false);
+      },
     });
   };
 
@@ -212,10 +265,100 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto px-3 space-y-1">
         <div className="flex items-center justify-between mb-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">My Projects</span>
-          <button onClick={() => setShowCreateProject(true)} className="p-1 text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-white rounded">
-            <Plus className="w-3.5 h-3.5" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowAddMenu(!showAddMenu)}
+              className="p-1 text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-white rounded"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+            {showAddMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowAddMenu(false)} />
+                <div className="absolute right-0 top-6 z-50 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg shadow-lg py-1 w-44">
+                  <button
+                    onClick={() => { setShowCreateProject(true); setShowAddMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+                  >
+                    <FolderKanban className="w-4 h-4 text-gray-400" /> New project
+                  </button>
+                  <button
+                    onClick={() => { setCreatingPortfolio(true); setShowAddMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+                  >
+                    <FolderOpen className="w-4 h-4 text-gray-400" /> New portfolio
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Inline portfolio creation */}
+        {creatingPortfolio && (
+          <div className="flex items-center gap-1 px-2 py-1 mb-1">
+            <FolderOpen className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input
+              autoFocus
+              value={newPortfolioName}
+              onChange={(e) => setNewPortfolioName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreatePortfolio();
+                if (e.key === 'Escape') { setCreatingPortfolio(false); setNewPortfolioName(''); }
+              }}
+              onBlur={() => { if (!newPortfolioName.trim()) { setCreatingPortfolio(false); } else handleCreatePortfolio(); }}
+              placeholder="Portfolio name…"
+              className="flex-1 text-sm bg-gray-100 dark:bg-slate-800 rounded px-2 py-0.5 outline-none text-gray-900 dark:text-white"
+            />
+          </div>
+        )}
+
+        {/* Portfolios */}
+        {portfolios.map((portfolio) => {
+          const portfolioProjects = projects.filter(p => portfolioProjectIds[portfolio.id]?.includes(p.id));
+          const isExpanded = expandedPortfolios.has(portfolio.id);
+          return (
+            <div key={portfolio.id}>
+              <div className="flex items-center group">
+                <button
+                  onClick={() => togglePortfolio(portfolio.id)}
+                  className="flex items-center gap-1.5 flex-1 px-2 py-1.5 text-sm text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 min-w-0"
+                >
+                  {isExpanded ? <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />}
+                  <FolderOpen className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                  <span className="truncate flex-1 text-left">{portfolio.name}</span>
+                </button>
+                <Link
+                  to={`/portfolios/${portfolio.id}`}
+                  onClick={handleNavClick}
+                  className="opacity-0 group-hover:opacity-100 px-1 py-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white text-xs rounded"
+                  title="Open portfolio"
+                >
+                  <BarChart3 className="w-3 h-3" />
+                </Link>
+              </div>
+              {isExpanded && (
+                <div className="ml-6 space-y-0.5">
+                  {portfolioProjects.map(project => (
+                    <Link
+                      key={project.id}
+                      to={`/projects/${project.id}`}
+                      onClick={handleNavClick}
+                      className={cn('flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors', isActive(`/projects/${project.id}`) ? 'bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white')}
+                    >
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: project.color }} />
+                      <span className="truncate flex-1">{project.name}</span>
+                      <ProjectStatusDot projectId={project.id} />
+                    </Link>
+                  ))}
+                  {portfolioProjects.length === 0 && (
+                    <p className="text-xs text-gray-400 dark:text-slate-600 px-2 py-1">No projects yet</p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {teams.map((team) => (
           <div key={team.id}>
@@ -242,8 +385,8 @@ export default function Sidebar() {
           </div>
         ))}
 
-        {/* Projects without team */}
-        {projects.filter((p) => !p.team_id).map((project) => (
+        {/* Projects without team and not in any portfolio */}
+        {projects.filter((p) => !p.team_id && !projectsInAnyPortfolio.has(p.id)).map((project) => (
           <Link
             key={project.id}
             to={`/projects/${project.id}`}
