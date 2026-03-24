@@ -9,7 +9,44 @@ export function useProjects(workspaceId: string | undefined) {
     queryFn: async () => {
       if (!workspaceId) return [];
 
-      // Fetch workspace projects (visible to all workspace members)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      // Check this user's role in the workspace
+      const { data: myMembership } = await supabase
+        .from('workspace_members')
+        .select('role')
+        .eq('workspace_id', workspaceId)
+        .eq('user_id', user.id)
+        .single();
+
+      const isGuest = myMembership?.role === 'guest' || myMembership?.role === 'client';
+
+      if (isGuest) {
+        // Guests only see projects linked to teams they belong to,
+        // plus any projects they're explicitly added to via project_members.
+        const [{ data: myTeams }, { data: myProjectMemberships }] = await Promise.all([
+          supabase.from('team_members').select('team_id').eq('user_id', user.id),
+          supabase.from('project_members').select('project_id').eq('user_id', user.id),
+        ]);
+
+        const myTeamIds = (myTeams || []).map(t => t.team_id);
+        const myProjectIds = new Set((myProjectMemberships || []).map(m => m.project_id));
+
+        const { data: allWsProjects, error } = await supabase
+          .from('projects')
+          .select('*, owner:profiles!owner_id(*)')
+          .eq('workspace_id', workspaceId)
+          .eq('status', 'active')
+          .order('name');
+        if (error) throw error;
+
+        return (allWsProjects as Project[]).filter(p =>
+          (p.team_id && myTeamIds.includes(p.team_id)) || myProjectIds.has(p.id)
+        );
+      }
+
+      // Non-guests see all workspace projects
       const { data: workspaceProjects, error } = await supabase
         .from('projects')
         .select('*, owner:profiles!owner_id(*)')
@@ -19,9 +56,6 @@ export function useProjects(workspaceId: string | undefined) {
       if (error) throw error;
 
       // Also fetch private projects where user is a member (handles invitations)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return workspaceProjects as Project[];
-
       const { data: memberRows } = await supabase
         .from('project_members')
         .select('project_id')

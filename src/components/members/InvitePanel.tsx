@@ -19,6 +19,7 @@ const ROLES: { value: InviteRole; label: string; description: string }[] = [
   { value: 'admin', label: 'Admin', description: 'Full access — manage members, projects, and settings' },
   { value: 'employee', label: 'Employee', description: 'Create and edit projects, tasks, and reports' },
   { value: 'client', label: 'Client', description: 'View assigned projects and leave comments' },
+  { value: 'guest', label: 'Guest', description: 'Restricted access — only sees projects in their assigned team/portfolio' },
 ]
 
 type Mode = 'link' | 'email'
