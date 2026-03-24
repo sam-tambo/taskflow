@@ -40,6 +40,7 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   const [showActions, setShowActions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveProject, setShowMoveProject] = useState(false);
+  const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -340,15 +341,50 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
           </select>
 
           {/* Project */}
-          {task.project && (
-            <>
-              <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><ArrowUpRight className="w-3.5 h-3.5" /> Project</span>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: task.project.color }} />
-                <span className="text-gray-900 dark:text-white">{task.project.name}</span>
+          <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><ArrowUpRight className="w-3.5 h-3.5" /> Project</span>
+          <div className="relative">
+            <button
+              onClick={() => setShowProjectPicker(!showProjectPicker)}
+              className="flex items-center gap-2 px-1.5 py-1 -ml-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              {task.project ? (
+                <>
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: task.project.color }} />
+                  <span className="text-gray-900 dark:text-white text-sm">{task.project.name}</span>
+                </>
+              ) : (
+                <span className="text-gray-400 text-sm">No project</span>
+              )}
+              <ChevronDown className="w-3 h-3 text-gray-400" />
+            </button>
+            {showProjectPicker && (
+              <div className="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="max-h-52 overflow-y-auto py-1">
+                  {allProjects.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        if (p.id !== task.project_id) {
+                          updateTask.mutate({ id: task.id, project_id: p.id, section_id: null });
+                          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                          toast.success(`Moved to ${p.name}`);
+                        }
+                        setShowProjectPicker(false);
+                      }}
+                      className={cn(
+                        'w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700',
+                        task.project_id === p.id && 'bg-[#4B7C6F]/5'
+                      )}
+                    >
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                      <span className="text-gray-700 dark:text-slate-300 truncate">{p.name}</span>
+                      {task.project_id === p.id && <Check className="w-3.5 h-3.5 text-[#4B7C6F] ml-auto flex-shrink-0" />}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </>
-          )}
+            )}
+          </div>
 
           {/* Tags */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Tags</span>
