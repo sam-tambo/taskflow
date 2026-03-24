@@ -25,12 +25,17 @@ export function useTasks(projectId: string | undefined) {
       if (!projectId) return [];
       const { data, error } = await supabase
         .from('tasks')
-        .select('*, assignee:profiles!assignee_id(*), section:sections(*)')
+        .select('*, assignee:profiles!assignee_id(*), section:sections(*), subtask_refs:tasks!tasks_parent_task_id_fkey(id,status)')
         .eq('project_id', projectId)
         .is('parent_task_id', null)
         .order('position');
       if (error) throw error;
-      return data as Task[];
+      // Compute subtasks_count and subtasks_completed from embedded subtask_refs
+      return (data as any[]).map(task => ({
+        ...task,
+        subtasks_count: task.subtask_refs?.length ?? 0,
+        subtasks_completed: task.subtask_refs?.filter((s: any) => s.status === 'done').length ?? 0,
+      })) as Task[];
     },
     enabled: !!projectId,
   });
