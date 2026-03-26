@@ -1,11 +1,11 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, useDroppable, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskForm } from '@/components/tasks/TaskForm';
 import { useTasks, useUpdateTask } from '@/hooks/useTasks';
-import { useSections } from '@/hooks/useProjects';
+import { useSections, useCreateSection } from '@/hooks/useProjects';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type TaskFilters, applyFilters, DEFAULT_FILTERS } from '@/components/projects/FilterBar';
@@ -79,6 +79,70 @@ function Column({ section, tasks, projectId, workspaceId, defaultStatus }: { sec
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function AddSectionButton({ projectId, nextPosition }: { projectId: string; nextPosition: number }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [name, setName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const createSection = useCreateSection(projectId);
+
+  useEffect(() => {
+    if (isAdding) inputRef.current?.focus();
+  }, [isAdding]);
+
+  const handleSubmit = () => {
+    const trimmed = name.trim();
+    if (!trimmed) { setIsAdding(false); return; }
+    createSection.mutate(
+      { project_id: projectId, name: trimmed, position: nextPosition },
+      { onSuccess: () => { setName(''); setIsAdding(false); } }
+    );
+  };
+
+  if (!isAdding) {
+    return (
+      <button
+        onClick={() => setIsAdding(true)}
+        className="flex-shrink-0 flex items-center gap-2 h-10 px-4 text-sm text-gray-500 dark:text-slate-400 hover:text-[#4B7C6F] hover:bg-gray-100 dark:hover:bg-slate-800/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-slate-700 w-52 transition-colors"
+      >
+        <Plus className="w-4 h-4" />
+        Add section
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex-shrink-0 w-72 bg-gray-50 dark:bg-slate-800/30 rounded-xl p-3 flex flex-col gap-2">
+      <input
+        ref={inputRef}
+        value={name}
+        onChange={e => setName(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') { e.preventDefault(); handleSubmit(); }
+          if (e.key === 'Escape') { setIsAdding(false); setName(''); }
+        }}
+        onBlur={handleSubmit}
+        placeholder="Section name..."
+        className="w-full px-3 py-2 text-sm font-semibold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg outline-none focus:border-[#4B7C6F] focus:ring-1 focus:ring-[#4B7C6F] text-gray-800 dark:text-white"
+      />
+      <div className="flex gap-2">
+        <button
+          onMouseDown={e => { e.preventDefault(); handleSubmit(); }}
+          disabled={createSection.isPending}
+          className="flex-1 py-1.5 text-xs font-medium text-white bg-[#4B7C6F] hover:bg-[#3d6b5e] rounded-lg disabled:opacity-60 transition-colors"
+        >
+          {createSection.isPending ? 'Adding…' : 'Add section'}
+        </button>
+        <button
+          onMouseDown={e => { e.preventDefault(); setIsAdding(false); setName(''); }}
+          className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );
@@ -203,6 +267,7 @@ export default function BoardView({ projectId, workspaceId, filters = DEFAULT_FI
             workspaceId={workspaceId}
           />
         )}
+        <AddSectionButton projectId={projectId} nextPosition={sections.length} />
       </div>
     </DndContext>
   );
