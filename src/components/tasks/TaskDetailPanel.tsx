@@ -23,7 +23,7 @@ import {
   X, Check, Star, MoreHorizontal, Calendar, Flag, User, Tag, Clock,
   ChevronDown, Copy, Trash2, ArrowUpRight, Diamond, Search, FolderOpen, CopyPlus
 } from 'lucide-react';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useSections } from '@/hooks/useProjects';
 import type { Task, ActivityLog } from '@/types';
 import { toast } from 'sonner';
 
@@ -75,8 +75,21 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
   });
 
   const { members: workspaceMembers } = useWorkspaceStore();
+  const { data: projectSections = [] } = useSections(task?.project_id || undefined);
   const updateTask = useUpdateTask(task?.project_id || undefined);
   const deleteTask = useDeleteTask(task?.project_id || undefined);
+
+  // Map a status value to its best-matching section_id in the current project
+  const statusToSectionId = (status: Task['status']): string | null => {
+    const nameToStatus: Record<string, Task['status']> = {
+      'to do': 'todo', 'todo': 'todo', 'backlog': 'todo', 'planning': 'todo',
+      'in progress': 'in_progress', 'in review': 'in_progress', 'sprint': 'in_progress', 'review': 'in_progress',
+      'done': 'done', 'complete': 'done', 'completed': 'done', 'published': 'done',
+      'cancelled': 'cancelled', 'canceled': 'cancelled',
+    };
+    const match = projectSections.find(s => nameToStatus[s.name.toLowerCase().trim()] === status);
+    return match?.id ?? null;
+  };
   const [showAssigneePicker, setShowAssigneePicker] = useState(false);
   const [assigneeSearch, setAssigneeSearch] = useState('');
   const assigneeRef = useRef<HTMLDivElement>(null);
@@ -336,7 +349,21 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
 
           {/* Status */}
           <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5"><ChevronDown className="w-3.5 h-3.5" /> Status</span>
-          <select value={task.status} onChange={(e) => updateTask.mutate({ id: task.id, status: e.target.value as Task['status'], completed_at: e.target.value === 'done' ? new Date().toISOString() : null })} className="text-sm bg-transparent outline-none cursor-pointer text-gray-900 dark:text-white">
+          <select
+            value={task.status}
+            onChange={(e) => {
+              const newStatus = e.target.value as Task['status'];
+              const matchingSectionId = statusToSectionId(newStatus);
+              updateTask.mutate({
+                id: task.id,
+                status: newStatus,
+                completed_at: newStatus === 'done' ? new Date().toISOString() : null,
+                // Move task to the board column that matches the new status (if one exists)
+                ...(matchingSectionId !== null ? { section_id: matchingSectionId } : {}),
+              });
+            }}
+            className="text-sm bg-transparent outline-none cursor-pointer text-gray-900 dark:text-white"
+          >
             {statuses.map((s) => <option key={s} value={s}>{statusLabels[s]}</option>)}
           </select>
 
