@@ -25,7 +25,7 @@ export function useTasks(projectId: string | undefined) {
       if (!projectId) return [];
       const { data, error } = await supabase
         .from('tasks')
-        .select('*, assignee:profiles!assignee_id(*), section:sections(*), subtask_refs:tasks!tasks_parent_task_id_fkey(id,status)')
+        .select('*, assignee:profiles!assignee_id(*), section:sections(*), subtask_refs:tasks!parent_task_id(id,status)')
         .eq('project_id', projectId)
         .is('parent_task_id', null)
         .order('position');
