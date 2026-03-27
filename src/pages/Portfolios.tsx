@@ -5,7 +5,7 @@ import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useProjects, useUpdateProject } from '@/hooks/useProjects';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, Check, Users, ChevronDown, ChevronRight } from 'lucide-react';
+import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, X, Check, Users, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import type { Project } from '@/types';
 import { Link } from 'react-router-dom';
