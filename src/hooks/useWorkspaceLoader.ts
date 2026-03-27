@@ -114,7 +114,9 @@ export function useWorkspaceLoader() {
     if (!currentWorkspace) return;
 
     async function loadWorkspaceData() {
-      const [membersRes, teamsRes] = await Promise.all([
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const [membersRes, allTeamsRes, userTeamMembershipsRes] = await Promise.all([
         supabase
           .from('workspace_members')
           .select('*, profiles:profiles!user_id(*)')
@@ -123,10 +125,18 @@ export function useWorkspaceLoader() {
           .from('teams')
           .select('*')
           .eq('workspace_id', currentWorkspace!.id),
+        user
+          ? supabase.from('team_members').select('team_id').eq('user_id', user.id)
+          : Promise.resolve({ data: [] as { team_id: string }[] }),
       ]);
 
+      // Only show teams the user belongs to in the sidebar.
+      // Workspace admins who need to manage other teams can do so via the Teams settings page.
+      const userTeamIds = new Set((userTeamMembershipsRes.data ?? []).map(t => t.team_id));
+      const userTeams = (allTeamsRes.data ?? []).filter(t => userTeamIds.has(t.id));
+
       if (membersRes.data) setMembers(membersRes.data);
-      if (teamsRes.data) setTeams(teamsRes.data);
+      setTeams(userTeams);
     }
 
     loadWorkspaceData();
