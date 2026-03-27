@@ -32,6 +32,7 @@ export interface Team {
   name: string;
   description: string | null;
   color: string;
+  privacy: 'public' | 'private';
   created_at: string;
 }
 

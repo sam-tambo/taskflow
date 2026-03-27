@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { Plus, Users, Pencil, Trash2, UserPlus, X, Check, FolderKanban, Link2, Unlink } from 'lucide-react';
+import { Plus, Users, Pencil, Trash2, UserPlus, X, Check, FolderKanban, Link2, Unlink, Lock, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Team, TeamMember, WorkspaceMember, Project } from '@/types';
 import { useProjects } from '@/hooks/useProjects';
@@ -52,7 +52,7 @@ export default function Teams() {
   });
 
   const createTeam = useMutation({
-    mutationFn: async (team: { name: string; description: string; color: string }) => {
+    mutationFn: async (team: { name: string; description: string; color: string; privacy: 'public' | 'private' }) => {
       const { error } = await supabase.from('teams').insert({
         ...team,
         workspace_id: currentWorkspace!.id,
@@ -68,7 +68,7 @@ export default function Teams() {
   });
 
   const updateTeam = useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; color?: string }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; color?: string; privacy?: 'public' | 'private' }) => {
       const { error } = await supabase.from('teams').update(updates).eq('id', id);
       if (error) throw error;
     },
@@ -224,7 +224,23 @@ export default function Teams() {
                     <h3 className="font-semibold text-gray-900 dark:text-white truncate">{team.name}</h3>
                     {team.description && <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{team.description}</p>}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-1">
+                    {/* Privacy badge + quick toggle */}
+                    <button
+                      onClick={() => updateTeam.mutate({ id: team.id, privacy: team.privacy === 'public' ? 'private' : 'public' })}
+                      title={team.privacy === 'private' ? 'Private — click to make public' : 'Public — click to make private'}
+                      className={cn(
+                        'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors',
+                        team.privacy === 'private'
+                          ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-700 hover:bg-amber-100'
+                          : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border-gray-200 dark:border-slate-600 hover:bg-gray-100'
+                      )}
+                    >
+                      {team.privacy === 'private'
+                        ? <><Lock className="w-2.5 h-2.5" /> Private</>
+                        : <><Globe className="w-2.5 h-2.5" /> Public</>
+                      }
+                    </button>
                     <button onClick={() => setEditingTeam(team)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
@@ -354,17 +370,18 @@ export default function Teams() {
 
 function TeamForm({ team, onSubmit, onCancel }: {
   team: Team | null;
-  onSubmit: (data: { name: string; description: string; color: string }) => void;
+  onSubmit: (data: { name: string; description: string; color: string; privacy: 'public' | 'private' }) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(team?.name || '');
   const [description, setDescription] = useState(team?.description || '');
   const [color, setColor] = useState(team?.color || TEAM_COLORS[0]);
+  const [privacy, setPrivacy] = useState<'public' | 'private'>(team?.privacy || 'public');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), description: description.trim(), color });
+    onSubmit({ name: name.trim(), description: description.trim(), color, privacy });
   };
 
   return (
@@ -394,6 +411,44 @@ function TeamForm({ team, onSubmit, onCancel }: {
             style={{ backgroundColor: c }}
           />
         ))}
+      </div>
+      {/* Privacy */}
+      <div>
+        <span className="text-xs text-gray-500 block mb-1.5">Visibility</span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setPrivacy('public')}
+            className={cn(
+              'flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors',
+              privacy === 'public'
+                ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]'
+                : 'border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-gray-300'
+            )}
+          >
+            <Globe className="w-3.5 h-3.5 shrink-0" />
+            <div className="text-left">
+              <div className="font-medium text-xs">Public</div>
+              <div className="text-[10px] opacity-70">All workspace members can see this team</div>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrivacy('private')}
+            className={cn(
+              'flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors',
+              privacy === 'private'
+                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
+                : 'border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-gray-300'
+            )}
+          >
+            <Lock className="w-3.5 h-3.5 shrink-0" />
+            <div className="text-left">
+              <div className="font-medium text-xs">Private</div>
+              <div className="text-[10px] opacity-70">Only members and admins can see this team</div>
+            </div>
+          </button>
+        </div>
       </div>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="text-sm text-gray-500 px-3 py-1.5">Cancel</button>
