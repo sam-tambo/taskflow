@@ -66,6 +66,18 @@ export default function AcceptInvite() {
 
     setState('accepting');
     try {
+      // Ensure a profile row exists for this user before touching workspace_members.
+      // The signup trigger can fail silently (e.g. metadata missing), leaving auth.users
+      // without a matching profiles row — which causes workspace_members FK violations.
+      await supabase.from('profiles').upsert(
+        {
+          id: user.id,
+          email: user.email ?? '',
+          full_name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? '',
+        },
+        { onConflict: 'id', ignoreDuplicates: true }
+      );
+
       const { error: memberError } = await supabase
         .from('workspace_members')
         .insert({
