@@ -27,7 +27,7 @@ export default function Project() {
   const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [view, setView] = useState<'overview' | 'list' | 'board' | 'timeline' | 'calendar'>('list');
+  const [view, setView] = useState<'overview' | 'list' | 'board' | 'timeline' | 'calendar'>('board');
   const [filters, setFilters] = useState<TaskFilters>(DEFAULT_FILTERS);
   const [isJoining, setIsJoining] = useState(false);
 
@@ -39,7 +39,7 @@ export default function Project() {
   useEffect(() => {
     if (project) {
       setCurrentProject(project);
-      setView(project.default_view || 'list');
+      setView(project.default_view || 'board');
     }
     return () => setCurrentProject(null);
   }, [project, setCurrentProject]);
