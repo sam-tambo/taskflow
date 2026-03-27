@@ -93,8 +93,13 @@ export function useWorkspaceLoader() {
 
         setWorkspaces(workspaces);
         const current = useWorkspaceStore.getState().currentWorkspace;
-        if (!current || !workspaces.find(w => w.id === current.id)) {
-          setCurrentWorkspace(workspaces[0]);
+        const best = workspaces[0];
+        const bestCount = memberCounts.get(best.id) ?? 0;
+        const currentCount = memberCounts.get(current?.id ?? '') ?? 0;
+        // Always prefer the workspace with the most members (the main shared workspace).
+        // This overrides stale currentWorkspace set to an empty auto-created solo workspace.
+        if (!current || !workspaces.find(w => w.id === current.id) || bestCount > currentCount) {
+          setCurrentWorkspace(best);
         }
       }
     }
