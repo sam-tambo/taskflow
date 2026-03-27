@@ -2,13 +2,14 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
-import { useProjects, useCreateProject, useUpdateProject } from '@/hooks/useProjects';
+import { useProjects, useUpdateProject } from '@/hooks/useProjects';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, X, Check, Users, ChevronDown, ChevronRight } from 'lucide-react';
+import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, Check, Users, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import type { Project } from '@/types';
 import { Link } from 'react-router-dom';
+import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 
 type HealthStatus = 'on_track' | 'at_risk' | 'off_track' | 'complete';
 
@@ -19,7 +20,6 @@ const HEALTH_CONFIG: Record<HealthStatus, { label: string; color: string; bg: st
   complete: { label: 'Complete', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30', icon: CheckCircle2 },
 };
 
-const PORTFOLIO_COLORS = ['#4B7C6F', '#3B82F6', '#8B5CF6', '#EF4444', '#F59E0B', '#10B981', '#F97316'];
 
 interface ProjectStats {
   total: number;
@@ -37,11 +37,8 @@ export default function Portfolios() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [collapsedTeams, setCollapsedTeams] = useState<Set<string>>(new Set());
 
-  const createProject = useCreateProject(currentWorkspace?.id);
   const updateProject = useUpdateProject(currentWorkspace?.id);
-  const [showNewDialog, setShowNewDialog] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newColor, setNewColor] = useState('#4B7C6F');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
@@ -148,20 +145,6 @@ export default function Portfolios() {
     });
   };
 
-  const handleCreate = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!newName.trim() || !currentWorkspace?.id) return;
-    await createProject.mutateAsync({
-      name: newName.trim(),
-      color: newColor,
-      workspace_id: currentWorkspace.id,
-      owner_id: user?.id,
-    });
-    setNewName('');
-    setNewColor('#4B7C6F');
-    setShowNewDialog(false);
-  };
-
   const handleRenameStart = (project: Project, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -189,7 +172,7 @@ export default function Portfolios() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowNewDialog(true)}
+            onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[#4B7C6F] text-white rounded-lg hover:bg-[#3d6559] transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -226,7 +209,7 @@ export default function Portfolios() {
           <FolderKanban className="w-16 h-16 mx-auto mb-4 text-gray-200 dark:text-slate-700" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No projects yet</h3>
           <p className="text-sm text-gray-500 dark:text-slate-400">Create projects to track your work.</p>
-          <button onClick={() => setShowNewDialog(true)} className="inline-flex items-center gap-1.5 px-4 py-2 mt-4 text-sm font-medium bg-[#4B7C6F] text-white rounded-lg hover:bg-[#3d6559] transition-colors">
+          <button onClick={() => setShowCreateModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 mt-4 text-sm font-medium bg-[#4B7C6F] text-white rounded-lg hover:bg-[#3d6559] transition-colors">
             <Plus className="w-4 h-4" />
             New Project
           </button>
@@ -445,52 +428,7 @@ export default function Portfolios() {
         </div>
       )}
 
-      {/* New Project dialog */}
-      {showNewDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNewDialog(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Project</h2>
-              <button onClick={() => setShowNewDialog(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Name</label>
-              <input
-                autoFocus
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setShowNewDialog(false); }}
-                placeholder="Project name..."
-                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4B7C6F]"
-              />
-            </div>
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Color</label>
-              <div className="flex gap-2">
-                {PORTFOLIO_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setNewColor(c)}
-                    className={cn('w-7 h-7 rounded-full border-2 transition-all', newColor === c ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent')}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowNewDialog(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-              <button
-                onClick={handleCreate}
-                disabled={!newName.trim() || createProject.isPending}
-                className="px-4 py-2 text-sm font-medium bg-[#4B7C6F] text-white rounded-lg hover:bg-[#3d6559] disabled:opacity-50"
-              >
-                {createProject.isPending ? 'Creating...' : 'Create Project'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateProjectModal open={showCreateModal} onClose={() => setShowCreateModal(false)} />
     </div>
   );
 }
