@@ -295,7 +295,10 @@ export function ProjectHeader({ project, currentView, onViewChange }: ProjectHea
                   onClick={async () => {
                     if (!confirm('Permanently delete this project and all its tasks? This cannot be undone.')) return;
                     await supabase.from('projects').delete().eq('id', project.id);
-                    queryClient.invalidateQueries({ queryKey: ['projects'] });
+                    // Remove immediately so sidebar doesn't show stale entry,
+                    // then invalidate so any surviving queries refetch cleanly.
+                    queryClient.removeQueries({ queryKey: ['projects'] });
+                    queryClient.removeQueries({ queryKey: ['project', project.id] });
                     toast.success('Project deleted');
                     navigate('/');
                     setShowMore(false);
