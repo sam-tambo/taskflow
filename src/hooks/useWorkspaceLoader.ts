@@ -75,13 +75,22 @@ export function useWorkspaceLoader() {
         }
       }
 
-      // Step 4: Fetch full workspace objects
-      const { data: workspaces } = await supabase
-        .from('workspaces')
-        .select('*')
-        .in('id', wsIds);
+      // Step 4: Fetch full workspace objects + member counts so we can prefer the most active workspace
+      const [workspacesRes, memberCountsRes] = await Promise.all([
+        supabase.from('workspaces').select('*').in('id', wsIds),
+        supabase.from('workspace_members').select('workspace_id').in('workspace_id', wsIds),
+      ]);
 
-      if (workspaces && workspaces.length > 0) {
+      const workspaces = workspacesRes.data ?? [];
+
+      if (workspaces.length > 0) {
+        // Sort: workspaces with more members come first (picks the shared main workspace over auto-created solo ones)
+        const memberCounts = new Map<string, number>();
+        (memberCountsRes.data ?? []).forEach((r: { workspace_id: string }) => {
+          memberCounts.set(r.workspace_id, (memberCounts.get(r.workspace_id) ?? 0) + 1);
+        });
+        workspaces.sort((a, b) => (memberCounts.get(b.id) ?? 0) - (memberCounts.get(a.id) ?? 0));
+
         setWorkspaces(workspaces);
         const current = useWorkspaceStore.getState().currentWorkspace;
         if (!current || !workspaces.find(w => w.id === current.id)) {

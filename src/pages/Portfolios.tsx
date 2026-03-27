@@ -5,7 +5,7 @@ import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useProjects, useCreateProject, useUpdateProject } from '@/hooks/useProjects';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn, getInitials, getAvatarColor } from '@/lib/utils';
-import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, X, Check } from 'lucide-react';
+import { BarChart3, FolderKanban, TrendingUp, AlertTriangle, XCircle, CheckCircle2, LayoutGrid, List, Plus, Pencil, X, Check, Users, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import type { Project } from '@/types';
 import { Link } from 'react-router-dom';
@@ -31,10 +31,11 @@ interface ProjectStats {
 
 export default function Portfolios() {
   usePageTitle('Projects');
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, teams } = useWorkspaceStore();
   const { data: projects = [] } = useProjects(currentWorkspace?.id);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [collapsedTeams, setCollapsedTeams] = useState<Set<string>>(new Set());
 
   const createProject = useCreateProject(currentWorkspace?.id);
   const updateProject = useUpdateProject(currentWorkspace?.id);
@@ -105,6 +106,47 @@ export default function Portfolios() {
     projects.forEach(p => { counts[getStats(p.id).health]++; });
     return counts;
   }, [projects, projectTaskCounts]);
+
+  // Group projects by team for the grouped view
+  const groupedByTeam = useMemo(() => {
+    const groups: { team: { id: string; name: string; color: string } | null; projects: Project[] }[] = [];
+    const teamMap = new Map(teams.map(t => [t.id, t]));
+    const assigned = new Map<string, Project[]>();
+    const unassigned: Project[] = [];
+    filteredProjects.forEach(p => {
+      if (p.team_id && teamMap.has(p.team_id)) {
+        const list = assigned.get(p.team_id) ?? [];
+        list.push(p);
+        assigned.set(p.team_id, list);
+      } else {
+        unassigned.push(p);
+      }
+    });
+    // Teams in sidebar order first
+    teams.forEach(t => {
+      if (assigned.has(t.id)) {
+        groups.push({ team: t, projects: assigned.get(t.id)! });
+      }
+    });
+    // Teams that have projects but user isn't a member of (admin can see all)
+    filteredProjects.forEach(p => {
+      if (p.team_id && !teamMap.has(p.team_id)) {
+        const existing = groups.find(g => g.team?.id === p.team_id);
+        if (existing) existing.projects.push(p);
+        else groups.push({ team: { id: p.team_id, name: p.team_id, color: '#6366f1' }, projects: [p] });
+      }
+    });
+    if (unassigned.length > 0) groups.push({ team: null, projects: unassigned });
+    return groups;
+  }, [filteredProjects, teams]);
+
+  const toggleTeam = (teamId: string) => {
+    setCollapsedTeams(prev => {
+      const next = new Set(prev);
+      if (next.has(teamId)) next.delete(teamId); else next.add(teamId);
+      return next;
+    });
+  };
 
   const handleCreate = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -191,10 +233,39 @@ export default function Portfolios() {
         </div>
       )}
 
-      {/* Grid view */}
+      {/* Grid view — grouped by team */}
       {viewMode === 'grid' && filteredProjects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProjects.map((project) => {
+        <div className="space-y-8">
+          {groupedByTeam.map(({ team, projects: teamProjects }) => {
+            const groupKey = team?.id ?? '__unassigned__';
+            const isCollapsed = collapsedTeams.has(groupKey);
+            return (
+              <div key={groupKey}>
+                {/* Team header */}
+                <button
+                  onClick={() => toggleTeam(groupKey)}
+                  className="flex items-center gap-2 mb-3 group"
+                >
+                  {isCollapsed ? <ChevronRight className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {team ? (
+                    <>
+                      <div className="w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: team.color + '30' }}>
+                        <Users className="w-3 h-3" style={{ color: team.color }} />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700 dark:text-slate-300">{team.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      <FolderKanban className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-semibold text-gray-500 dark:text-slate-400">No team</span>
+                    </>
+                  )}
+                  <span className="text-xs text-gray-400 ml-1">({teamProjects.length})</span>
+                </button>
+
+                {!isCollapsed && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {teamProjects.map((project) => {
             const stats = getStats(project.id);
             const health = HEALTH_CONFIG[stats.health];
             const HealthIcon = health.icon;
@@ -269,6 +340,11 @@ export default function Portfolios() {
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
+                )}
+              </div>
+            );
+                    })}
+                  </div>
                 )}
               </div>
             );
