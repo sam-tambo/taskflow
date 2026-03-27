@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Briefcase, Code, Megaphone, Palette, Lightbulb, GraduationCap } from 'lucide-react';
+import { X, Briefcase, Code, Megaphone, Palette, Lightbulb, GraduationCap, Users } from 'lucide-react';
 import { useCreateProject } from '@/hooks/useProjects';
 import { useWorkspaceStore } from '@/stores/useWorkspaceStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -90,11 +90,12 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [icon, setIcon] = useState('folder');
   const [privacy, setPrivacy] = useState<'workspace' | 'private'>('workspace');
+  const [teamId, setTeamId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [step, setStep] = useState<'template' | 'details'>('template');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { currentWorkspace, setCurrentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, setCurrentWorkspace, teams } = useWorkspaceStore();
   const { user } = useAuth();
   const createProject = useCreateProject(currentWorkspace?.id);
   const navigate = useNavigate();
@@ -162,6 +163,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
         color,
         icon,
         privacy,
+        team_id: teamId || null,
         workspace_id: workspaceId,
         owner_id: user.id,
         status: 'active',
@@ -206,6 +208,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
           setColor(PRESET_COLORS[0]);
           setIcon('folder');
           setPrivacy('workspace');
+          setTeamId(null);
           setSelectedTemplate(null);
           setStep('template');
           setError(null);
@@ -332,6 +335,32 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
               </button>
             </div>
           </div>
+
+          {teams.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-300 block mb-1">Team <span className="text-gray-400 font-normal">(optional)</span></label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTeamId(null)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${!teamId ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+                >
+                  No team
+                </button>
+                {teams.map((team) => (
+                  <button
+                    key={team.id}
+                    type="button"
+                    onClick={() => setTeamId(team.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${teamId === team.id ? 'border-[#4B7C6F] bg-[#4B7C6F]/10 text-[#4B7C6F]' : 'border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: team.color }} />
+                    {team.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-slate-300 block mb-1">Description</label>
